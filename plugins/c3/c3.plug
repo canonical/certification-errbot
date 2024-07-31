@@ -1,0 +1,9 @@
+[Core]
+Name = c3
+Module = c3
+
+[Documentation]
+Description = plugin to do C3 stuff
+
+[Python]
+Version = 3
