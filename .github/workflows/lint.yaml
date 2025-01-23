@@ -1,0 +1,26 @@
+on:
+    workflow_call:
+      secrets:
+        CHARMHUB_TOKEN:
+          required: true
+    
+    push:
+      branches:
+        - main
+   
+    pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Install dependencies
+        run: sudo snap install --classic astral-uv
+      - name: Run linters
+        run: |
+          uv tool run ruff check
+          uv tool run ruff format --check --diff
+        working-directory: charm
