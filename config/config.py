@@ -15,9 +15,9 @@ BOT_ADMINS = ["@jocave","mz2"]
 
 BOT_IDENTITY = {
     # Required
-    "team": "Canonical",
-    "server": "chat.canonical.com",
-    "token": os.environ.get("HWCERTBOT_TOKEN"),
+    "team": os.environ.get("ERRBOT_TEAM", "Canonical"),
+    "server": os.environ.get("ERRBOT_SERVER", "chat.canonical.com"),
+    "token": os.environ.get("ERRBOT_TOKEN"),
     # Optional
     "insecure": False,  # Default = False. Set to true for self signed certificates
     "scheme": "https",  # Default = https

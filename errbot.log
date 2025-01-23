@@ -448,3 +448,117 @@ mattermostdriver.exceptions.NoAccessTokenProvided: Invalid or expired session, p
 2025-01-23 12:01:35,160 INFO     errbot.plugin_manager     Shutdown.
 2025-01-23 12:01:35,161 INFO     errbot.plugin_manager     Bye.
 2025-01-23 12:01:35,161 INFO     errbot.cli                Process exiting
+2025-01-23 12:06:18,351 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 12:06:18,354 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 12:06:18,440 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 12:06:18,643 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 12:06:18,644 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 12:06:18,647 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 12:06:19,856 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 12:06:19,856 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 12:06:19,859 INFO     errbot.backends.base      Reconnecting in 3 seconds (1 attempted reconnections so far).
+2025-01-23 12:06:20,153 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 12:06:20,153 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 12:06:20,362 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 12:06:20,362 INFO     errbot.plugin_manager     Bye.
+2025-01-23 12:06:20,362 INFO     errbot.cli                Process exiting
+2025-01-23 12:06:43,628 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 12:06:43,630 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 12:06:43,716 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 12:06:43,917 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 12:06:43,917 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 12:06:43,921 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 12:06:44,922 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 12:06:44,922 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 12:06:45,118 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 12:06:45,119 INFO     errbot.plugin_manager     Bye.
+2025-01-23 12:06:45,119 INFO     errbot.cli                Process exiting
+2025-01-23 12:22:26,947 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 12:22:26,948 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 12:22:27,036 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 12:22:27,226 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 12:22:27,227 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 12:22:27,230 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 12:22:28,404 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 12:22:28,404 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 12:22:28,409 INFO     errbot.backends.base      Reconnecting in 3 seconds (1 attempted reconnections so far).
+2025-01-23 12:22:29,387 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 12:22:29,387 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 12:22:29,562 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 12:22:29,563 INFO     errbot.plugin_manager     Bye.
+2025-01-23 12:22:29,563 INFO     errbot.cli                Process exiting

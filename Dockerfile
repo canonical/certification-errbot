@@ -1,6 +1,9 @@
 # Use the specified base image
 FROM ubuntu:24.04
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV ERRBOT_TOKEN=""
+ENV ERRBOT_TEAM="Canonical"
+ENV ERRBOT_SERVER="chat.canonical.com"
 
 LABEL name="hwcert-errbot" \
     version="6.2.0" \
@@ -8,21 +11,18 @@ LABEL name="hwcert-errbot" \
     license="GPL-3.0"
 
 RUN apt-get update && \
-    apt-get install -y python3.12 && \
+    apt-get install -y python3.12 git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . .
 
 ENV UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-WORKDIR /app
+RUN uv sync
+RUN uv tool install errbot
 
-COPY . .
-
-RUN cargo install --git https://github.com/astral-sh/uv uv
-COPY config/config.py /root/
-
-ENTRYPOINT ["/app/venv/bin/errbot"]
-
-CMD uv run errbot
+CMD ["uv", "run", "errbot"]
