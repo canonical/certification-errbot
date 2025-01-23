@@ -1,0 +1,450 @@
+2025-01-23 11:34:43,927 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:35:00,577 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:35:47,756 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:36:30,388 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:36:53,882 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:37:11,369 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:37:39,328 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:39:14,281 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:39:14,282 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:39:14,567 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:39:14,879 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:39:14,879 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:39:14,880 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 11:39:16,095 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:39:16,096 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:39:16,099 INFO     errbot.backends.base      Reconnecting in 3 seconds (1 attempted reconnections so far).
+2025-01-23 11:39:17,939 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 11:39:17,939 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:39:18,131 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:39:18,143 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:39:18,143 INFO     errbot.cli                Process exiting
+2025-01-23 11:42:54,008 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:42:54,010 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:42:54,096 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:42:54,320 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:42:54,321 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:42:54,324 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 11:42:55,506 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:42:55,506 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:42:55,509 INFO     errbot.backends.base      Reconnecting in 2 seconds (1 attempted reconnections so far).
+2025-01-23 11:42:55,959 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 11:42:55,960 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:42:56,176 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:42:56,176 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:42:56,176 INFO     errbot.cli                Process exiting
+2025-01-23 11:43:29,697 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:43:29,699 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:43:29,787 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:43:29,993 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:29,993 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:29,997 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 11:43:31,183 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:31,183 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:31,185 INFO     errbot.backends.base      Reconnecting in 2 seconds (1 attempted reconnections so far).
+2025-01-23 11:43:34,211 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:34,212 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:34,215 INFO     errbot.backends.base      Reconnecting in 7 seconds (2 attempted reconnections so far).
+2025-01-23 11:43:40,275 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 11:43:40,275 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:43:40,478 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:43:40,479 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:43:40,479 INFO     errbot.cli                Process exiting
+2025-01-23 11:43:41,073 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:43:41,075 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:43:41,162 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:43:41,356 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:41,357 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:41,357 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 11:43:42,546 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:42,546 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:42,549 INFO     errbot.backends.base      Reconnecting in 2 seconds (1 attempted reconnections so far).
+2025-01-23 11:43:45,077 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 11:43:45,078 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:43:45,255 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:43:45,255 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:43:45,255 INFO     errbot.cli                Process exiting
+2025-01-23 11:43:51,781 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:43:51,783 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:43:51,868 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:43:52,060 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:52,061 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:52,064 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 11:43:53,258 ERROR    mattermostdriver.websocket Password field must not be blank
+2025-01-23 11:43:53,259 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 173, in login
+    response = self.users.login_user({
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 8, in login_user
+    return self.client.make_request('post', self.endpoint + '/login', options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 173, in make_request
+    raise InvalidOrMissingParameters(message) from None
+mattermostdriver.exceptions.InvalidOrMissingParameters: Password field must not be blank
+2025-01-23 11:43:53,261 INFO     errbot.backends.base      Reconnecting in 3 seconds (1 attempted reconnections so far).
+2025-01-23 11:43:55,092 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 11:43:55,092 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:56:05,516 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:56:05,517 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:56:05,605 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:56:06,341 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:11,402 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:16,461 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:21,529 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:26,590 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:31,649 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:36,713 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:41,637 INFO     errbot.backends.mattermost Interrupt received, shutting down..
+2025-01-23 11:56:41,638 INFO     errbot.core               Disconnect callback, deactivating all the plugins.
+2025-01-23 11:56:41,638 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:56:41,891 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:56:41,892 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:56:41,892 INFO     errbot.cli                Process exiting
+2025-01-23 11:56:48,421 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:56:48,423 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:56:48,509 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:56:49,222 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:54,282 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:56:59,345 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:04,411 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:08,532 INFO     errbot.backends.mattermost Interrupt received, shutting down..
+2025-01-23 11:57:08,532 INFO     errbot.core               Disconnect callback, deactivating all the plugins.
+2025-01-23 11:57:08,532 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:57:08,746 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:57:08,747 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:57:08,747 INFO     errbot.cli                Process exiting
+2025-01-23 11:57:18,120 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:57:18,121 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:57:18,207 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:57:18,898 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:23,962 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:26,236 INFO     errbot.backends.mattermost Interrupt received, shutting down..
+2025-01-23 11:57:26,236 INFO     errbot.core               Disconnect callback, deactivating all the plugins.
+2025-01-23 11:57:26,237 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:57:26,436 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:57:26,436 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:57:26,436 INFO     errbot.cli                Process exiting
+2025-01-23 11:57:28,800 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:57:28,801 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:57:28,888 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:57:29,095 ERROR    mattermostdriver.websocket Invalid or expired session, please login again.
+2025-01-23 11:57:29,095 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 171, in login
+    result = self.users.get_user('me')
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 44, in get_user
+    return self.client.get(
+           ^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 193, in get
+    response = self.make_request('get', endpoint, options=options, params=params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 175, in make_request
+    raise NoAccessTokenProvided(message) from None
+mattermostdriver.exceptions.NoAccessTokenProvided: Invalid or expired session, please login again.
+2025-01-23 11:57:29,099 INFO     errbot.backends.base      Reconnecting in 1 seconds (0 attempted reconnections so far).
+2025-01-23 11:57:30,301 ERROR    mattermostdriver.websocket Invalid or expired session, please login again.
+2025-01-23 11:57:30,302 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 171, in login
+    result = self.users.get_user('me')
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 44, in get_user
+    return self.client.get(
+           ^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 193, in get
+    response = self.make_request('get', endpoint, options=options, params=params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 175, in make_request
+    raise NoAccessTokenProvided(message) from None
+mattermostdriver.exceptions.NoAccessTokenProvided: Invalid or expired session, please login again.
+2025-01-23 11:57:30,304 INFO     errbot.backends.base      Reconnecting in 1 seconds (1 attempted reconnections so far).
+2025-01-23 11:57:32,280 ERROR    mattermostdriver.websocket Invalid or expired session, please login again.
+2025-01-23 11:57:32,281 ERROR    errbot.backends.base      Exception occurred in serve_once:
+Traceback (most recent call last):
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/errbot/backends/base.py", line 869, in serve_forever
+    if self.serve_once():
+       ^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/err-backend-mattermost/err-backend-mattermost.py", line 343, in serve_once
+    self.driver.login()
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/driver.py", line 171, in login
+    result = self.users.get_user('me')
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/endpoints/users.py", line 44, in get_user
+    return self.client.get(
+           ^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 193, in get
+    response = self.make_request('get', endpoint, options=options, params=params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mz2/Developer/hwcert-errbot/.venv/lib/python3.12/site-packages/mattermostdriver/client.py", line 175, in make_request
+    raise NoAccessTokenProvided(message) from None
+mattermostdriver.exceptions.NoAccessTokenProvided: Invalid or expired session, please login again.
+2025-01-23 11:57:32,283 INFO     errbot.backends.base      Reconnecting in 5 seconds (2 attempted reconnections so far).
+2025-01-23 11:57:32,802 INFO     errbot.backends.base      Interrupt received, shutting down..
+2025-01-23 11:57:32,803 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 11:57:32,991 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 11:57:32,992 INFO     errbot.plugin_manager     Bye.
+2025-01-23 11:57:32,992 INFO     errbot.cli                Process exiting
+2025-01-23 11:57:34,640 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 11:57:34,641 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 11:57:34,728 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 11:57:35,414 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:40,473 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:45,526 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:50,587 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:57:55,648 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:00,713 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:05,774 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:10,838 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:15,892 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:20,953 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:26,013 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:31,068 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:36,135 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:41,194 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:46,256 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:51,318 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:58:56,377 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:01,440 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:06,504 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:11,568 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:16,631 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:21,686 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:26,751 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:31,813 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:36,871 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:41,936 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:46,994 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:52,056 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 11:59:57,120 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:02,186 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:07,248 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:12,311 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:17,373 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:22,433 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:27,493 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:32,558 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:37,627 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:42,692 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:47,756 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:52,818 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:00:57,887 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:01:02,951 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:01:08,021 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:01:13,175 WARNING  mattermostdriver.websocket Failed to establish websocket connection: Cannot create a client socket with a PROTOCOL_TLS_SERVER context (_ssl.c:806)
+2025-01-23 12:01:16,359 INFO     errbot.backends.mattermost Interrupt received, shutting down..
+2025-01-23 12:01:16,359 INFO     errbot.core               Disconnect callback, deactivating all the plugins.
+2025-01-23 12:01:16,360 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 12:01:16,595 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 12:01:16,595 INFO     errbot.plugin_manager     Bye.
+2025-01-23 12:01:16,595 INFO     errbot.cli                Process exiting
+2025-01-23 12:01:16,967 INFO     errbot.bootstrap          Found Storage plugin: Shelf.
+2025-01-23 12:01:16,968 INFO     errbot.bootstrap          Found Backend plugin: Mattermost
+2025-01-23 12:01:17,054 INFO     errbot                    webhooks: Flag to bind /echo to echo
+2025-01-23 12:01:17,925 INFO     errbot.core               Activate internal commands
+2025-01-23 12:01:17,926 INFO     errbot.plugin_manager     Activate bot plugins...
+2025-01-23 12:01:17,926 INFO     errbot.plugin_manager     Activate plugin: ACLs.
+2025-01-23 12:01:17,938 INFO     errbot.core_plugins.wsview Checking ACLS for webhooks
+2025-01-23 12:01:17,939 INFO     errbot.plugin_manager     Activate plugin: Backup.
+2025-01-23 12:01:17,944 INFO     errbot.core_plugins.wsview Checking Backup for webhooks
+2025-01-23 12:01:17,945 INFO     errbot.plugin_manager     Activate plugin: ChatRoom.
+2025-01-23 12:01:17,952 INFO     errbot.core_plugins.wsview Checking ChatRoom for webhooks
+2025-01-23 12:01:17,953 INFO     errbot.plugins.ChatRoom   Connecting bot chatrooms
+2025-01-23 12:01:17,953 INFO     errbot.plugin_manager     Activate plugin: CommandNotFoundFilter.
+2025-01-23 12:01:17,959 INFO     errbot.core_plugins.wsview Checking CommandNotFoundFilter for webhooks
+2025-01-23 12:01:17,960 INFO     errbot.plugin_manager     Activate plugin: Flows.
+2025-01-23 12:01:17,965 INFO     errbot.core_plugins.wsview Checking Flows for webhooks
+2025-01-23 12:01:17,965 INFO     errbot.plugin_manager     Activate plugin: Health.
+2025-01-23 12:01:17,970 INFO     errbot.core_plugins.wsview Checking Health for webhooks
+2025-01-23 12:01:17,971 INFO     errbot.plugin_manager     Activate plugin: Help.
+2025-01-23 12:01:17,977 INFO     errbot.core_plugins.wsview Checking Help for webhooks
+2025-01-23 12:01:17,977 INFO     errbot.plugin_manager     Activate plugin: Plugins.
+2025-01-23 12:01:17,981 INFO     errbot.core_plugins.wsview Checking Plugins for webhooks
+2025-01-23 12:01:17,982 INFO     errbot.plugin_manager     Activate plugin: TextCmds.
+2025-01-23 12:01:17,982 INFO     errbot.core_plugins.wsview Checking TextModeCmds for webhooks
+2025-01-23 12:01:17,983 INFO     errbot.plugin_manager     Activate plugin: Utils.
+2025-01-23 12:01:17,987 INFO     errbot.core_plugins.wsview Checking Utils for webhooks
+2025-01-23 12:01:17,988 INFO     errbot.plugin_manager     Activate plugin: VersionChecker.
+2025-01-23 12:01:17,994 INFO     errbot.core_plugins.wsview Checking VersionChecker for webhooks
+2025-01-23 12:01:17,995 INFO     errbot.plugin_manager     Activate plugin: Webserver.
+2025-01-23 12:01:17,996 INFO     errbot.plugins.Webserver  Webserver is not configured. Forbid activation
+2025-01-23 12:01:17,996 INFO     errbot.core_plugins.wsview Checking Webserver for webhooks
+2025-01-23 12:01:17,996 INFO     errbot.core_plugins.wsview Webhook routing echo
+2025-01-23 12:01:17,998 INFO     errbot.plugin_manager     Activate plugin: c3.
+2025-01-23 12:01:18,000 INFO     errbot.core_plugins.wsview Checking SeeThree for webhooks
+2025-01-23 12:01:18,000 INFO     errbot.core               Notifying connection to all the plugins...
+2025-01-23 12:01:18,001 INFO     errbot.plugins.ChatRoom   Connecting bot chatrooms
+2025-01-23 12:01:18,001 INFO     errbot.core               Plugin activation done.
+2025-01-23 12:01:18,001 INFO     mattermostdriver.websocket Websocket authentification OK
+2025-01-23 12:01:34,942 INFO     errbot.backends.mattermost Interrupt received, shutting down..
+2025-01-23 12:01:34,942 INFO     errbot.core               Disconnect callback, deactivating all the plugins.
+2025-01-23 12:01:34,949 INFO     errbot.backends.base      Trigger shutdown
+2025-01-23 12:01:35,160 INFO     errbot.plugin_manager     Shutdown.
+2025-01-23 12:01:35,161 INFO     errbot.plugin_manager     Bye.
+2025-01-23 12:01:35,161 INFO     errbot.cli                Process exiting
