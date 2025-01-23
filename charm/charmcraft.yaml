@@ -9,13 +9,8 @@ description: |
 
 base: ubuntu@24.04
 
-bases:
-  - build-on:
-      - name: ubuntu
-        channel: "24.04"
-    run-on:
-      - name: ubuntu
-        channel: "24.04"
+platforms:
+  amd64:
 
 config:
   options:
