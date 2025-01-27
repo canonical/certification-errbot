@@ -2,6 +2,9 @@ name: Publish OCI Image and charm
 
 on:
   push:
+    branches:
+      - main
+      - deadline-notifications
     tags:
       - 'v*'
 
