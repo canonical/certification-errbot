@@ -26,10 +26,10 @@ class CharmCharm(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
-        framework.observe(self.on["httpbin"].pebble_ready, self._on_httpbin_pebble_ready)
+        framework.observe(self.on["errbot"].pebble_ready, self._on_errbot_pebble_ready)
         framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _on_httpbin_pebble_ready(self, event: ops.PebbleReadyEvent):
+    def _on_errbot_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Define and start a workload using the Pebble API.
 
         Change this example to suit your needs. You'll need to specify the right entrypoint and
@@ -73,7 +73,7 @@ class CharmCharm(ops.CharmBase):
             "summary": "errbot layer",
             "description": "pebble config layer for errbot",
             "services": {
-                "httpbin": {
+                "errbot": {
                     "override": "replace",
                     "summary": "errbot",
                     "command": "uv run errbot",
