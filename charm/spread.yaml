@@ -6,19 +6,21 @@ environment:
   CI: "$(HOST: echo $CI)"
   CONCIERGE_JUJU_CHANNEL/juju_3_5: 3.5/stable
   CONCIERGE_JUJU_CHANNEL/juju_3_6: 3.6/stable
+  GHCR_PACKAGE_API_USER: "$(HOST: echo $GHCR_PACKAGE_API_USER)"
+  GHCR_PACKAGE_API_TOKEN: "$(HOST: echo $GHCR_PACKAGE_API_TOKEN)"
 
 backends:
   lxd:
     type: adhoc
     allocate: |
       BASE="${BASE:-noble}"
-      VM_NAME="${VM_NAME:-ubuntu-${BASE}-${RANDOM}}"
+      VM_NAME="${VM_NAME:-charm-tests-ubuntu-${BASE}-${RANDOM}}"
       DISK="${DISK:-20}"
       CPU="${CPU:-4}"
       MEM="${MEM:-8}"
 
-      cloud_config="$(mktemp)"
-      yq e ".users[1].plain_text_passwd = \"${SPREAD_PASSWORD}\"" tests/spread/integration/lib/cloud-config.yaml > "$cloud_config"
+      cloud_config="$PWD/tests/spread/integration/lib/cloud-config.yaml"
+      yq e -i ".users[1].plain_text_passwd = \"${SPREAD_PASSWORD}\"" tests/spread/integration/lib/cloud-config.yaml
 
       lxc launch --vm \
         "ubuntu:${BASE}" \
@@ -31,7 +33,7 @@ backends:
       # Wait for the spread user
       while ! lxc exec "${VM_NAME}" -- id -u spread &>/dev/null; do sleep 0.5; done
 
-      rm "$cloud_config"
+      # rm "$cloud_config"
 
       # Set the instance address for spread
       ADDRESS "$(lxc ls -f csv | grep "${VM_NAME}" | cut -d"," -f3 | cut -d" " -f1)"
@@ -95,6 +97,16 @@ prepare: |
 
   snap install --classic concierge
   concierge prepare --trace -p microk8s --extra-snaps astral-uv --extra-snaps juju-crashdump
+
+  mkdir -p /var/snap/microk8s/current/args
+  echo "" | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  echo '[plugins."io.containerd.grpc.v1.cri".registry.configs."ghcr.io".auth]' | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  echo '  username = "$GHCR_PACKAGE_API_USER"' | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  echo '  password = "$GHCR_PACKAGE_API_TOKEN"' | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  systemctl restart snap.microk8s.daemon-containerd.service
+  microk8s.stop
+  microk8s.start
+  microk8s status --wait-ready
 
   pushd "$SPREAD_PATH"
   chown $(id -u):$(id -g) $PWD/hwcert-errbot_amd64.charm
