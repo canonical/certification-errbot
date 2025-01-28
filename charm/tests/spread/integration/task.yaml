@@ -1,4 +1,14 @@
 summary: Run the charm integration test
 
 execute: |
-  uv tool run tox -e integration
+  oci_image="$(cat ../../../charmcraft.yaml | yq '.resources.errbot-image.upstream-source')"
+  juju deploy "$PWD/../../../hwcert-errbot_amd64.charm" errbot --resource errbot-image="${oci_image}"
+
+  juju config errbot log-level=info
+  juju config errbot errbot-team='foobar'
+  juju config errbot errbot-server='https://mattermost.example.com'
+  juju config errbot errbot-token='foobar'
+
+  juju wait-for application errbot --timeout 2m
+
+  # uv tool run tox -e integration
