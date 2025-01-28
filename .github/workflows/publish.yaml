@@ -34,6 +34,9 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/hwcert-errbot:latest
 
   build-and-push-charm:
+    permissions:
+      contents: read
+      packages: read
     runs-on: ubuntu-latest
     needs:
       - build-and-publish-image
@@ -41,6 +44,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Log in to GitHub Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@3d1aae2686723b4f25d1be5cc78bfe147f7f100d
         with:
