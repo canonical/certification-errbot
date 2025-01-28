@@ -94,7 +94,7 @@ prepare: |
   fi
 
   snap install --classic concierge
-  concierge prepare --trace -p microk8s --extra-snaps astral-uv
+  concierge prepare --trace -p microk8s --extra-snaps astral-uv --extra-snaps juju-crashdump
 
   pushd "$SPREAD_PATH"
   chown $(id -u):$(id -g) $PWD/hwcert-errbot_amd64.charm
