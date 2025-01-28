@@ -35,7 +35,7 @@ jobs:
 
   build-and-push-charm:
     permissions:
-      contents: read
+      contents: write # workflow pushes a tag
       packages: read
     runs-on: ubuntu-latest
     needs:

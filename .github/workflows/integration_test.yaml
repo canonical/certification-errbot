@@ -92,8 +92,8 @@ jobs:
     name: Spread (${{ matrix.suite }})
 
     permissions:
-      contents: write # workflow pushes a tag
-      packages: write # does it also upload to ghcr?
+      contents: read
+      packages: read
     
     runs-on: ubuntu-24.04
     needs:
