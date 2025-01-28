@@ -102,7 +102,7 @@ prepare: |
   juju controllers
   # juju wait-for model concierge-microk8s --summary --timeout 1m
 
-  mkdir -p /var/snap/microk8s/current/args
+  mkdir -p /var/snap/microk8s/current/args/ghcr.io
   echo "" | sudo tee -a /var/snap/microk8s/current/args/ghcr.io/containerd-template.toml
 
   echo 'server = "https://ghcr.io"' | tee -a /var/snap/microk8s/current/args/ghcr.io/hosts.toml
