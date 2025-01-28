@@ -92,7 +92,7 @@ jobs:
     name: Spread (${{ matrix.suite }})
 
     permissions:
-      contents: read
+      contents: write # workflow pushes a tag
       packages: read
     
     runs-on: ubuntu-24.04
