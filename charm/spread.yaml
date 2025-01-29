@@ -107,6 +107,7 @@ prepare: |
   echo "" | sudo tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
   echo 'server = "https://ghcr.io"' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
   echo '[host."https://ghcr.io"]' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
+  echo 'capabilities = ["pull", "resolve"]' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
 
   echo "" | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
   echo '[plugins."io.containerd.grpc.v1.cri".registry.configs."ghcr.io".auth]' | tee -a /var/snap/microk8s/current/args/containerd-template.toml
