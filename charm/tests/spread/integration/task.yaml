@@ -8,7 +8,7 @@ execute: |
   juju config errbot errbot-team='foobar'
   juju config errbot errbot-server='https://mattermost.example.com'
   juju config errbot errbot-token='foobar'
-  juju config errbot errbot-admins='@mz2 @jocave'
+  juju config errbot errbot-admins='\@mz2 \@jocave'
 
   juju wait-for application errbot --timeout 2m
   juju show-status-log errbot/0
