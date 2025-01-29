@@ -10,6 +10,6 @@ execute: |
   juju config errbot errbot-token='foobar'
   juju config errbot errbot-admins='\@mz2 \@jocave'
 
-  juju wait-for application errbot --timeout 2m
+  juju wait-for application errbot --timeout 5m
   juju show-status-log errbot/0
   juju debug-log --replay

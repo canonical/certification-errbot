@@ -129,7 +129,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          charmcraft test -v "github-ci:ubuntu-24.04:tests/spread/${{ matrix.suite }}"
+          charmcraft.spread -v "github-ci:ubuntu-24.04:tests/spread/${{ matrix.suite }}"
         working-directory: charm
         env:
           GHCR_PACKAGE_API_USER: ${{ github.actor }}
