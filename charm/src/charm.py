@@ -82,7 +82,7 @@ class CharmCharm(ops.CharmBase):
                         "ERRBOT_TOKEN": self.model.config["errbot-token"],
                         "ERRBOT_TEAM": self.model.config["errbot-team"],
                         "ERRBOT_SERVER": self.model.config["errbot-server"],
-                        "ERRBOT_ADMINS": self.model.config["errbot-admins"]
+                        "ERRBOT_ADMINS": self.model.config["errbot-admins"],
                     },
                 }
             },
