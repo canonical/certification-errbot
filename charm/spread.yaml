@@ -4,7 +4,7 @@ workers: 1
 
 environment:
   CI: "$(HOST: echo $CI)"
-  CONCIERGE_JUJU_CHANNEL/juju_3_5: 3.5/stable
+  # CONCIERGE_JUJU_CHANNEL/juju_3_5: 3.5/stable
   CONCIERGE_JUJU_CHANNEL/juju_3_6: 3.6/stable
   GHCR_PACKAGE_API_USER: "$(HOST: echo $GHCR_PACKAGE_API_USER)"
   GHCR_PACKAGE_API_TOKEN: "$(HOST: echo $GHCR_PACKAGE_API_TOKEN)"
