@@ -11,4 +11,7 @@ execute: |
 
   juju wait-for application errbot --timeout 2m
 
-  # uv tool run tox -e integration
+  if ! juju wait-for application errbot --timeout 2m; then
+    juju show-status-log errbot/0
+    juju debug-log --replay
+  fi
