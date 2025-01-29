@@ -33,6 +33,10 @@ config:
       description: |
         The token for Errbot authentication.
       type: string
+    errbot-admins:
+      description: |
+        List of handles (prefixed with @, separated by space) who act as bot admins.
+      type: string
 
 containers:
   errbot:
