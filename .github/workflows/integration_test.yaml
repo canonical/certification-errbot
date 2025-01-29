@@ -132,8 +132,8 @@ jobs:
           charmcraft test -v "github-ci:ubuntu-24.04:tests/spread/${{ matrix.suite }}"
         working-directory: charm
         env:
-          GHCR_PACKAGE_API_USER: ${{ secrets.GHCR_PACKAGE_API_USER }}
-          GHCR_PACKAGE_API_TOKEN: ${{ secrets.GHCR_PACKAGE_API_TOKEN }}
+          GHCR_PACKAGE_API_USER: ${{ github.actor }}
+          GHCR_PACKAGE_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Upload charmcraft logs
         if: failure()

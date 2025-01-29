@@ -105,6 +105,7 @@ prepare: |
   mkdir -p /var/snap/microk8s/current/args/certs.d/ghcr.io
 
   echo 'server = "https://ghcr.io"' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
+  echo '' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
   echo '[host."https://ghcr.io"]' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
   echo '  capabilities = ["pull", "resolve"]' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
 
