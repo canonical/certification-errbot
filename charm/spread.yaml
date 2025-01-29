@@ -102,13 +102,16 @@ prepare: |
   juju controllers
   # juju wait-for model concierge-microk8s --summary --timeout 1m
 
-  mkdir -p /var/snap/microk8s/current/args/ghcr.io
-  echo "" | sudo tee -a /var/snap/microk8s/current/args/ghcr.io/containerd-template.toml
+  mkdir -p /var/snap/microk8s/current/args/certs.d/ghcr.io
 
-  echo 'server = "https://ghcr.io"' | tee -a /var/snap/microk8s/current/args/ghcr.io/hosts.toml
-  echo '[host."https://ghcr.io"]' | tee -a /var/snap/microk8s/current/args/ghcr.io/hosts.toml
-  echo "username = \"$GHCR_PACKAGE_API_USER"\"" | tee -a /var/snap/microk8s/current/args/ghcr.io/hosts.toml
-  echo "username = \"$GHCR_PACKAGE_API_TOKEN"\"" | tee -a /var/snap/microk8s/current/args/ghcr.io/hosts.toml
+  echo "" | sudo tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
+  echo 'server = "https://ghcr.io"' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
+  echo '[host."https://ghcr.io"]' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
+
+  echo "" | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  echo '[plugins."io.containerd.grpc.v1.cri".registry.configs."ghcr.io".auth]' | tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  echo "username = \"${GHCR_PACKAGE_API_USER}\"" | tee -a /var/snap/microk8s/current/args/containerd-template.toml
+  echo "password = \"${GHCR_PACKAGE_API_TOKEN}\"" | tee -a /var/snap/microk8s/current/args/containerd-template.toml
 
   systemctl restart snap.microk8s.daemon-containerd.service
   microk8s.stop
