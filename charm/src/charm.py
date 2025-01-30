@@ -76,7 +76,7 @@ class CharmCharm(ops.CharmBase):
                 "errbot": {
                     "override": "replace",
                     "summary": "errbot",
-                    "command": "uv run errbot",
+                    "command": "errbot",
                     "startup": "enabled",
                     "environment": {
                         "ERRBOT_TOKEN": self.model.config["errbot-token"],
