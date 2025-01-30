@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = "~=3.12"
 dependencies = [
+    "errbot==6.2.0",
     "err-backend-mattermost==3.0.0",
     "errbot[mattermost]>=6.2.0",
 ]

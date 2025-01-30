@@ -263,6 +263,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "err-backend-mattermost", git = "https://github.com/rwielk/err-backend-mattermost.git?branch=NETDEV-1336%2Fensure-py310-compatibility" },
+    { name = "errbot", specifier = "==6.2.0" },
     { name = "errbot", extras = ["mattermost"], specifier = ">=6.2.0" },
 ]
 
