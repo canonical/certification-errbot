@@ -14,7 +14,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: sudo snap install astral-uv --classic
 
       - name: Generate client library
         run: ./bin/generate-test-observer-client.sh
@@ -22,7 +25,7 @@ jobs:
       - name: Check for changes in client library
         run: |
           if [[ `git status --porcelain plugins/test_observer/lib` ]]; then
-            echo "Client library has changes. Please commit the generated files."
+            echo "Client library has changes. Please run `./bin/generate-test-observer-client.sh` and commit the changes (and check for breaking changes in the API integration)."
             exit 1
           else
             echo "No changes in client library."
