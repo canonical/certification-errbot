@@ -1,0 +1,29 @@
+name: Generate Test Observer Client
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Generate client library
+        run: ./bin/generate-test-observer-client.sh
+
+      - name: Check for changes in client library
+        run: |
+          if [[ `git status --porcelain plugins/test_observer/lib` ]]; then
+            echo "Client library has changes. Please commit the generated files."
+            exit 1
+          else
+            echo "No changes in client library."
+          fi
