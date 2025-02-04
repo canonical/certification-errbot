@@ -1,0 +1,9 @@
+[Core]
+Name = certification
+Module = certification
+
+[Documentation]
+Description = plugin to do Certification things
+
+[Python]
+Version = 3

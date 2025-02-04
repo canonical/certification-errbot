@@ -1,14 +1,14 @@
 from errbot import BotPlugin, botcmd, re_botcmd
 import re
 import os
-from lib.fast_api_client import Client
+from c3.c3_client import C3ApiAgent
 
 import ssl_fix
 
 
-class TestObserver(BotPlugin):
+class CertificationPlugin(BotPlugin):
     """
-    A plugin for interacting with Test Observer
+    A plugin for interacting with Certification things
     """
 
     @botcmd(split_args_with=None)
@@ -16,10 +16,9 @@ class TestObserver(BotPlugin):
         # a command callable with !cid
         msg = ""
 
-        base_uri = os.environ.get(
-            "TEST_OBSERVER_API_BASE_URI", "https://test-observer-api.canonical.com"
-        )
-        client = Client(base_url=base_uri, follow_redirects=True)
+        client_id = os.environ.get("C3_CLIENT_ID")
+        client_secret = os.environ.get("C3_CLIENT_SECRET")
+        client = C3ApiAgent(client_id, client_secret)
 
         for cid in args:
             # test if the format is a CID
