@@ -6,7 +6,9 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.environment_reported_issue_request import EnvironmentReportedIssueRequest
-from ...models.environment_reported_issue_response import EnvironmentReportedIssueResponse
+from ...models.environment_reported_issue_response import (
+    EnvironmentReportedIssueResponse,
+)
 from ...models.http_validation_error import HTTPValidationError
 from ...types import Response
 
@@ -20,7 +22,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/v1/environments/reported-issues/{issue_id}",
+        "url": "/v1/environments/reported-issues/{issue_id}".format(
+            issue_id=issue_id,
+        ),
     }
 
     _body = body.to_dict()

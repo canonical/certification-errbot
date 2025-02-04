@@ -20,7 +20,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/v1/artefacts/{artefact_id}",
+        "url": "/v1/artefacts/{artefact_id}".format(
+            artefact_id=artefact_id,
+        ),
     }
 
     _body = body.to_dict()

@@ -3,8 +3,12 @@ from typing import Any, TypeVar, Union, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.start_charm_test_execution_request_execution_stage import StartCharmTestExecutionRequestExecutionStage
-from ..models.start_charm_test_execution_request_family import StartCharmTestExecutionRequestFamily
+from ..models.start_charm_test_execution_request_execution_stage import (
+    StartCharmTestExecutionRequestExecutionStage,
+)
+from ..models.start_charm_test_execution_request_family import (
+    StartCharmTestExecutionRequestFamily,
+)
 from ..models.test_execution_status import TestExecutionStatus
 from ..types import UNSET, Unset
 
@@ -111,7 +115,9 @@ class StartCharmTestExecutionRequest:
 
         track = d.pop("track")
 
-        execution_stage = StartCharmTestExecutionRequestExecutionStage(d.pop("execution_stage"))
+        execution_stage = StartCharmTestExecutionRequestExecutionStage(
+            d.pop("execution_stage")
+        )
 
         def _parse_ci_link(data: object) -> Union[None, Unset, str]:
             if data is None:

@@ -3,7 +3,9 @@ from typing import Any, TypeVar, Union, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.artefact_build_environment_review_decision import ArtefactBuildEnvironmentReviewDecision
+from ..models.artefact_build_environment_review_decision import (
+    ArtefactBuildEnvironmentReviewDecision,
+)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="EnvironmentReviewPatch")
@@ -17,7 +19,9 @@ class EnvironmentReviewPatch:
         review_comment (Union[None, Unset, str]):
     """
 
-    review_decision: Union[None, Unset, list[ArtefactBuildEnvironmentReviewDecision]] = UNSET
+    review_decision: Union[
+        None, Unset, list[ArtefactBuildEnvironmentReviewDecision]
+    ] = UNSET
     review_comment: Union[None, Unset, str] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -54,7 +58,9 @@ class EnvironmentReviewPatch:
     def from_dict(cls: type[T], src_dict: dict[str, Any]) -> T:
         d = src_dict.copy()
 
-        def _parse_review_decision(data: object) -> Union[None, Unset, list[ArtefactBuildEnvironmentReviewDecision]]:
+        def _parse_review_decision(
+            data: object,
+        ) -> Union[None, Unset, list[ArtefactBuildEnvironmentReviewDecision]]:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -65,8 +71,10 @@ class EnvironmentReviewPatch:
                 review_decision_type_0 = []
                 _review_decision_type_0 = data
                 for review_decision_type_0_item_data in _review_decision_type_0:
-                    review_decision_type_0_item = ArtefactBuildEnvironmentReviewDecision(
-                        review_decision_type_0_item_data
+                    review_decision_type_0_item = (
+                        ArtefactBuildEnvironmentReviewDecision(
+                            review_decision_type_0_item_data
+                        )
                     )
 
                     review_decision_type_0.append(review_decision_type_0_item)
@@ -74,7 +82,9 @@ class EnvironmentReviewPatch:
                 return review_decision_type_0
             except:  # noqa: E722
                 pass
-            return cast(Union[None, Unset, list[ArtefactBuildEnvironmentReviewDecision]], data)
+            return cast(
+                Union[None, Unset, list[ArtefactBuildEnvironmentReviewDecision]], data
+            )
 
         review_decision = _parse_review_decision(d.pop("review_decision", UNSET))
 

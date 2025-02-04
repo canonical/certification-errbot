@@ -101,7 +101,9 @@ class TestResultResponse:
         previous_results = []
         _previous_results = d.pop("previous_results", UNSET)
         for previous_results_item_data in _previous_results or []:
-            previous_results_item = PreviousTestResult.from_dict(previous_results_item_data)
+            previous_results_item = PreviousTestResult.from_dict(
+                previous_results_item_data
+            )
 
             previous_results.append(previous_results_item)
 

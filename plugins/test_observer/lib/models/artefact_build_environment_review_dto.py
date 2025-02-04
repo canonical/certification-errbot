@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.artefact_build_environment_review_decision import ArtefactBuildEnvironmentReviewDecision
+from ..models.artefact_build_environment_review_decision import (
+    ArtefactBuildEnvironmentReviewDecision,
+)
 
 if TYPE_CHECKING:
     from ..models.artefact_build_minimal_dto import ArtefactBuildMinimalDTO
@@ -70,7 +72,9 @@ class ArtefactBuildEnvironmentReviewDTO:
         review_decision = []
         _review_decision = d.pop("review_decision")
         for review_decision_item_data in _review_decision:
-            review_decision_item = ArtefactBuildEnvironmentReviewDecision(review_decision_item_data)
+            review_decision_item = ArtefactBuildEnvironmentReviewDecision(
+                review_decision_item_data
+            )
 
             review_decision.append(review_decision_item)
 

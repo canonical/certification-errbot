@@ -3,8 +3,12 @@ from typing import Any, TypeVar, Union, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.start_image_test_execution_request_execution_stage import StartImageTestExecutionRequestExecutionStage
-from ..models.start_image_test_execution_request_family import StartImageTestExecutionRequestFamily
+from ..models.start_image_test_execution_request_execution_stage import (
+    StartImageTestExecutionRequestExecutionStage,
+)
+from ..models.start_image_test_execution_request_family import (
+    StartImageTestExecutionRequestFamily,
+)
 from ..models.test_execution_status import TestExecutionStatus
 from ..types import UNSET, Unset
 
@@ -45,7 +49,9 @@ class StartImageTestExecutionRequest:
     image_url: str
     ci_link: Union[None, Unset, str] = UNSET
     initial_status: Union[Unset, TestExecutionStatus] = TestExecutionStatus.IN_PROGRESS
-    family: Union[Unset, StartImageTestExecutionRequestFamily] = StartImageTestExecutionRequestFamily.IMAGE
+    family: Union[Unset, StartImageTestExecutionRequestFamily] = (
+        StartImageTestExecutionRequestFamily.IMAGE
+    )
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -124,7 +130,9 @@ class StartImageTestExecutionRequest:
 
         test_plan = d.pop("test_plan")
 
-        execution_stage = StartImageTestExecutionRequestExecutionStage(d.pop("execution_stage"))
+        execution_stage = StartImageTestExecutionRequestExecutionStage(
+            d.pop("execution_stage")
+        )
 
         os = d.pop("os")
 

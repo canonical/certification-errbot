@@ -19,7 +19,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/v1/test-executions/{id}/test-results",
+        "url": "/v1/test-executions/{id}/test-results".format(
+            id=id,
+        ),
     }
 
     _body = []

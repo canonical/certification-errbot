@@ -5,7 +5,9 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.artefact_build_environment_review_dto import ArtefactBuildEnvironmentReviewDTO
+from ...models.artefact_build_environment_review_dto import (
+    ArtefactBuildEnvironmentReviewDTO,
+)
 from ...models.http_validation_error import HTTPValidationError
 from ...types import Response
 
@@ -15,7 +17,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/v1/artefacts/{artefact_id}/environment-reviews",
+        "url": "/v1/artefacts/{artefact_id}/environment-reviews".format(
+            artefact_id=artefact_id,
+        ),
     }
 
     return _kwargs
@@ -28,7 +32,9 @@ def _parse_response(
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
-            response_200_item = ArtefactBuildEnvironmentReviewDTO.from_dict(response_200_item_data)
+            response_200_item = ArtefactBuildEnvironmentReviewDTO.from_dict(
+                response_200_item_data
+            )
 
             response_200.append(response_200_item)
 

@@ -4,7 +4,9 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..models.test_execution_status import TestExecutionStatus
-from ..models.test_executions_patch_request_status_type_1 import TestExecutionsPatchRequestStatusType1
+from ..models.test_executions_patch_request_status_type_1 import (
+    TestExecutionsPatchRequestStatusType1,
+)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="TestExecutionsPatchRequest")
@@ -21,7 +23,9 @@ class TestExecutionsPatchRequest:
 
     c3_link: Union[None, Unset, str] = UNSET
     ci_link: Union[None, Unset, str] = UNSET
-    status: Union[None, TestExecutionStatus, TestExecutionsPatchRequestStatusType1, Unset] = UNSET
+    status: Union[
+        None, TestExecutionStatus, TestExecutionsPatchRequestStatusType1, Unset
+    ] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -83,7 +87,9 @@ class TestExecutionsPatchRequest:
 
         def _parse_status(
             data: object,
-        ) -> Union[None, TestExecutionStatus, TestExecutionsPatchRequestStatusType1, Unset]:
+        ) -> Union[
+            None, TestExecutionStatus, TestExecutionsPatchRequestStatusType1, Unset
+        ]:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -104,7 +110,15 @@ class TestExecutionsPatchRequest:
                 return status_type_1
             except:  # noqa: E722
                 pass
-            return cast(Union[None, TestExecutionStatus, TestExecutionsPatchRequestStatusType1, Unset], data)
+            return cast(
+                Union[
+                    None,
+                    TestExecutionStatus,
+                    TestExecutionsPatchRequestStatusType1,
+                    Unset,
+                ],
+                data,
+            )
 
         status = _parse_status(d.pop("status", UNSET))
 

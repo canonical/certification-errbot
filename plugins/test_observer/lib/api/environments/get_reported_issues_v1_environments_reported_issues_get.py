@@ -5,7 +5,9 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.environment_reported_issue_response import EnvironmentReportedIssueResponse
+from ...models.environment_reported_issue_response import (
+    EnvironmentReportedIssueResponse,
+)
 from ...models.http_validation_error import HTTPValidationError
 from ...types import UNSET, Response, Unset
 
@@ -41,7 +43,9 @@ def _parse_response(
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
-            response_200_item = EnvironmentReportedIssueResponse.from_dict(response_200_item_data)
+            response_200_item = EnvironmentReportedIssueResponse.from_dict(
+                response_200_item_data
+            )
 
             response_200.append(response_200_item)
 

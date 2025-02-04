@@ -204,7 +204,9 @@ class ArtefactDTO:
 
         all_environment_reviews_count = d.pop("all_environment_reviews_count")
 
-        completed_environment_reviews_count = d.pop("completed_environment_reviews_count")
+        completed_environment_reviews_count = d.pop(
+            "completed_environment_reviews_count"
+        )
 
         artefact_dto = cls(
             id=id,

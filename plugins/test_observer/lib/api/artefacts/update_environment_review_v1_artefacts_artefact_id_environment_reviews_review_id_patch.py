@@ -5,7 +5,9 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.artefact_build_environment_review_dto import ArtefactBuildEnvironmentReviewDTO
+from ...models.artefact_build_environment_review_dto import (
+    ArtefactBuildEnvironmentReviewDTO,
+)
 from ...models.environment_review_patch import EnvironmentReviewPatch
 from ...models.http_validation_error import HTTPValidationError
 from ...types import Response
@@ -21,7 +23,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/v1/artefacts/{artefact_id}/environment-reviews/{review_id}",
+        "url": "/v1/artefacts/{artefact_id}/environment-reviews/{review_id}".format(
+            artefact_id=artefact_id,
+            review_id=review_id,
+        ),
     }
 
     _body = body.to_dict()

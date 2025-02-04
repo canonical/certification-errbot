@@ -16,7 +16,9 @@ class TestObserver(BotPlugin):
         # a command callable with !cid
         msg = ""
 
-        base_uri = os.environ.get("TEST_OBSERVER_API_BASE_URI", 'https://test-observer-api.canonical.com')
+        base_uri = os.environ.get(
+            "TEST_OBSERVER_API_BASE_URI", "https://test-observer-api.canonical.com"
+        )
         client = Client(base_url=base_uri, follow_redirects=True)
 
         for cid in args:
