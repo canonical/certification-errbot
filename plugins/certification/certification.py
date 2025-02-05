@@ -22,8 +22,10 @@ class CertificationPlugin(BotPlugin):
     A plugin for interacting with Certification things
     """
 
-    @botcmd(split_args_with=None)
+    @botcmd(split_args_with=" ", name="cid")
     def cid(self, msg, args):
+        self.log.info(f"args: {args}")
+
         # a command callable with !cid
         msg = ""
 
