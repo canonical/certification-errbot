@@ -37,6 +37,14 @@ config:
       description: |
         List of handles (prefixed with @, separated by space) who act as bot admins.
       type: string
+    c3-client-id:
+      description: |
+        OAuth client ID for the C3 v2 API.
+      type: string
+    c3-client-secret:
+      description: |
+        OAuth client secret for the C3 v2 API.
+      type: string
 
 containers:
   errbot:

@@ -2,8 +2,15 @@ from errbot import BotPlugin, botcmd, re_botcmd
 import re
 import os
 from c3.c3_client import C3ApiAgent
+from test_observer.models import ArtefactDTO
+from test_observer.client import Client
+from test_observer.api.artefacts import get_artefacts_v1_artefacts_get
 
 import ssl_fix
+
+c3_client_id = os.environ.get("C3_CLIENT_ID")
+c3_client_secret = os.environ.get("C3_CLIENT_SECRET")
+c3_client = C3ApiAgent(c3_client_id, c3_client_secret)
 
 
 class CertificationPlugin(BotPlugin):
@@ -16,10 +23,6 @@ class CertificationPlugin(BotPlugin):
         # a command callable with !cid
         msg = ""
 
-        client_id = os.environ.get("C3_CLIENT_ID")
-        client_secret = os.environ.get("C3_CLIENT_SECRET")
-        client = C3ApiAgent(client_id, client_secret)
-
         for cid in args:
             # test if the format is a CID
 
@@ -28,12 +31,11 @@ class CertificationPlugin(BotPlugin):
             msg += cid
             msg += "\n"
 
-            r = client.get_physicalmachinesview(cid)
+            r = c3_client.get_physicalmachinesview(cid)
             msg = f"{r['make']} | {r['model']} | {r['tf_provision_type']}\n"
 
         return msg
 
-    @re_botcmd(pattern=r"(^| )cookies?( |$)", prefixed=False, flags=re.IGNORECASE)
-    def listen_for_talk_of_cookies(self, msg, match):
-        """Talk of cookies gives Errbot a craving..."""
-        return "Somebody mentioned cookies? Om nom nom!"
+    @botcmd(split_args_with=None)
+    def artefacts(self, msg, args):
+        msg = ""

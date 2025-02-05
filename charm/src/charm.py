@@ -83,6 +83,8 @@ class CharmCharm(ops.CharmBase):
                         "ERRBOT_TEAM": self.model.config["errbot-team"],
                         "ERRBOT_SERVER": self.model.config["errbot-server"],
                         "ERRBOT_ADMINS": self.model.config["errbot-admins"],
+                        "C3_CLIENT_ID": self.model.config["c3-client-id"],
+                        "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
                     },
                 }
             },
