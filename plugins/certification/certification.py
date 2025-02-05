@@ -10,6 +10,10 @@ import ssl_fix
 
 c3_client_id = os.environ.get("C3_CLIENT_ID")
 c3_client_secret = os.environ.get("C3_CLIENT_SECRET")
+
+if c3_client_id is None or c3_client_secret is None:
+    raise Exception("C3_CLIENT_ID and C3_CLIENT_SECRET must be set")
+
 c3_client = C3ApiAgent(c3_client_id, c3_client_secret)
 
 
