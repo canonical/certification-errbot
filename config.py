@@ -12,7 +12,7 @@ py_major_minor = f"{sys.version_info.major}.{sys.version_info.minor}"
 BOT_EXTRA_BACKEND_DIR = f".venv/lib/python{py_major_minor}/site-packages/err-backend-mattermost"
 
 BOT_LOG_FILE = r"./errbot.log"
-BOT_LOG_LEVEL = logging.INFO
+BOT_LOG_LEVEL = logging.DEBUG
 
 if "ERRBOT_ADMINS" not in os.environ:
     raise ValueError("ERRBOT_ADMINS is not set")
