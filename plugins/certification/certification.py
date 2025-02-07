@@ -82,6 +82,25 @@ class CertificationPlugin(BotPlugin):
         artefacts_by_user = {}
 
         one_week_ago = now - timedelta(weeks=1)
+        artifact_filter = None
+        assigned_to_filter = None
+
+        filter_by_sender_as_assignee = True
+
+        for arg in args:
+            if arg.startswith("name-contains:"):
+                artifact_filter = arg.split("name-contains:", 1)[1].lower()
+                filter_by_sender_as_assignee = False
+
+                if "all" in args:
+                    return "You can't use 'all' and 'name-contains' together"
+
+            if arg.startswith("assigned-to:"):
+                assigned_to_filter = arg.split("assigned-to:", 1)[1].lower()
+                filter_by_sender_as_assignee = False
+
+                if "all" in args:
+                    return "You can't use 'all' and 'assigned-to' together"
 
         with test_observer_client:
             r = get_artefacts(client=test_observer_client)
@@ -93,6 +112,9 @@ class CertificationPlugin(BotPlugin):
                 if artefact.status == ArtefactStatus.MARKED_AS_FAILED and artefact.due_date and artefact.due_date < one_week_ago:
                     continue
 
+                if artifact_filter and artifact_filter not in artefact.name.lower():
+                    continue
+
                 assignee = artefact.assignee
                 if not assignee and not artefact.due_date:
                     continue
@@ -102,6 +124,9 @@ class CertificationPlugin(BotPlugin):
                 else:
                     assignee_handle = "No assignee"
 
+                if assigned_to_filter and assigned_to_filter != assignee_handle.lower():
+                    continue
+
                 if args[0] == 'pending' and (artefact.status in [ArtefactStatus.MARKED_AS_FAILED]):
                     continue
 
@@ -110,7 +135,7 @@ class CertificationPlugin(BotPlugin):
 
                 artefacts_by_user[assignee_handle].append(artefact)
 
-            if "all" in args:
+            if "all" in args or not filter_by_sender_as_assignee:
                 user_artefacts = artefacts_by_user
             else:
                 sender_handle = msg.frm.username 
