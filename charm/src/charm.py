@@ -12,13 +12,12 @@ develop a new k8s charm using the Operator Framework:
 https://juju.is/docs/sdk/create-a-minimal-kubernetes-charm
 """
 
-from typing import cast
 import logging
+from typing import cast
 
 import ops
-from ops.pebble import ExecError, Layer
 from ops.model import BlockedStatus
-
+from ops.pebble import ExecError, Layer
 
 logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
