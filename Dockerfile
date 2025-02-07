@@ -25,4 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN uv sync
 RUN uv tool install errbot
 
+RUN ./bin/generate-c3-client.sh
+RUN ./bin/generate-test-observer-client.sh
+
 CMD ["uv", "run", "errbot"]
