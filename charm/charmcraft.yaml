@@ -5,7 +5,8 @@ title: Hardware Certification errbot
 summary: Canonical Hardware Certification errbot instance.
 
 description: |
-  Canonical Hardware Certification errbot instance, for .
+  errbot configured for mattermost,
+  with Canonical Hardware Certification team relevant plugins.
 
 base: ubuntu@24.04
 
