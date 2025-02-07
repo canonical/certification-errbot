@@ -99,9 +99,6 @@ prepare: |
   concierge prepare --trace -p microk8s --extra-snaps astral-uv --extra-snaps juju-crashdump
   microk8s status --wait-ready
 
-  juju controllers
-  # juju wait-for model concierge-microk8s --summary --timeout 1m
-
   mkdir -p /var/snap/microk8s/current/args/certs.d/ghcr.io
 
   echo 'server = "https://ghcr.io"' | tee -a /var/snap/microk8s/current/args/certs.d/ghcr.io/hosts.toml
