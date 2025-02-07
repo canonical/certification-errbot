@@ -1,0 +1,54 @@
+name: hwcert-errbot
+type: charm
+title: Hardware Certification errbot
+
+summary: Canonical Hardware Certification errbot instance.
+
+description: |
+  Canonical Hardware Certification errbot instance, for .
+
+base: ubuntu@24.04
+
+platforms:
+  amd64:
+
+config:
+  options:
+    log-level:
+      description: |
+        Configures the application log level.
+
+        Acceptable values are: "info", "debug", "warning", "error" and "critical"
+      default: "info"
+      type: string
+    errbot-team:
+      description: |
+        The Mattermost team name.
+      type: string
+    errbot-server:
+      description: |
+        The Mattermost server address for Errbot.
+      type: string
+    errbot-token:
+      description: |
+        The token for Errbot authentication.
+      type: string
+    errbot-admins:
+      description: |
+        List of handles (prefixed with @, separated by space) who act as bot admins.
+      type: string
+
+containers:
+  errbot:
+    resource: errbot-image
+
+resources:
+  errbot-image:
+    type: oci-image
+    description: OCI image for errbot with the plugin installed
+    upstream-source: ghcr.io/canonical/hwcert-errbot:latest
+
+parts:
+  errbot:
+    source: .
+    plugin: charm

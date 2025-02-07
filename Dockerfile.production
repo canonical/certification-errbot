@@ -1,0 +1,42 @@
+FROM ubuntu:24.04 AS builder
+RUN apt-get update && \
+    apt-get install -y python3.12 git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=.python-version,target=.python-version \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev --no-python-downloads
+
+ADD . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-python-downloads
+
+FROM ubuntu:24.04
+ENV ERRBOT_TOKEN=""
+ENV ERRBOT_TEAM="Canonical"
+ENV ERRBOT_SERVER="chat.canonical.com"
+ENV ERRBOT_ADMINS=""
+
+LABEL name="hwcert-errbot" \
+    description="An OCI image for hwcert-errbot" \
+    license="GPL-3.0"
+
+RUN apt-get update && \
+    apt-get install -y python3.12 python3.12-gdbm && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder --chown=app:app /app /app
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["errbot"]

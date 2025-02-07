@@ -3,6 +3,8 @@ import re
 import os
 from lib.c3_client import C3ApiAgent
 
+import ssl_fix
+
 
 class SeeThree(BotPlugin):
     """
