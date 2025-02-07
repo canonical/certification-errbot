@@ -14,6 +14,8 @@ https://juju.is/docs/sdk/create-a-minimal-kubernetes-charm
 
 import logging
 from typing import cast
+from ops.pebble import ExecError, Layer
+from ops.model import BlockedStatus
 
 import ops
 
@@ -29,6 +31,20 @@ class CharmCharm(ops.CharmBase):
         framework.observe(self.on["errbot"].pebble_ready, self._on_errbot_pebble_ready)
         framework.observe(self.on.config_changed, self._on_config_changed)
 
+    def _ensure_data_directory_exists(self, container):
+        process = container.exec(
+            ["mkdir", "-p", "data"],
+            working_dir="/app"
+        )
+
+        try:
+            stdout, _ = process.wait_output()
+            logger.info(stdout)
+        except ExecError as e:
+            logger.error(e.stdout)
+            logger.error(e.stderr)
+            self.unit.status = BlockedStatus("Database migration failed")
+
     def _on_errbot_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Define and start a workload using the Pebble API.
 
@@ -38,6 +54,8 @@ class CharmCharm(ops.CharmBase):
         Learn more about interacting with Pebble at at https://juju.is/docs/sdk/pebble.
         """
         container = event.workload
+        self._ensure_data_directory_exists(container)
+
         container.add_layer("errbot", self._pebble_layer, combine=True)
         container.replan()
         self.unit.status = ops.ActiveStatus()
@@ -69,14 +87,14 @@ class CharmCharm(ops.CharmBase):
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
         """Return a dictionary representing a Pebble layer."""
-        return {
+        return Layer({
             "summary": "errbot layer",
             "description": "pebble config layer for errbot",
             "services": {
                 "errbot": {
                     "override": "replace",
                     "summary": "errbot",
-                    "command": "mkdir -p data && errbot",
+                    "command": "errbot",
                     "startup": "enabled",
                     "environment": {
                         "ERRBOT_TOKEN": self.model.config["errbot-token"],
@@ -88,7 +106,7 @@ class CharmCharm(ops.CharmBase):
                     },
                 }
             },
-        }
+        })
 
 
 if __name__ == "__main__":  # pragma: nocover
