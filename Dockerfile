@@ -5,9 +5,9 @@ ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"
 ENV ERRBOT_SERVER="chat.canonical.com"
 
-LABEL name="hwcert-errbot" \
+LABEL name="certification-errbot" \
     version="6.2.0" \
-    description="An OCI image for hwcert-errbot" \
+    description="An OCI image for certification-errbot" \
     license="GPL-3.0"
 
 RUN apt-get update && \

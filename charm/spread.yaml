@@ -1,4 +1,4 @@
-project: hwcert-errbot-charm-tests
+project: certification-errbot-charm-tests
 kill-timeout: 90m
 workers: 1
 
@@ -122,7 +122,7 @@ prepare: |
   sleep 20
 
   pushd "$SPREAD_PATH"
-  chown $(id -u):$(id -g) $PWD/hwcert-errbot_amd64.charm
+  chown $(id -u):$(id -g) $PWD/certification-errbot_amd64.charm
 
 restore: |
   if [[ -z "${CI:-}" ]]; then

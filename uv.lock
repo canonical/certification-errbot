@@ -312,7 +312,7 @@ wheels = [
 ]
 
 [[package]]
-name = "hwcert-errbot"
+name = "certification-errbot"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

@@ -1,6 +1,6 @@
-# hwcert-errbot
+# certification-errbot
 
-
+Errbot plugins and a charm for deploying the Hardware Certification team's instance of https://github.com/errbotio/errbot
 
 ## Running locally
 

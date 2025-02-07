@@ -1,4 +1,4 @@
-name: hwcert-errbot
+name: certification-errbot
 type: charm
 title: Hardware Certification errbot
 
@@ -54,7 +54,7 @@ resources:
   errbot-image:
     type: oci-image
     description: OCI image for errbot with the plugin installed
-    upstream-source: ghcr.io/canonical/hwcert-errbot:latest
+    upstream-source: ghcr.io/canonical/certification-errbot:latest
 
 parts:
   errbot:

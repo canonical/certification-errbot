@@ -2,7 +2,7 @@ summary: Run the charm integration test
 
 execute: |
   oci_image="$(cat ../../../charmcraft.yaml | yq '.resources.errbot-image.upstream-source')"
-  juju deploy "$PWD/../../../hwcert-errbot_amd64.charm" errbot --resource errbot-image="${oci_image}"
+  juju deploy "$PWD/../../../certification-errbot_amd64.charm" errbot --resource errbot-image="${oci_image}"
 
   juju config errbot log-level=info
   juju config errbot errbot-team='foobar'
