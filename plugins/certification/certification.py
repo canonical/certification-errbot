@@ -10,7 +10,7 @@ from c3.models import PhysicalMachineView
 from c3.types import Response
 from c3_auth import get_access_token as get_c3_access_token
 
-from test_observer.models import ArtefactDTO, ArtefactStatus, UserDTO
+from test_observer.models import ArtefactResponse, ArtefactStatus, UserResponse
 from test_observer.client import Client as TestObserverClient
 from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
 
@@ -133,7 +133,7 @@ class CertificationPlugin(BotPlugin):
                     completed_reviews = artefact.completed_environment_reviews_count
                     all_reviews = artefact.all_environment_reviews_count
                     review_percentage = round((completed_reviews / all_reviews) * 100) if all_reviews > 0 else 0
-                    out_msg += f"- **[{artefact.name} {artefact.version}](https://test-observer.canonical.com/#/{artefact.repo}/{artefact.id})**: {artefact.status.lower()}{due_date_str} - {completed_reviews}/{all_reviews} reviews ({review_percentage:.0f}%)\n"
+                    out_msg += f"- **[{artefact.name} {artefact.version}](https://test-observer.canonical.com/#/{artefact.family}s/{artefact.id})**: {due_date_str} - {completed_reviews}/{all_reviews} reviews ({review_percentage:.0f}%)\n"
                 out_msg += "\n"
 
             # Sort un-assigned artefacts last
