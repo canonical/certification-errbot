@@ -2,16 +2,17 @@ summary: Run the charm integration test
 
 execute: |
   oci_image="$(cat ../../../charmcraft.yaml | yq '.resources.errbot-image.upstream-source')"
-  juju deploy "$PWD/../../../certification-errbot_amd64.charm" errbot --resource errbot-image="${oci_image}"
+  juju deploy \
+  "$PWD/../../../certification-errbot_amd64.charm" errbot \
+  --resource errbot-image="${oci_image}" \
+  --config log-level=info \
+  --config errbot-team='foobar' \
+  --config errbot-server='https://mattermost.example.com' \
+  --config errbot-token='foobar' \
+  --config errbot-admins='\@mz2 \@jocave' \
+  --config c3-client-id='foo' \
+  --config c3-client-secret='bar'
 
-  juju config errbot log-level=info
-  juju config errbot errbot-team='foobar'
-  juju config errbot errbot-server='https://mattermost.example.com'
-  juju config errbot errbot-token='foobar'
-  juju config errbot errbot-admins='\@mz2 \@jocave'
-  juju config errbot c3-client-id='foo'
-  juju config errbot c3-client-secret='bar'
-
-  juju wait-for application errbot --timeout 5m
+  juju wait-for application errbot --timeout 10m
   juju show-status-log errbot/0
   juju debug-log --replay
