@@ -12,12 +12,13 @@ develop a new k8s charm using the Operator Framework:
 https://juju.is/docs/sdk/create-a-minimal-kubernetes-charm
 """
 
-import logging
 from typing import cast
+import logging
+
+import ops
 from ops.pebble import ExecError, Layer
 from ops.model import BlockedStatus
 
-import ops
 
 logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
@@ -32,10 +33,7 @@ class CharmCharm(ops.CharmBase):
         framework.observe(self.on.config_changed, self._on_config_changed)
 
     def _ensure_data_directory_exists(self, container):
-        process = container.exec(
-            ["mkdir", "-p", "data"],
-            working_dir="/app"
-        )
+        process = container.exec(["mkdir", "-p", "data"], working_dir="/app")
 
         try:
             stdout, _ = process.wait_output()
@@ -87,26 +85,28 @@ class CharmCharm(ops.CharmBase):
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
         """Return a dictionary representing a Pebble layer."""
-        return Layer({
-            "summary": "errbot layer",
-            "description": "pebble config layer for errbot",
-            "services": {
-                "errbot": {
-                    "override": "replace",
-                    "summary": "errbot",
-                    "command": "errbot",
-                    "startup": "enabled",
-                    "environment": {
-                        "ERRBOT_TOKEN": self.model.config["errbot-token"],
-                        "ERRBOT_TEAM": self.model.config["errbot-team"],
-                        "ERRBOT_SERVER": self.model.config["errbot-server"],
-                        "ERRBOT_ADMINS": self.model.config["errbot-admins"],
-                        "C3_CLIENT_ID": self.model.config["c3-client-id"],
-                        "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
-                    },
-                }
-            },
-        })
+        return Layer(
+            {
+                "summary": "errbot layer",
+                "description": "pebble config layer for errbot",
+                "services": {
+                    "errbot": {
+                        "override": "replace",
+                        "summary": "errbot",
+                        "command": "errbot",
+                        "startup": "enabled",
+                        "environment": {
+                            "ERRBOT_TOKEN": self.model.config["errbot-token"],
+                            "ERRBOT_TEAM": self.model.config["errbot-team"],
+                            "ERRBOT_SERVER": self.model.config["errbot-server"],
+                            "ERRBOT_ADMINS": self.model.config["errbot-admins"],
+                            "C3_CLIENT_ID": self.model.config["c3-client-id"],
+                            "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
+                        },
+                    }
+                },
+            }
+        )
 
 
 if __name__ == "__main__":  # pragma: nocover
