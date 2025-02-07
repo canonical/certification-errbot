@@ -4,7 +4,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
-    from ..models.test_event_dto import TestEventDTO
+    from ..models.test_event_response import TestEventResponse
 
 
 T = TypeVar("T", bound="StatusUpdateRequest")
@@ -14,10 +14,10 @@ T = TypeVar("T", bound="StatusUpdateRequest")
 class StatusUpdateRequest:
     """
     Attributes:
-        events (list['TestEventDTO']):
+        events (list['TestEventResponse']):
     """
 
-    events: list["TestEventDTO"]
+    events: list["TestEventResponse"]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,13 +38,13 @@ class StatusUpdateRequest:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: dict[str, Any]) -> T:
-        from ..models.test_event_dto import TestEventDTO
+        from ..models.test_event_response import TestEventResponse
 
         d = src_dict.copy()
         events = []
         _events = d.pop("events")
         for events_item_data in _events:
-            events_item = TestEventDTO.from_dict(events_item_data)
+            events_item = TestEventResponse.from_dict(events_item_data)
 
             events.append(events_item)
 

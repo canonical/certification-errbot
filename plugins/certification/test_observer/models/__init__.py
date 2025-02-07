@@ -1,22 +1,24 @@
 """Contains all the data models used in inputs/outputs"""
 
-from .artefact_build_dto import ArtefactBuildDTO
 from .artefact_build_environment_review_decision import (
     ArtefactBuildEnvironmentReviewDecision,
 )
-from .artefact_build_environment_review_dto import ArtefactBuildEnvironmentReviewDTO
-from .artefact_build_minimal_dto import ArtefactBuildMinimalDTO
-from .artefact_dto import ArtefactDTO
+from .artefact_build_environment_review_response import (
+    ArtefactBuildEnvironmentReviewResponse,
+)
+from .artefact_build_minimal_response import ArtefactBuildMinimalResponse
+from .artefact_build_response import ArtefactBuildResponse
 from .artefact_patch import ArtefactPatch
+from .artefact_response import ArtefactResponse
 from .artefact_status import ArtefactStatus
-from .artefact_version_dto import ArtefactVersionDTO
+from .artefact_version_response import ArtefactVersionResponse
 from .c3_test_result import C3TestResult
 from .c3_test_result_status import C3TestResultStatus
 from .delete_reruns import DeleteReruns
 from .end_test_execution_request import EndTestExecutionRequest
-from .environment_dto import EnvironmentDTO
 from .environment_reported_issue_request import EnvironmentReportedIssueRequest
 from .environment_reported_issue_response import EnvironmentReportedIssueResponse
+from .environment_response import EnvironmentResponse
 from .environment_review_patch import EnvironmentReviewPatch
 from .family_name import FamilyName
 from .http_validation_error import HTTPValidationError
@@ -50,8 +52,8 @@ from .start_snap_test_execution_request_family import (
     StartSnapTestExecutionRequestFamily,
 )
 from .status_update_request import StatusUpdateRequest
-from .test_event_dto import TestEventDTO
-from .test_execution_dto import TestExecutionDTO
+from .test_event_response import TestEventResponse
+from .test_execution_response import TestExecutionResponse
 from .test_execution_status import TestExecutionStatus
 from .test_executions_patch_request import TestExecutionsPatchRequest
 from .test_executions_patch_request_status_type_1 import (
@@ -62,25 +64,25 @@ from .test_reported_issue_response import TestReportedIssueResponse
 from .test_result_request import TestResultRequest
 from .test_result_response import TestResultResponse
 from .test_result_status import TestResultStatus
-from .user_dto import UserDTO
+from .user_response import UserResponse
 from .validation_error import ValidationError
 
 __all__ = (
-    "ArtefactBuildDTO",
     "ArtefactBuildEnvironmentReviewDecision",
-    "ArtefactBuildEnvironmentReviewDTO",
-    "ArtefactBuildMinimalDTO",
-    "ArtefactDTO",
+    "ArtefactBuildEnvironmentReviewResponse",
+    "ArtefactBuildMinimalResponse",
+    "ArtefactBuildResponse",
     "ArtefactPatch",
+    "ArtefactResponse",
     "ArtefactStatus",
-    "ArtefactVersionDTO",
+    "ArtefactVersionResponse",
     "C3TestResult",
     "C3TestResultStatus",
     "DeleteReruns",
     "EndTestExecutionRequest",
-    "EnvironmentDTO",
     "EnvironmentReportedIssueRequest",
     "EnvironmentReportedIssueResponse",
+    "EnvironmentResponse",
     "EnvironmentReviewPatch",
     "FamilyName",
     "HTTPValidationError",
@@ -100,8 +102,8 @@ __all__ = (
     "StartSnapTestExecutionRequestExecutionStage",
     "StartSnapTestExecutionRequestFamily",
     "StatusUpdateRequest",
-    "TestEventDTO",
-    "TestExecutionDTO",
+    "TestEventResponse",
+    "TestExecutionResponse",
     "TestExecutionsPatchRequest",
     "TestExecutionsPatchRequestStatusType1",
     "TestExecutionStatus",
@@ -110,6 +112,6 @@ __all__ = (
     "TestResultRequest",
     "TestResultResponse",
     "TestResultStatus",
-    "UserDTO",
+    "UserResponse",
     "ValidationError",
 )

@@ -6,9 +6,9 @@ from attrs import field as _attrs_field
 from ..models.family_name import FamilyName
 
 if TYPE_CHECKING:
-    from ..models.artefact_build_minimal_dto import ArtefactBuildMinimalDTO
-    from ..models.artefact_dto import ArtefactDTO
-    from ..models.test_execution_dto import TestExecutionDTO
+    from ..models.artefact_build_minimal_response import ArtefactBuildMinimalResponse
+    from ..models.artefact_response import ArtefactResponse
+    from ..models.test_execution_response import TestExecutionResponse
 
 
 T = TypeVar("T", bound="PendingRerun")
@@ -21,17 +21,17 @@ class PendingRerun:
         test_execution_id (int):
         ci_link (Union[None, str]):
         family (FamilyName):
-        test_execution (TestExecutionDTO):
-        artefact (ArtefactDTO):
-        artefact_build (ArtefactBuildMinimalDTO):
+        test_execution (TestExecutionResponse):
+        artefact (ArtefactResponse):
+        artefact_build (ArtefactBuildMinimalResponse):
     """
 
     test_execution_id: int
     ci_link: Union[None, str]
     family: FamilyName
-    test_execution: "TestExecutionDTO"
-    artefact: "ArtefactDTO"
-    artefact_build: "ArtefactBuildMinimalDTO"
+    test_execution: "TestExecutionResponse"
+    artefact: "ArtefactResponse"
+    artefact_build: "ArtefactBuildMinimalResponse"
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -65,9 +65,11 @@ class PendingRerun:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: dict[str, Any]) -> T:
-        from ..models.artefact_build_minimal_dto import ArtefactBuildMinimalDTO
-        from ..models.artefact_dto import ArtefactDTO
-        from ..models.test_execution_dto import TestExecutionDTO
+        from ..models.artefact_build_minimal_response import (
+            ArtefactBuildMinimalResponse,
+        )
+        from ..models.artefact_response import ArtefactResponse
+        from ..models.test_execution_response import TestExecutionResponse
 
         d = src_dict.copy()
         test_execution_id = d.pop("test_execution_id")
@@ -81,11 +83,11 @@ class PendingRerun:
 
         family = FamilyName(d.pop("family"))
 
-        test_execution = TestExecutionDTO.from_dict(d.pop("test_execution"))
+        test_execution = TestExecutionResponse.from_dict(d.pop("test_execution"))
 
-        artefact = ArtefactDTO.from_dict(d.pop("artefact"))
+        artefact = ArtefactResponse.from_dict(d.pop("artefact"))
 
-        artefact_build = ArtefactBuildMinimalDTO.from_dict(d.pop("artefact_build"))
+        artefact_build = ArtefactBuildMinimalResponse.from_dict(d.pop("artefact_build"))
 
         pending_rerun = cls(
             test_execution_id=test_execution_id,
