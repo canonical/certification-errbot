@@ -76,7 +76,7 @@ class CharmCharm(ops.CharmBase):
                 "errbot": {
                     "override": "replace",
                     "summary": "errbot",
-                    "command": "errbot",
+                    "command": "mkdir -p data && errbot",
                     "startup": "enabled",
                     "environment": {
                         "ERRBOT_TOKEN": self.model.config["errbot-token"],
