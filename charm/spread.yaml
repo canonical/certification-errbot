@@ -90,10 +90,10 @@ path: /root/proj
 
 prepare: |
   snap refresh --hold
-  # if systemctl is-enabled unattended-upgrades.service; then
-  #  systemctl stop unattended-upgrades.service
-  #  systemctl mask unattended-upgrades.service
-  # fi
+  if systemctl status unattended-upgrades.service >/dev/null 2>&1; then
+    systemctl stop unattended-upgrades.service
+    systemctl mask unattended-upgrades.service
+  fi
 
   snap install --classic concierge
   concierge prepare --trace -p microk8s --extra-snaps astral-uv --extra-snaps juju-crashdump
