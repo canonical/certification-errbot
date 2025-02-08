@@ -1,4 +1,4 @@
-from .mattermost_api import get_user_by_email, mattermost_token, mattermost_base_url
+from mattermost_api import get_user_by_email, mattermost_token, mattermost_base_url
 import os
 
 

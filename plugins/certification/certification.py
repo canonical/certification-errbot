@@ -19,7 +19,7 @@ import ssl_fix
 import logging
 logger = logging.getLogger(__name__)
 
-from .artefacts import artefacts_summary
+from artefacts import artefacts_summary
 
 c3_client_id = os.environ.get("C3_CLIENT_ID")
 c3_client_secret = os.environ.get("C3_CLIENT_SECRET")
@@ -42,6 +42,14 @@ class CertificationPlugin(BotPlugin):
     """
     def __init__(self, bot, name):
         super().__init__(bot, name)
+    
+    def activate(self):
+        super().activate()
+        self.start_poller(1, self.poll_for_artefacts)
+
+    def poll_for_artefacts(self):
+        self.log.debug('I got called')
+
 
     @botcmd(split_args_with=" ", name="cid")
     def cid(self, msg, args):

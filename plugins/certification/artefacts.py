@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-from .test_observer.models import ArtefactStatus, ArtefactResponse
-from .test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
-from .test_observer.client import Client as TestObserverClient
+from test_observer.models import ArtefactStatus, ArtefactResponse
+from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
+from test_observer.client import Client as TestObserverClient
 
-from .user_handle_cache import get_assignee_handle
+from user_handle_cache import get_assignee_handle
 from typing import Any, List, Dict
 
 now = datetime.now().date()
