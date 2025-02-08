@@ -18,5 +18,8 @@ jobs:
       - name: Resolve dev dependencies
         run: uv sync --dev
 
+      - name: Generate client libraries
+        run: ./bin/generate-c3-client.sh && ./bin/generate-test-observer-client.sh
+
       - name: Run unit tests
         run: uv run pytest tests
