@@ -11,8 +11,8 @@ class TestArtefactsSummary(unittest.TestCase):
     @patch('plugins.certification.artefacts.get_artefacts')
     @patch('plugins.certification.artefacts.get_assignee_handle')
     def test_artefacts_summary(self, mock_get_assignee_handle, mock_get_artefacts, MockTestObserverClient):
-        mock_msg = MagicMock()
-        mock_msg.frm.username = 'testuser'
+        user = MagicMock(username="testuser@example.com", email="testuser@example.com")
+        assignee = MagicMock(launchpad_email="testuser@example.com")
 
         mock_get_assignee_handle.return_value = {"username": "testuser"}
 
@@ -22,7 +22,7 @@ class TestArtefactsSummary(unittest.TestCase):
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
             due_date=datetime.now().date() + timedelta(days=1),
-            assignee=MagicMock(launchpad_email="testuser@example.com"),
+            assignee=assignee,
             completed_environment_reviews_count=1,
             all_environment_reviews_count=2,
             family="family1",
@@ -45,7 +45,7 @@ class TestArtefactsSummary(unittest.TestCase):
             version="1.0",
             status=ArtefactStatus.MARKED_AS_FAILED,
             due_date=datetime.now().date() - timedelta(days=10),
-            assignee=None,
+            assignee=assignee,
             completed_environment_reviews_count=0,
             all_environment_reviews_count=1,
             family="family2",
@@ -64,8 +64,7 @@ class TestArtefactsSummary(unittest.TestCase):
 
         mock_get_artefacts.return_value.parsed = [artefact1, artefact2]
 
-        args = []
-        result = artefacts_summary(mock_msg, args)
+        result = artefacts_summary(user, ["assigned-to:testuser"])
         self.assertIn("**@testuser**", result)
         self.assertIn("**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**", result)
         self.assertNotIn("**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**", result)

@@ -7,7 +7,8 @@ from user_handle_cache import get_assignee_handle
 from typing import Any, List, Dict
 
 now = datetime.now().date()
-def artefacts_summary(msg: Any, args: List[str]) -> str:
+
+def artefacts_summary(target_user, args: List[str]) -> str:
     test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
 
     out_msg = ''
@@ -73,7 +74,7 @@ def artefacts_summary(msg: Any, args: List[str]) -> str:
         if "all" in args or not filter_by_sender_as_assignee:
             user_artefacts = artefacts_by_user
         else:
-            sender_handle = msg.frm.username 
+            sender_handle = target_user.username 
             if sender_handle in artefacts_by_user:
                 user_artefacts = {sender_handle: artefacts_by_user[sender_handle]}
             else:

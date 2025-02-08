@@ -10,9 +10,8 @@ from c3.models import PhysicalMachineView
 from c3.types import Response
 from c3_auth import get_access_token as get_c3_access_token
 
-from test_observer.models import ArtefactResponse, ArtefactStatus, UserResponse
-from test_observer.client import Client as TestObserverClient
 from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
+from types import UserLike
 
 import ssl_fix
 
@@ -48,7 +47,8 @@ class CertificationPlugin(BotPlugin):
         self.start_poller(1, self.poll_for_artefacts)
 
     def poll_for_artefacts(self):
-        self.log.debug('I got called')
+        msg = artefacts_summary(self, "mz2", args)
+        self.log.debug(msg)
 
 
     @botcmd(split_args_with=" ", name="cid")
@@ -76,5 +76,4 @@ class CertificationPlugin(BotPlugin):
 
     @botcmd(split_args_with=' ')
     def artefacts(self, msg, args):
-        return artefacts_summary(self, msg, args)
-
+        return artefacts_summary(self, msg.frm, args)
