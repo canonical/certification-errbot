@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
+
 from datetime import datetime, timedelta
 from plugins.certification.artefacts import artefacts_summary
 from plugins.certification.test_observer.models import ArtefactStatus, ArtefactResponse
