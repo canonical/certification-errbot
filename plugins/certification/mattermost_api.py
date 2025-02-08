@@ -1,5 +1,9 @@
 import requests
+from os import environ
 from typing import TypedDict, Any, Dict
+
+mattermost_token = environ.get("ERRBOT_TOKEN")
+mattermost_base_url = f"https://{environ.get('ERRBOT_SERVER')}/api/v4"
 
 class UserDetails(TypedDict):
     id: str
