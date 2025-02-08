@@ -40,7 +40,7 @@ class CharmCharm(ops.CharmBase):
         except ExecError as e:
             logger.error(e.stdout)
             logger.error(e.stderr)
-            self.unit.status = BlockedStatus("Database migration failed")
+            self.unit.status = BlockedStatus("Creating data directory failed")
 
     def _on_errbot_pebble_ready(self, event: ops.PebbleReadyEvent):
         container = event.workload

@@ -15,4 +15,4 @@ execute: |
 
   juju wait-for application errbot --timeout 10m
   juju show-status-log errbot/0
-  juju debug-log --replay
+  juju debug-log --level=DEBUG
