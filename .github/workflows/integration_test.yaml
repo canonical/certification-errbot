@@ -95,7 +95,7 @@ jobs:
       contents: read
       packages: read
     
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, large, noble, x64]
     needs:
       - define-matrix
       - lib-check
