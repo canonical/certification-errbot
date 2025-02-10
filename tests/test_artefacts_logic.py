@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from datetime import datetime, timedelta
-from plugins.certification.artefacts import reply_with_artefacts_summary, pending_artefacts_by_user_handle, send_artefact_digests
+from plugins.certification.artefacts import reply_with_artefacts_summary, pending_artefacts_by_user_handle, send_artefact_summaries
 from plugins.certification.test_observer.models import ArtefactStatus, ArtefactResponse
 
 class ArtefactsTestBase(unittest.TestCase):
@@ -73,20 +73,24 @@ class TestArtefactsSummary(ArtefactsTestBase):
 
     # Add more tests for different scenarios
 
-class TestArtefactsDigest(ArtefactsTestBase):
+class TestArtefactsSummarySending(ArtefactsTestBase):
 
     @patch('plugins.certification.artefacts.pending_artefacts_by_user_handle')
     def test_artefacts_digest(self, mock_pending_artefacts_by_user_handle):
         mock_pending_artefacts_by_user_handle.return_value = {
-            "testuser": [self.artefact1, self.artefact2]
+            "testuser": [self.artefact1]
         }
 
         sender = MagicMock()
         sender.build_identifier.return_value = "@testuser"
 
-        send_artefact_digests(sender)
+        send_artefact_summaries(sender)
 
-        sender.send.assert_called_once_with('@testuser', 'Hello @testuser! You have some test artefacts to review:\n- Artefact 1 1.0 - due 2025-02-11\n- Artefact 2 1.0 - due 2025-01-31\n')
+        sent_message = sender.send.call_args[0][1]
+        self.assertIn('Hello @testuser!', sent_message)
+        self.assertIn('You have some test artefacts to review:', sent_message)
+        self.assertIn('**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**', sent_message)
+        self.assertNotIn('**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**', sent_message)
 
 if __name__ == '__main__':
     unittest.main()

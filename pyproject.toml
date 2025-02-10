@@ -11,6 +11,7 @@ dependencies = [
     "httpx>=0.28.1",
     "attrs>=25.1.0",
     "python-dateutil>=2.9.0.post0",
+    "apscheduler>=3.11.0",
 ]
 
 [tool.uv.sources]

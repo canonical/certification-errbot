@@ -11,7 +11,10 @@ import ssl_fix
 import logging
 logger = logging.getLogger(__name__)
 
-from artefacts import reply_with_artefacts_summary, send_artefact_digests
+from artefacts import reply_with_artefacts_summary, send_artefact_summaries
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 c3_client_id = os.environ.get("C3_CLIENT_ID")
 c3_client_secret = os.environ.get("C3_CLIENT_SECRET")
@@ -38,12 +41,14 @@ class CertificationPlugin(BotPlugin):
     def activate(self):
         super().activate()
 
-        # Execute the poller once per 24h from when plugin activated.
-        # TODO: scheduling at a set point in time rather than relative to when started.
-        self.start_poller(1, self.polled_digest_sending)
+        # Schedule the poller to run every weekday at 8:47 UTC
+        scheduler = BackgroundScheduler()
+        trigger = CronTrigger(day_of_week='mon-fri', hour=9, minute=00, timezone='UTC')
+        scheduler.add_job(self.polled_digest_sending, trigger)
+        scheduler.start()
 
     def polled_digest_sending(self):
-        send_artefact_digests(self)
+        send_artefact_summaries(self)
 
     @botcmd(split_args_with=' ')
     def artefacts(self, msg, args):
@@ -53,7 +58,6 @@ class CertificationPlugin(BotPlugin):
     def cid(self, msg, args):
         c3_client = C3Client(base_url='https://certification.canonical.com', token=c3_access_token)
 
-        # a command callable with !cid
         msg = ""
 
         with c3_client:

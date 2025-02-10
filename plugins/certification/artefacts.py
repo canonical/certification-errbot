@@ -10,7 +10,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-now = datetime.now().date()
+
+def format_artefact_message(artefact: ArtefactResponse) -> str:
+    due_date_str = f" (due {artefact.due_date.strftime('%d-%m-%Y')})" if artefact.due_date else ""
+    completed_reviews = artefact.completed_environment_reviews_count
+    all_reviews = artefact.all_environment_reviews_count
+    review_percentage = round((completed_reviews / all_reviews) * 100) if all_reviews > 0 else 0
+    return f"- **[{artefact.name} {artefact.version}](https://test-observer.canonical.com/#/{artefact.family}s/{artefact.id})**: {due_date_str} - {completed_reviews}/{all_reviews} reviews ({review_percentage:.0f}%)\n"
 
 def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     """
@@ -31,6 +37,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     out_msg = ''
     artefacts_by_user: Dict[str, List[ArtefactResponse]] = {}
 
+    now = datetime.now().date()
     one_week_ago = now - timedelta(weeks=1)
     artifact_filter = None
     assigned_to_filter = None
@@ -107,11 +114,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
             else:
                 out_msg += f"**@{user}**\n"
             for artefact in artefacts:
-                due_date_str = f" (due {artefact.due_date.strftime('%d-%m-%Y')})" if artefact.due_date else ""
-                completed_reviews = artefact.completed_environment_reviews_count
-                all_reviews = artefact.all_environment_reviews_count
-                review_percentage = round((completed_reviews / all_reviews) * 100) if all_reviews > 0 else 0
-                out_msg += f"- **[{artefact.name} {artefact.version}](https://test-observer.canonical.com/#/{artefact.family}s/{artefact.id})**: {due_date_str} - {completed_reviews}/{all_reviews} reviews ({review_percentage:.0f}%)\n"
+                out_msg += format_artefact_message(artefact)
             out_msg += "\n"
 
         # Sort un-assigned artefacts last
@@ -158,7 +161,7 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
 
         return artefacts_by_user
 
-def send_artefact_digests(sender):
+def send_artefact_summaries(sender):
     """
     Send a digest of pending Test Observer artefacts per user.
     """
@@ -172,9 +175,9 @@ def send_artefact_digests(sender):
             msg = ''
             msg += f"Hello @{user}! You have some test artefacts to review:\n"
             for artefact in artefacts:
-                msg += f"- {artefact.name} {artefact.version} - due {artefact.due_date}\n"
+                msg += format_artefact_message(artefact)
 
-            identifier = sender.build_identifier('@mz2')
+            identifier = sender.build_identifier(f"@{user}")
             logger.info(f"Sending digest to {user}")
 
             sender.send(identifier, msg)
