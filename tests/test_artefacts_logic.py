@@ -2,27 +2,22 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from datetime import datetime, timedelta
-from plugins.certification.artefacts import artefacts_summary
+from plugins.certification.artefacts import reply_with_artefacts_summary, pending_artefacts_by_user_handle, send_artefact_digests
 from plugins.certification.test_observer.models import ArtefactStatus, ArtefactResponse
 
-class TestArtefactsSummary(unittest.TestCase):
+class ArtefactsTestBase(unittest.TestCase):
 
-    @patch('plugins.certification.artefacts.TestObserverClient')
-    @patch('plugins.certification.artefacts.get_artefacts')
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_summary(self, mock_get_assignee_handle, mock_get_artefacts, MockTestObserverClient):
-        user = MagicMock(username="testuser@example.com", email="testuser@example.com")
-        assignee = MagicMock(launchpad_email="testuser@example.com")
+    def setUp(self):
+        self.user = MagicMock(username="testuser@example.com", email="testuser@example.com")
+        self.assignee = MagicMock(launchpad_email="testuser@example.com")
 
-        mock_get_assignee_handle.return_value = {"username": "testuser"}
-
-        artefact1 = ArtefactResponse(
+        self.artefact1 = ArtefactResponse(
             id=1,
             name="Artefact 1",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
             due_date=datetime.now().date() + timedelta(days=1),
-            assignee=assignee,
+            assignee=self.assignee,
             completed_environment_reviews_count=1,
             all_environment_reviews_count=2,
             family="family1",
@@ -39,13 +34,13 @@ class TestArtefactsSummary(unittest.TestCase):
             bug_link="bug_link"
         )
 
-        artefact2 = ArtefactResponse(
+        self.artefact2 = ArtefactResponse(
             id=2,
             name="Artefact 2",
             version="1.0",
             status=ArtefactStatus.MARKED_AS_FAILED,
             due_date=datetime.now().date() - timedelta(days=10),
-            assignee=assignee,
+            assignee=self.assignee,
             completed_environment_reviews_count=0,
             all_environment_reviews_count=1,
             family="family2",
@@ -62,14 +57,36 @@ class TestArtefactsSummary(unittest.TestCase):
             bug_link="bug_link2"
         )
 
-        mock_get_artefacts.return_value.parsed = [artefact1, artefact2]
+class TestArtefactsSummary(ArtefactsTestBase):
 
-        result = artefacts_summary(user, ["assigned-to:testuser"])
+    @patch('plugins.certification.artefacts.TestObserverClient')
+    @patch('plugins.certification.artefacts.get_artefacts')
+    @patch('plugins.certification.artefacts.get_assignee_handle')
+    def test_artefacts_summary(self, mock_get_assignee_handle, mock_get_artefacts, MockTestObserverClient):
+        mock_get_assignee_handle.return_value = {"username": "testuser"}
+        mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2]
+
+        result = reply_with_artefacts_summary(self.user, ["assigned-to:testuser"])
         self.assertIn("**@testuser**", result)
         self.assertIn("**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**", result)
         self.assertNotIn("**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**", result)
 
     # Add more tests for different scenarios
+
+class TestArtefactsDigest(ArtefactsTestBase):
+
+    @patch('plugins.certification.artefacts.pending_artefacts_by_user_handle')
+    def test_artefacts_digest(self, mock_pending_artefacts_by_user_handle):
+        mock_pending_artefacts_by_user_handle.return_value = {
+            "testuser": [self.artefact1, self.artefact2]
+        }
+
+        sender = MagicMock()
+        sender.build_identifier.return_value = "@testuser"
+
+        send_artefact_digests(sender)
+
+        sender.send.assert_called_once_with('@testuser', 'Hello @testuser! You have some test artefacts to review:\n- Artefact 1 1.0 - due 2025-02-11\n- Artefact 2 1.0 - due 2025-01-31\n')
 
 if __name__ == '__main__':
     unittest.main()

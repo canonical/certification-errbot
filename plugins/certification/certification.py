@@ -1,24 +1,17 @@
 from errbot import BotPlugin, botcmd, re_botcmd
-import re
 import os
-from datetime import date
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from c3.client import AuthenticatedClient as C3Client
 from c3.api.physicalmachinesview.physicalmachinesview_list import sync_detailed as get_physicalmachinesview
-from c3.models import PhysicalMachineView
-from c3.types import Response
 from c3_auth import get_access_token as get_c3_access_token
-
-from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
-from types import UserLike
 
 import ssl_fix
 
 import logging
 logger = logging.getLogger(__name__)
 
-from artefacts import artefacts_summary
+from artefacts import reply_with_artefacts_summary, send_artefact_digests
 
 c3_client_id = os.environ.get("C3_CLIENT_ID")
 c3_client_secret = os.environ.get("C3_CLIENT_SECRET")
@@ -44,12 +37,17 @@ class CertificationPlugin(BotPlugin):
     
     def activate(self):
         super().activate()
-        self.start_poller(1, self.poll_for_artefacts)
 
-    def poll_for_artefacts(self):
-        msg = artefacts_summary(self, "mz2", args)
-        self.log.debug(msg)
+        # Execute the poller once per 24h from when plugin activated.
+        # TODO: scheduling at a set point in time rather than relative to when started.
+        self.start_poller(1, self.polled_digest_sending)
 
+    def polled_digest_sending(self):
+        send_artefact_digests(self)
+
+    @botcmd(split_args_with=' ')
+    def artefacts(self, msg, args):
+        return reply_with_artefacts_summary(self, msg.frm, args)
 
     @botcmd(split_args_with=" ", name="cid")
     def cid(self, msg, args):
@@ -73,7 +71,3 @@ class CertificationPlugin(BotPlugin):
                     msg = f"{make} | {model} | {tf_provision_type}\n"
 
             return msg
-
-    @botcmd(split_args_with=' ')
-    def artefacts(self, msg, args):
-        return artefacts_summary(self, msg.frm, args)

@@ -6,9 +6,26 @@ from test_observer.client import Client as TestObserverClient
 from user_handle_cache import get_assignee_handle
 from typing import Any, List, Dict
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 now = datetime.now().date()
 
-def artefacts_summary(target_user, args: List[str]) -> str:
+def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
+    """
+    Reply to a user with a relevant set of artefacts, i.e. union of:
+    - pending (not approved, not rejected) artefacts.
+    - recently rejected artefacts.
+
+    When no argument is provided, returns the summary for the sender
+    (artefacts filtered with them as the assignee).
+    
+    Optional arguments to the command:
+    - name-contains: filtering by artefact name substring
+    - assigned-to: filtering by exact match to user's Mattermost handle
+    - all: returns all artefacts. 
+    """
     test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
 
     out_msg = ''
@@ -102,4 +119,62 @@ def artefacts_summary(target_user, args: List[str]) -> str:
         if unassigned_artefacts:
             artefacts_by_user["No assignee"] = unassigned_artefacts
 
+    if out_msg == '':
+        out_msg = "No pending artefacts."
+
     return out_msg
+
+def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse]]:
+    """
+    Get all pending (not approved or failed) artefacts by user's Mattermost handle
+    """
+    test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
+
+    with test_observer_client:
+        r = get_artefacts(client=test_observer_client)
+
+        if not isinstance(r.parsed, list):
+            raise Exception("Error retrieving artefacts")
+
+        artefacts_by_user: Dict[str | None, List[ArtefactResponse]] = {}
+
+        for artefact in r.parsed:
+            if artefact.status in [ArtefactStatus.APPROVED, ArtefactStatus.MARKED_AS_FAILED]:
+                continue
+
+            assignee = artefact.assignee
+            if not assignee and not artefact.due_date:
+                continue
+
+            if assignee and assignee.launchpad_email:
+                assignee_handle = get_assignee_handle(assignee.launchpad_email)["username"]
+            else:
+                assignee_handle = None
+
+            if assignee_handle not in artefacts_by_user:
+                artefacts_by_user[assignee_handle] = []
+
+            artefacts_by_user[assignee_handle].append(artefact)
+
+        return artefacts_by_user
+
+def send_artefact_digests(sender):
+    """
+    Send a digest of pending Test Observer artefacts per user.
+    """
+    pending_artefacts = pending_artefacts_by_user_handle()
+
+    for user, artefacts in pending_artefacts.items():
+        if len(artefacts) == 0:
+            continue
+
+        if user is not None:
+            msg = ''
+            msg += f"Hello @{user}! You have some test artefacts to review:\n"
+            for artefact in artefacts:
+                msg += f"- {artefact.name} {artefact.version} - due {artefact.due_date}\n"
+
+            identifier = sender.build_identifier('@mz2')
+            logger.info(f"Sending digest to {user}")
+
+            sender.send(identifier, msg)
