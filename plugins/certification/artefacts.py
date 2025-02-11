@@ -32,6 +32,9 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     - assigned-to: filtering by exact match to user's Mattermost handle
     - all: returns all artefacts. 
     """
+    if "all" in args and (artifact_filter or assigned_to_filter):
+        return "You can't use 'all' with 'name-contains' or 'assigned-to'"
+
     test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
 
     out_msg = ''
@@ -49,15 +52,9 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
             artifact_filter = arg.split("name-contains:", 1)[1].lower()
             filter_by_sender_as_assignee = False
 
-            if "all" in args:
-                return "You can't use 'all' and 'name-contains' together"
-
         if arg.startswith("assigned-to:"):
             assigned_to_filter = arg.split("assigned-to:", 1)[1].lower()
             filter_by_sender_as_assignee = False
-
-            if "all" in args:
-                return "You can't use 'all' and 'assigned-to' together"
 
     with test_observer_client:
         r = get_artefacts(client=test_observer_client)
@@ -127,7 +124,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     return out_msg
 
-def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse]]:
+def pending_artefacts_by_user_handle() -> Dict[str | None, List<ArtefactResponse]]:
     """
     Get all pending (not approved or failed) artefacts by user's Mattermost handle
     """
@@ -139,7 +136,7 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
         if not isinstance(r.parsed, list):
             raise Exception("Error retrieving artefacts")
 
-        artefacts_by_user: Dict[str | None, List[ArtefactResponse]] = {}
+        artefacts_by_user: Dict[str | None, List<ArtefactResponse]] = {}
 
         for artefact in r.parsed:
             if artefact.status in [ArtefactStatus.APPROVED, ArtefactStatus.MARKED_AS_FAILED]:
