@@ -8,7 +8,7 @@ from plugins.certification.test_observer.models import ArtefactStatus, ArtefactR
 class ArtefactsTestBase(unittest.TestCase):
 
     def setUp(self):
-        self.user = MagicMock(username="testuser@example.com", email="testuser@example.com")
+        self.user = MagicMock(username="testuser", email="testuser@example.com")
         self.assignee = MagicMock(launchpad_email="testuser@example.com")
 
         self.artefact1 = ArtefactResponse(

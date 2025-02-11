@@ -72,7 +72,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
         if not isinstance(r.parsed, list):
             return "Error retrieving artefacts"
 
-        artefacts_by_user = artefacts_by_user_handle(r, artifact_filter, assigned_to_filter, "pending" in args)
+        artefacts_by_user = artefacts_by_user_handle(r.parsed, artifact_filter, assigned_to_filter, "pending" in args)
 
         if "all" in args or not filter_by_sender_as_assignee:
             user_artefacts = artefacts_by_user
