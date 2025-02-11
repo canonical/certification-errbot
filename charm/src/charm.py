@@ -32,9 +32,7 @@ class CharmCharm(ops.CharmBase):
         framework.observe(self.on.config_changed, self._on_config_changed)
 
     def _ensure_data_directory_exists(self, container):
-    """
-    Creates a directory to contain the bot's transient state.
-    """
+        """Create a directory to contain the bot's transient state."""
         process = container.exec(["mkdir", "-p", "data"], working_dir="/app")
 
         try:
