@@ -136,11 +136,11 @@ jobs:
           GHCR_PACKAGE_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Upload spread artifacts
-          if: failure()
-          uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
-          with:
-            name: spread-artifacts
-            path: ./artifacts
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        with:
+          name: spread-artifacts
+          path: ./artifacts
 
       - name: Upload charmcraft logs
         if: failure()
