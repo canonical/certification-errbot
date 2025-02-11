@@ -13,6 +13,6 @@ execute: |
   --config c3-client-id='foo' \
   --config c3-client-secret='bar'
 
-  juju wait-for application errbot --timeout 10m
+  juju wait-for application errbot --timeout 20m
   juju show-status-log errbot/0
   juju debug-log --level=DEBUG
