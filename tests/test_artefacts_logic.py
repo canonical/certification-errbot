@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from datetime import datetime, timedelta
-from plugins.certification.artefacts import reply_with_artefacts_summary, pending_artefacts_by_user_handle, send_artefact_summaries
+from plugins.certification.artefacts import reply_with_artefacts_summary, send_artefact_summaries, artefacts_by_user_handle
 from plugins.certification.test_observer.models import ArtefactStatus, ArtefactResponse
 
 class ArtefactsTestBase(unittest.TestCase):
@@ -91,6 +91,58 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
         self.assertIn('You have some test artefacts to review:', sent_message)
         self.assertIn('**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**', sent_message)
         self.assertNotIn('**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**', sent_message)
+
+class TestArtefactsByUserHandle(ArtefactsTestBase):
+
+    @patch('plugins.certification.artefacts.get_assignee_handle')
+    def test_artefacts_by_user_handle(self, mock_get_assignee_handle):
+        mock_get_assignee_handle.return_value = {"username": "testuser"}
+
+        artefacts_response = [self.artefact1, self.artefact2]
+        result = artefacts_by_user_handle(artefacts_response, None, None, False)
+
+        self.assertIn("testuser", result)
+        self.assertEqual(len(result["testuser"]), 1)
+        self.assertEqual(result["testuser"][0].id, 1)
+
+    @patch('plugins.certification.artefacts.get_assignee_handle')
+    def test_artefacts_by_user_handle_with_filter(self, mock_get_assignee_handle):
+        mock_get_assignee_handle.return_value = {"username": "testuser"}
+
+        artefacts_response = [self.artefact1, self.artefact2]
+        result = artefacts_by_user_handle(artefacts_response, "artefact 1", None, False)
+
+        self.assertIn("testuser", result)
+        self.assertEqual(len(result["testuser"]), 1)
+        self.assertEqual(result["testuser"][0].id, 1)
+
+        result = artefacts_by_user_handle(artefacts_response, "artefact 2", None, False)
+        self.assertNotIn("testuser", result)
+
+    @patch('plugins.certification.artefacts.get_assignee_handle')
+    def test_artefacts_by_user_handle_with_assigned_to_filter(self, mock_get_assignee_handle):
+        mock_get_assignee_handle.return_value = {"username": "testuser"}
+
+        artefacts_response = [self.artefact1, self.artefact2]
+        result = artefacts_by_user_handle(artefacts_response, None, "testuser", False)
+
+        self.assertIn("testuser", result)
+        self.assertEqual(len(result["testuser"]), 1)
+        self.assertEqual(result["testuser"][0].id, 1)
+
+        result = artefacts_by_user_handle(artefacts_response, None, "otheruser", False)
+        self.assertNotIn("testuser", result)
+
+    @patch('plugins.certification.artefacts.get_assignee_handle')
+    def test_artefacts_by_user_handle_with_pending_filter(self, mock_get_assignee_handle):
+        mock_get_assignee_handle.return_value = {"username": "testuser"}
+
+        artefacts_response = [self.artefact1, self.artefact2]
+        result = artefacts_by_user_handle(artefacts_response, None, None, True)
+
+        self.assertIn("testuser", result)
+        self.assertEqual(len(result["testuser"]), 1)
+        self.assertEqual(result["testuser"][0].id, 1)
 
 if __name__ == '__main__':
     unittest.main()

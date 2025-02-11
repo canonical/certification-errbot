@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from test_observer.models import ArtefactStatus, ArtefactResponse
 from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
 from test_observer.client import Client as TestObserverClient
@@ -33,22 +33,9 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     - all: returns all artefacts.
     - pending: list only in 'undecided' state.
     """
-    if "all" in args and (artifact_filter or assigned_to_filter):
-        return "You can't use 'all' with 'name-contains' or 'assigned-to'"
-    
-    if "all" in args and "pending" in args:
-        return "You can't use 'all' with 'pending'"
 
-    test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
-
-    out_msg = ''
-
-    now = datetime.now().date()
-    one_week_ago = now - timedelta(weeks=1)
     artifact_filter = None
     assigned_to_filter = None
-
-    filter_by_sender_as_assignee = True
 
     for arg in args:
         if arg.startswith("name-contains:"):
@@ -59,13 +46,33 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
             assigned_to_filter = arg.split("assigned-to:", 1)[1].lower()
             filter_by_sender_as_assignee = False
 
+    if "all" in args and (artifact_filter or assigned_to_filter):
+        return "You can't use 'all' with 'name-contains' or 'assigned-to'"
+    
+    if "all" in args and "pending" in args:
+        return "You can't use 'all' with 'pending'"
+    
+    if len([arg for arg in args if arg.startswith("name-contains:")]) > 1:
+        return "You can't use multiple 'name-contains' arguments"
+    
+    if len([arg for arg in args if arg.startswith("assigned-to:")]) > 1:
+        return "You can't use multiple 'assigned-to' arguments"
+
+    test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
+
+    out_msg = ''
+
+    filter_by_sender_as_assignee = True
+
+    now = datetime.now().date()
+
     with test_observer_client:
         r = get_artefacts(client=test_observer_client)
 
         if not isinstance(r.parsed, list):
             return "Error retrieving artefacts"
 
-        artefacts_by_user = artefacts_by_user_handle(artifact_filter, assigned_to_filter, "pending" in args)
+        artefacts_by_user = artefacts_by_user_handle(r, artifact_filter, assigned_to_filter, "pending" in args)
 
         if "all" in args or not filter_by_sender_as_assignee:
             user_artefacts = artefacts_by_user
@@ -95,17 +102,21 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
             artefacts_by_user["No assignee"] = unassigned_artefacts
 
     if out_msg == '':
-        out_msg = "No pending artefacts."
+        out_msg = f"No pending artefacts (assigned to filter: {assigned_to_filter}, name filter: {artifact_filter})"
 
     return out_msg
 
 def artefacts_by_user_handle(
+        artefacts_response: list[ArtefactResponse],
         artifact_filter: str | None,
         assigned_to_filter: str | None,
         pending: bool) -> Dict[str, List[ArtefactResponse]]:
     artefacts_by_user: Dict[str, List[ArtefactResponse]] = {}
 
-    for artefact in r.parsed:
+    now = datetime.now().date()
+    one_week_ago = now - timedelta(weeks=1)
+
+    for artefact in artefacts_response:
         if artefact.status == ArtefactStatus.APPROVED:
             continue
 
@@ -149,7 +160,7 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
         if not isinstance(r.parsed, list):
             raise Exception("Error retrieving artefacts")
 
-        artefacts_by_user: Dict[str | None, List<ArtefactResponse]] = {}
+        artefacts_by_user: Dict[str | None, List[ArtefactResponse]] = {}
 
         for artefact in r.parsed:
             if artefact.status in [ArtefactStatus.APPROVED, ArtefactStatus.MARKED_AS_FAILED]:

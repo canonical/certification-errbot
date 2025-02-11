@@ -4,7 +4,7 @@ import os
 
 user_cache: dict[str, str] = {}
 
-def get_assignee_handle(email):
+def get_assignee_handle(email: str) -> str | None:
     if email in user_cache:
         return user_cache[email]
     else:
