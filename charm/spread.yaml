@@ -95,7 +95,9 @@ prepare: |
     systemctl mask unattended-upgrades.service
   fi
 
-  pipx install https://github.com/canonical/juju-k8s-crashdump.git
+  apt update
+  apt install -y pipx
+  pipx install git+https://github.com/canonical/juju-k8s-crashdump.git
 
   snap install --classic concierge
   concierge prepare --trace -p microk8s --extra-snaps astral-uv --extra-snaps juju-crashdump
