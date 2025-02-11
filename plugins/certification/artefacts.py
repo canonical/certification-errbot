@@ -4,7 +4,7 @@ from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_deta
 from test_observer.client import Client as TestObserverClient
 
 from user_handle_cache import get_assignee_handle
-from typing import Any, List, Dict
+from typing import List, Dict
 
 import logging
 
@@ -30,15 +30,18 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     Optional arguments to the command:
     - name-contains: filtering by artefact name substring
     - assigned-to: filtering by exact match to user's Mattermost handle
-    - all: returns all artefacts. 
+    - all: returns all artefacts.
+    - pending: list only in 'undecided' state.
     """
     if "all" in args and (artifact_filter or assigned_to_filter):
         return "You can't use 'all' with 'name-contains' or 'assigned-to'"
+    
+    if "all" in args and "pending" in args:
+        return "You can't use 'all' with 'pending'"
 
     test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
 
     out_msg = ''
-    artefacts_by_user: Dict[str, List[ArtefactResponse]] = {}
 
     now = datetime.now().date()
     one_week_ago = now - timedelta(weeks=1)
@@ -62,35 +65,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
         if not isinstance(r.parsed, list):
             return "Error retrieving artefacts"
 
-        for artefact in r.parsed:
-            if artefact.status == ArtefactStatus.APPROVED:
-                continue
-
-            if artefact.status == ArtefactStatus.MARKED_AS_FAILED and artefact.due_date and artefact.due_date < one_week_ago:
-                continue
-
-            if artifact_filter and artifact_filter not in artefact.name.lower():
-                continue
-
-            assignee = artefact.assignee
-            if not assignee and not artefact.due_date:
-                continue
-            
-            if assignee and assignee.launchpad_email:
-                assignee_handle = get_assignee_handle(assignee.launchpad_email)["username"]
-            else:
-                assignee_handle = "No assignee"
-
-            if assigned_to_filter and assigned_to_filter != assignee_handle.lower():
-                continue
-
-            if len(args) > 0 and args[0] == 'pending' and (artefact.status in [ArtefactStatus.MARKED_AS_FAILED]):
-                continue
-
-            if assignee_handle not in artefacts_by_user:
-                artefacts_by_user[assignee_handle] = []
-
-            artefacts_by_user[assignee_handle].append(artefact)
+        artefacts_by_user = artefacts_by_user_handle(artifact_filter, assigned_to_filter, "pending" in args)
 
         if "all" in args or not filter_by_sender_as_assignee:
             user_artefacts = artefacts_by_user
@@ -124,7 +99,45 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     return out_msg
 
-def pending_artefacts_by_user_handle() -> Dict[str | None, List<ArtefactResponse]]:
+def artefacts_by_user_handle(
+        artifact_filter: str | None,
+        assigned_to_filter: str | None,
+        pending: bool) -> Dict[str, List[ArtefactResponse]]:
+    artefacts_by_user: Dict[str, List[ArtefactResponse]] = {}
+
+    for artefact in r.parsed:
+        if artefact.status == ArtefactStatus.APPROVED:
+            continue
+
+        if artefact.status == ArtefactStatus.MARKED_AS_FAILED and artefact.due_date and artefact.due_date < one_week_ago:
+            continue
+
+        if artifact_filter and artifact_filter not in artefact.name.lower():
+            continue
+
+        assignee = artefact.assignee
+        if not assignee and not artefact.due_date:
+            continue
+        
+        if assignee and assignee.launchpad_email:
+            assignee_handle = get_assignee_handle(assignee.launchpad_email)["username"]
+        else:
+            assignee_handle = "No assignee"
+
+        if assigned_to_filter and assigned_to_filter != assignee_handle.lower():
+            continue
+
+        if pending and (artefact.status in [ArtefactStatus.MARKED_AS_FAILED]):
+            continue
+
+        if assignee_handle not in artefacts_by_user:
+            artefacts_by_user[assignee_handle] = []
+
+        artefacts_by_user[assignee_handle].append(artefact)
+    
+    return artefacts_by_user
+
+def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse]]:
     """
     Get all pending (not approved or failed) artefacts by user's Mattermost handle
     """
