@@ -41,7 +41,6 @@ class CertificationPlugin(BotPlugin):
     def activate(self):
         super().activate()
 
-        # Schedule the poller to run every weekday at 8:47 UTC
         scheduler = BackgroundScheduler()
         trigger = CronTrigger(day_of_week='mon-fri', hour=9, minute=00, timezone='UTC')
         scheduler.add_job(self.polled_digest_sending, trigger)
