@@ -13,6 +13,12 @@ execute: |
   --config c3-client-id='foo' \
   --config c3-client-secret='bar'
 
-  juju wait-for application errbot --timeout 20m
+  juju wait-for application errbot --timeout 20m | juju-crashdump
   juju show-status-log errbot/0
   juju debug-log --level=DEBUG
+
+  microk8s config > kube-config
+  juju-k8s-crashdump ./kube-config concierge-microk8s
+
+artifacts:
+  - juju-k8s-crashdump
