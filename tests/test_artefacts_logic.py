@@ -31,7 +31,8 @@ class ArtefactsTestBase(unittest.TestCase):
             sha256="sha256",
             image_url="image_url",
             stage="stage1",
-            bug_link="bug_link"
+            bug_link="bug_link",
+            created_at=datetime.now().date() - timedelta(days=10),
         )
 
         self.artefact2 = ArtefactResponse(
@@ -54,7 +55,8 @@ class ArtefactsTestBase(unittest.TestCase):
             sha256="sha2562",
             image_url="image_url2",
             stage="stage2",
-            bug_link="bug_link2"
+            bug_link="bug_link2",
+            created_at=datetime.now().date() - timedelta(days=10),
         )
 
 class TestArtefactsSummary(ArtefactsTestBase):
