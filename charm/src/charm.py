@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
 
 
-class CharmCharm(ops.CharmBase):
+class ErrbotCharm(ops.CharmBase):
     """Charm the service."""
 
     def __init__(self, framework: ops.Framework):
@@ -95,4 +95,4 @@ class CharmCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main(CharmCharm)  # type: ignore
+    ops.main(ErrbotCharm)  # type: ignore
