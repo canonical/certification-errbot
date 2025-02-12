@@ -21,7 +21,7 @@ execute: |
   juju debug-log --level=DEBUG
 
   microk8s config > kube-config
-  juju-k8s-crashdump ./kube-config concierge-microk8s
+  pipx run --spec git+https://github.com/canonical/juju-k8s-crashdump.git juju-k8s-crashdump ./kube-config concierge-microk8s
 
 artifacts:
   - juju-k8s-crashdump
