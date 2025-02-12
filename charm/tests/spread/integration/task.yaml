@@ -1,6 +1,9 @@
 summary: Run the charm integration test
 
 execute: |
+  # needs to be done by the spread user
+  pipx install git+https://github.com/canonical/juju-k8s-crashdump.git
+
   oci_image="$(cat ../../../charmcraft.yaml | yq '.resources.errbot-image.upstream-source')"
   juju deploy \
   "$PWD/../../../certification-errbot_amd64.charm" errbot \
