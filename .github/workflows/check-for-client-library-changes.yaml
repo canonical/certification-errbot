@@ -1,0 +1,44 @@
+name: Generate Test Observer Client
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: sudo snap install astral-uv --classic
+
+      - name: Generate Test Observer client library
+        run: ./bin/generate-test-observer-client.sh
+
+      - name: Check for changes in Test Observer client library
+        run: |
+          if [[ `git status --porcelain plugins/certification/test_observer` ]]; then
+            echo "Client library has changes. Please run `./bin/generate-test-observer-client.sh` and commit the changes (and check for breaking changes in the API integration)."
+            exit 1
+          else
+            echo "No changes in client library."
+          fi
+
+      - name: Generate C3 client library
+        run: ./bin/generate-c3-client.sh
+
+      - name: Check for changes in C3 client library
+        run: |
+          if [[ `git status --porcelain plugins/certification/c3` ]]; then
+            echo "Client library has changes. Please run `./bin/generate-test-observer-client.sh` and commit the changes (and check for breaking changes in the API integration)."
+            exit 1
+          else
+            echo "No changes in client library."
+          fi

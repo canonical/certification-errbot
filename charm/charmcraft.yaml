@@ -1,11 +1,12 @@
-name: hwcert-errbot
+name: certification-errbot
 type: charm
 title: Hardware Certification errbot
 
 summary: Canonical Hardware Certification errbot instance.
 
 description: |
-  Canonical Hardware Certification errbot instance, for .
+  errbot configured for mattermost,
+  with Canonical Hardware Certification team relevant plugins.
 
 base: ubuntu@24.04
 
@@ -37,6 +38,14 @@ config:
       description: |
         List of handles (prefixed with @, separated by space) who act as bot admins.
       type: string
+    c3-client-id:
+      description: |
+        OAuth client ID for the C3 v2 API.
+      type: string
+    c3-client-secret:
+      description: |
+        OAuth client secret for the C3 v2 API.
+      type: string
 
 containers:
   errbot:
@@ -46,7 +55,7 @@ resources:
   errbot-image:
     type: oci-image
     description: OCI image for errbot with the plugin installed
-    upstream-source: ghcr.io/canonical/hwcert-errbot:latest
+    upstream-source: ghcr.io/canonical/certification-errbot:latest
 
 parts:
   errbot:

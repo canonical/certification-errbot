@@ -1,2 +1,6 @@
 __pycache__
 data
+*.log
+.venv
+plugins/certification/c3
+plugins/certification/test_observer

@@ -1,0 +1,25 @@
+name: Run Unit Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.x"
+
+      - name: Resolve dev dependencies
+        run: uv sync --dev
+
+      - name: Generate client libraries
+        run: ./bin/generate-c3-client.sh && ./bin/generate-test-observer-client.sh
+
+      - name: Run unit tests
+        run: uv run pytest tests

@@ -1,14 +1,23 @@
 [project]
-name = "hwcert-errbot"
+name = "certification-errbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Hardware Certification plugins to errbot"
 readme = "README.md"
 requires-python = "~=3.12"
 dependencies = [
     "errbot==6.2.0",
     "err-backend-mattermost==3.0.0",
     "errbot[mattermost]>=6.2.0",
+    "httpx>=0.28.1",
+    "attrs>=25.1.0",
+    "python-dateutil>=2.9.0.post0",
+    "apscheduler>=3.11.0",
 ]
 
 [tool.uv.sources]
 err-backend-mattermost = { git = "https://github.com/rwielk/err-backend-mattermost.git", branch = "NETDEV-1336/ensure-py310-compatibility" }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+]

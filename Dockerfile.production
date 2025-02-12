@@ -24,8 +24,8 @@ ENV ERRBOT_TEAM="Canonical"
 ENV ERRBOT_SERVER="chat.canonical.com"
 ENV ERRBOT_ADMINS=""
 
-LABEL name="hwcert-errbot" \
-    description="An OCI image for hwcert-errbot" \
+LABEL name="certification-errbot" \
+    description="An OCI image for certification-errbot" \
     license="GPL-3.0"
 
 RUN apt-get update && \

@@ -1,4 +1,4 @@
-project: hwcert-errbot-charm-tests
+project: certification-errbot-charm-tests
 kill-timeout: 90m
 workers: 1
 
@@ -90,17 +90,17 @@ path: /root/proj
 
 prepare: |
   snap refresh --hold
-  if systemctl is-enabled unattended-upgrades.service; then
+  if systemctl is-active unattended-upgrades.service; then
     systemctl stop unattended-upgrades.service
     systemctl mask unattended-upgrades.service
   fi
 
+  apt update
+  apt install -y pipx
+
   snap install --classic concierge
   concierge prepare --trace -p microk8s --extra-snaps astral-uv --extra-snaps juju-crashdump
   microk8s status --wait-ready
-
-  juju controllers
-  # juju wait-for model concierge-microk8s --summary --timeout 1m
 
   mkdir -p /var/snap/microk8s/current/args/certs.d/ghcr.io
 
@@ -119,10 +119,10 @@ prepare: |
   microk8s.start
   microk8s status --wait-ready
 
-  sleep 20
+  sleep 30
 
   pushd "$SPREAD_PATH"
-  chown $(id -u):$(id -g) $PWD/hwcert-errbot_amd64.charm
+  chown $(id -u):$(id -g) $PWD/certification-errbot_amd64.charm
 
 restore: |
   if [[ -z "${CI:-}" ]]; then

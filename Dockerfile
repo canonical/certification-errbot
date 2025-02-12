@@ -5,13 +5,13 @@ ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"
 ENV ERRBOT_SERVER="chat.canonical.com"
 
-LABEL name="hwcert-errbot" \
+LABEL name="certification-errbot" \
     version="6.2.0" \
-    description="An OCI image for hwcert-errbot" \
+    description="An OCI image for certification-errbot" \
     license="GPL-3.0"
 
 RUN apt-get update && \
-    apt-get install -y python3.12 git && \
+    apt-get install -y python3.12 python3.12-gdbm git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -24,5 +24,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 RUN uv sync
 RUN uv tool install errbot
+
+RUN ./bin/generate-c3-client.sh
+RUN ./bin/generate-test-observer-client.sh
 
 CMD ["uv", "run", "errbot"]

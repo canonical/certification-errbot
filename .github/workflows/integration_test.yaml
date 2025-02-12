@@ -95,7 +95,7 @@ jobs:
       contents: read
       packages: read
     
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, large, noble, x64]
     needs:
       - define-matrix
       - lib-check
@@ -129,12 +129,19 @@ jobs:
 
       - name: Run integration tests
         run: |
-          charmcraft.spread -v "github-ci:ubuntu-24.04:tests/spread/${{ matrix.suite }}"
+          charmcraft.spread -artifacts ./artifacts -v "github-ci:ubuntu-24.04:tests/spread/${{ matrix.suite }}"
         working-directory: charm
         env:
           GHCR_PACKAGE_API_USER: ${{ github.actor }}
           GHCR_PACKAGE_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Upload spread artifacts
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        with:
+          name: spread-artifacts
+          path: ./artifacts
+
       - name: Upload charmcraft logs
         if: failure()
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
