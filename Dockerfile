@@ -3,6 +3,7 @@ FROM ubuntu:24.04
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"
+ENV ERRBOT_ADMIN=""
 ENV ERRBOT_SERVER="chat.canonical.com"
 
 LABEL name="certification-errbot" \
@@ -17,6 +18,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 COPY . .
+
+RUN mkdir -p data
 
 ENV UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv \
