@@ -16,7 +16,7 @@ import logging
 from typing import cast
 
 import ops
-from ops.pebble import Layer
+from ops.pebble import LayerDict, ServiceDict
 
 logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
@@ -55,27 +55,25 @@ class ErrbotCharm(ops.CharmBase):
 
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
-        return Layer(
-            {
-                "summary": "errbot layer",
-                "description": "pebble config layer for errbot",
-                "services": {
-                    "errbot": {
-                        "override": "replace",
-                        "summary": "errbot",
-                        "command": "errbot",
-                        "startup": "enabled",
-                        "environment": {
-                            "ERRBOT_TOKEN": self.model.config["errbot-token"],
-                            "ERRBOT_TEAM": self.model.config["errbot-team"],
-                            "ERRBOT_SERVER": self.model.config["errbot-server"],
-                            "ERRBOT_ADMINS": self.model.config["errbot-admins"],
-                            "C3_CLIENT_ID": self.model.config["c3-client-id"],
-                            "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
-                        },
-                    }
-                },
-            }
+        return LayerDict(
+            summary="errbot layer",
+            description="pebble config layer for errbot",
+            services={
+                "errbot": ServiceDict(
+                    override="replace",
+                    summary="errbot",
+                    command="errbot",
+                    startup="enabled",
+                    environment={
+                        "ERRBOT_TOKEN": str(self.model.config["errbot-token"]),
+                        "ERRBOT_TEAM": str(self.model.config["errbot-team"]),
+                        "ERRBOT_SERVER": str(self.model.config["errbot-server"]),
+                        "ERRBOT_ADMINS": str(self.model.config["errbot-admins"]),
+                        "C3_CLIENT_ID": str(self.model.config["c3-client-id"]),
+                        "C3_CLIENT_SECRET": str(self.model.config["c3-client-secret"]),
+                    },
+                ),
+            },
         )
 
 
