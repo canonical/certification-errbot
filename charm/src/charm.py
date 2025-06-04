@@ -16,8 +16,7 @@ import logging
 from typing import cast
 
 import ops
-from ops.model import BlockedStatus
-from ops.pebble import ExecError, Layer
+from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
@@ -31,22 +30,8 @@ class ErrbotCharm(ops.CharmBase):
         framework.observe(self.on["errbot"].pebble_ready, self._on_errbot_pebble_ready)
         framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _ensure_data_directory_exists(self, container):
-        """Create a directory to contain the bot's transient state."""
-        process = container.exec(["mkdir", "-p", "data"], working_dir="/app")
-
-        try:
-            stdout, _ = process.wait_output()
-            logger.info(stdout)
-        except ExecError as e:
-            logger.error(e.stdout)
-            logger.error(e.stderr)
-            self.unit.status = BlockedStatus("Creating data directory failed")
-
     def _on_errbot_pebble_ready(self, event: ops.PebbleReadyEvent):
         container = event.workload
-        self._ensure_data_directory_exists(container)
-
         container.add_layer("errbot", self._pebble_layer, combine=True)
         container.replan()
         self.unit.status = ops.ActiveStatus()
