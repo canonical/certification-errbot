@@ -132,8 +132,8 @@ class CertificationPlugin(BotPlugin):
         }
         
         try:
-            assigned_prs = []
-            authored_unassigned_prs = []
+            prs_requested_to_review = []
+            authored_prs_with_no_requested_reviewer = []
             
             # Use predefined repositories with configured organization
             for repo_name in DEFAULT_REPOS:
@@ -144,50 +144,41 @@ class CertificationPlugin(BotPlugin):
                 if prs_response.status_code == 200:
                     prs = prs_response.json()
                     for pr in prs:
-                        print(pr)
-
-                        assignees = pr.get("assignees", [])
+                        requested_reviewers = pr.get("requested_reviewers", [])
                         author = pr.get("user", {}).get("login", "")
                         
                         # Check if PR is assigned to the user
-                        if any(assignee["login"].lower() == github_username.lower() for assignee in assignees):
-                            assigned_prs.append({
-                                "repo": f"{github_org}/{repo_name}",
-                                "number": pr["number"],
-                                "title": pr["title"],
-                                "url": pr["html_url"]
-                            })
+                        if any(reviewer["login"].lower() == github_username.lower() for reviewer in requested_reviewers):
+                            prs_requested_to_review.append(pr)
                         # Check if PR is authored by user but has no assignees
-                        elif author.lower() == github_username.lower() and len(assignees) == 0:
-                            authored_unassigned_prs.append({
-                                "repo": f"{github_org}/{repo_name}",
-                                "number": pr["number"],
-                                "title": pr["title"],
-                                "url": pr["html_url"]
-                            })
+                        elif author.lower() == github_username.lower() and len(requested_reviewers) == 0:
+                            authored_prs_with_no_requested_reviewer.append(pr)
                 else:
                     return f"Error fetching PRs from {github_org}/{repo_name}: {prs_response.status_code} - {prs_response.text}"
             
             # Determine if we're looking at the requesting user's PRs or someone else's
             is_self = not (args and len(args) > 0 and args[0].strip())  # No meaningful argument means looking at own PRs
             user_prefix = "you" if is_self else f"@{args[0].lstrip('@')}"
+
+            logger.info(f"Assigned PRs for {user_prefix}: {prs_requested_to_review}")
+            logger.info(f"Authored unassigned PRs for {user_prefix}: {authored_prs_with_no_requested_reviewer}")
             
-            if not assigned_prs and not authored_unassigned_prs:
+            if not prs_requested_to_review and not authored_prs_with_no_requested_reviewer:
                 return f"No PRs assigned to {user_prefix} and no unassigned PRs authored by {user_prefix} in the monitored repositories."
             
             response = ""
             
-            if assigned_prs:
+            if prs_requested_to_review:
                 response += f"PRs pending review from {user_prefix}:\n\n"
-                for pr in assigned_prs:
-                    response += f"- [{pr['repo']}#{pr['number']}]({pr['url']}): {pr['title']}\n"
+                for pr in prs_requested_to_review:
+                    response += f"- [{pr['html_url']}]({pr['html_url']}): {pr['title']}\n"
             
-            if authored_unassigned_prs:
+            if authored_prs_with_no_requested_reviewer:
                 if response:
                     response += "\n"
                 response += f"PRs authored by {user_prefix} with no reviewer assigned:\n\n"
-                for pr in authored_unassigned_prs:
-                    response += f"- [{pr['repo']}#{pr['number']}]({pr['url']}): {pr['title']}\n"
+                for pr in authored_prs_with_no_requested_reviewer:
+                    response += f"- [{pr['html_url']}]({pr['html_url']}): {pr['title']}\n"
                 
             return response
             
