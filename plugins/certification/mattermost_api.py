@@ -33,3 +33,21 @@ def get_user_by_email(token, base_url, email) -> UserDetails:
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return response.json()
+
+def get_user_by_name(token, base_url, user_name) -> UserDetails:
+    url = f"{base_url}/users/username/{user_name}"
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def get_user_by_mattermost_id(token, base_url, user_id) -> UserDetails:
+    url = f"{base_url}/plugins/github/user?mattermost_user_id={user_id}"
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()

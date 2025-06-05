@@ -87,6 +87,12 @@ class ErrbotCharm(ops.CharmBase):
                             "ERRBOT_ADMINS": self.model.config["errbot-admins"],
                             "C3_CLIENT_ID": self.model.config["c3-client-id"],
                             "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
+                            "GITHUB_TOKEN": self.model.config["github-token"],
+                            "GITHUB_ORG": self.model.config["github-org"],
+                            "LDAP_SERVER": self.model.config["ldap-server"],
+                            "LDAP_BASE_DN": self.model.config["ldap-base-dn"],
+                            "LDAP_BIND_DN": self.model.config["ldap-bind-dn"],
+                            "LDAP_BIND_PASSWORD": self.model.config["ldap-bind-password"],
                         },
                     }
                 },

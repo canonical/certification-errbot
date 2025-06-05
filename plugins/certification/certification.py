@@ -1,35 +1,55 @@
 from errbot import BotPlugin, botcmd, re_botcmd
 import os
 from datetime import datetime
+import requests
 
 from c3.client import AuthenticatedClient as C3Client
 from c3.api.physicalmachinesview.physicalmachinesview_list import sync_detailed as get_physicalmachinesview
 from c3_auth import get_access_token as get_c3_access_token
+from artefacts import reply_with_artefacts_summary, send_artefact_summaries
+from ldap import get_github_username_from_mattermost_handle, get_email_from_mattermost_handle
+from github import get_github_username_from_email
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 import ssl_fix
 
 import logging
 logger = logging.getLogger(__name__)
 
-from artefacts import reply_with_artefacts_summary, send_artefact_summaries
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 c3_client_id = os.environ.get("C3_CLIENT_ID")
 c3_client_secret = os.environ.get("C3_CLIENT_SECRET")
 
 mattermost_token = os.environ.get("ERRBOT_TOKEN")
 mattermost_base_url = f"https://{os.environ.get('ERRBOT_SERVER')}/api/v4"
+github_token = os.environ.get("GITHUB_TOKEN")
+github_org = os.environ.get("GITHUB_ORG")
 
 if not c3_client_id or not c3_client_secret:
     raise Exception("C3_CLIENT_ID and C3_CLIENT_SECRET must be set")
+
+if not github_token:
+    raise Exception("GITHUB_TOKEN must be set")
+
+if not github_org:
+    raise Exception("GITHUB_ORG must be set")
 
 C3_BASE_URL = 'https://certification.canonical.com'
 
 c3_access_token = get_c3_access_token(C3_BASE_URL, c3_client_id, c3_client_secret)
 
 now = datetime.now().date()
+
+# Predefined list of repositories to check for PRs
+DEFAULT_REPOS = [
+    "checkbox",
+    "testflinger", 
+    "hwcert-jenkins-jobs", 
+    "certification-docs", 
+    "certification-ops"
+]
 
 class CertificationPlugin(BotPlugin):
     """
@@ -53,6 +73,127 @@ class CertificationPlugin(BotPlugin):
     def artefacts(self, msg, args):
         return reply_with_artefacts_summary(self, msg.frm, args)
 
+    @botcmd(split_args_with=" ")
+    def prs(self, msg, args):
+        """
+        List PRs assigned to you or another user, plus unassigned PRs authored by you
+        Usage: !prs [mattermost_username]
+        Default username: your own username (mapped from LDAP)
+        """
+        github_username = None
+        
+        # Parse arguments
+        if args and len(args) > 0 and args[0].strip():
+            # If Mattermost username is provided, map to GitHub via LDAP
+            mattermost_username = args[0].lstrip('@')  # Remove @ prefix if present
+            try:
+                github_username = get_github_username_from_mattermost_handle(mattermost_username)
+                
+                if not github_username:
+                    # Fallback to email-based lookup
+                    target_user_email = get_email_from_mattermost_handle(mattermost_username)
+                    if target_user_email:
+                        github_username = get_github_username_from_email(github_token, target_user_email)
+                
+                if not github_username:
+                    return f"Could not find GitHub username for Mattermost user @{mattermost_username}"
+                    
+                logger.info(f"Found GitHub username {github_username} for Mattermost user @{mattermost_username}")
+            except Exception as e:
+                return f"Could not find Mattermost user @{mattermost_username}: {str(e)}"
+        else:
+            # Map requesting user's Mattermost account to GitHub username via LDAP
+            requesting_user_handle = msg.frm.username
+            try:
+                github_username = get_github_username_from_mattermost_handle(requesting_user_handle)
+                
+                if not github_username:
+                    # Fallback to email-based lookup
+                    target_user_email = get_email_from_mattermost_handle(requesting_user_handle)
+                    if target_user_email:
+                        github_username = get_github_username_from_email(github_token, target_user_email)
+                    
+                if not github_username:
+                    # Final fallback to using Mattermost username
+                    github_username = requesting_user_handle
+                    
+                logger.info(f"Found GitHub username {github_username} for requesting user @{requesting_user_handle}")
+            except Exception as e:
+                logger.warning(f"Could not find GitHub username for requesting user @{requesting_user_handle}: {str(e)}")
+                # Fallback to using Mattermost username directly
+                github_username = requesting_user_handle
+            
+        if not github_token:
+            return "GitHub token not configured. Please set the GITHUB_TOKEN environment variable."
+        
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        try:
+            assigned_prs = []
+            authored_unassigned_prs = []
+            
+            # Use predefined repositories with configured organization
+            for repo_name in DEFAULT_REPOS:
+                # Get PRs assigned to the user
+                prs_url = f"https://api.github.com/repos/{github_org}/{repo_name}/pulls?state=open"
+                prs_response = requests.get(prs_url, headers=headers)
+                
+                if prs_response.status_code == 200:
+                    prs = prs_response.json()
+                    for pr in prs:
+                        print(pr)
+
+                        assignees = pr.get("assignees", [])
+                        author = pr.get("user", {}).get("login", "")
+                        
+                        # Check if PR is assigned to the user
+                        if any(assignee["login"].lower() == github_username.lower() for assignee in assignees):
+                            assigned_prs.append({
+                                "repo": f"{github_org}/{repo_name}",
+                                "number": pr["number"],
+                                "title": pr["title"],
+                                "url": pr["html_url"]
+                            })
+                        # Check if PR is authored by user but has no assignees
+                        elif author.lower() == github_username.lower() and len(assignees) == 0:
+                            authored_unassigned_prs.append({
+                                "repo": f"{github_org}/{repo_name}",
+                                "number": pr["number"],
+                                "title": pr["title"],
+                                "url": pr["html_url"]
+                            })
+                else:
+                    return f"Error fetching PRs from {github_org}/{repo_name}: {prs_response.status_code} - {prs_response.text}"
+            
+            # Determine if we're looking at the requesting user's PRs or someone else's
+            is_self = not (args and len(args) > 0 and args[0].strip())  # No meaningful argument means looking at own PRs
+            user_prefix = "you" if is_self else f"@{args[0].lstrip('@')}"
+            
+            if not assigned_prs and not authored_unassigned_prs:
+                return f"No PRs assigned to {user_prefix} and no unassigned PRs authored by {user_prefix} in the monitored repositories."
+            
+            response = ""
+            
+            if assigned_prs:
+                response += f"PRs pending review from {user_prefix}:\n\n"
+                for pr in assigned_prs:
+                    response += f"- [{pr['repo']}#{pr['number']}]({pr['url']}): {pr['title']}\n"
+            
+            if authored_unassigned_prs:
+                if response:
+                    response += "\n"
+                response += f"PRs authored by {user_prefix} with no reviewer assigned:\n\n"
+                for pr in authored_unassigned_prs:
+                    response += f"- [{pr['repo']}#{pr['number']}]({pr['url']}): {pr['title']}\n"
+                
+            return response
+            
+        except requests.exceptions.RequestException as e:
+            return f"Error fetching PRs: {str(e)}"
+
     @botcmd(split_args_with=" ", name="cid")
     def cid(self, msg, args):
         c3_client = C3Client(base_url='https://certification.canonical.com', token=c3_access_token)
@@ -74,3 +215,4 @@ class CertificationPlugin(BotPlugin):
                     msg = f"{make} | {model} | {tf_provision_type}\n"
 
             return msg
+

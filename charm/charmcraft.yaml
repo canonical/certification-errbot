@@ -46,6 +46,31 @@ config:
       description: |
         OAuth client secret for the C3 v2 API.
       type: string
+    github-token:
+      description: |
+        GitHub personal access token for API access.
+      type: string
+    github-org:
+      description: |
+        GitHub organization name to fetch PRs from.
+      default: "canonical"
+      type: string
+    ldap-server:
+      description: |
+        LDAP server URL for user lookups.
+      type: string
+    ldap-base-dn:
+      description: |
+        LDAP base DN for user searches.
+      type: string
+    ldap-bind-dn:
+      description: |
+        LDAP bind DN for authentication.
+      type: string
+    ldap-bind-password:
+      description: |
+        LDAP bind password for authentication.
+      type: string
 
 containers:
   errbot:

@@ -63,9 +63,9 @@ class TestArtefactsSummary(ArtefactsTestBase):
 
     @patch('plugins.certification.artefacts.TestObserverClient')
     @patch('plugins.certification.artefacts.get_artefacts')
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_summary(self, mock_get_assignee_handle, mock_get_artefacts, MockTestObserverClient):
-        mock_get_assignee_handle.return_value = {"username": "testuser"}
+    @patch('plugins.certification.artefacts.get_user_handle')
+    def test_artefacts_summary(self, mock_get_user_handle, mock_get_artefacts, MockTestObserverClient):
+        mock_get_user_handle.return_value = {"username": "testuser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2]
 
         result = reply_with_artefacts_summary(self.user, ["assigned-to:testuser"])
@@ -96,9 +96,9 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
 
 class TestArtefactsByUserHandle(ArtefactsTestBase):
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_by_user_handle(self, mock_get_assignee_handle):
-        mock_get_assignee_handle.return_value = {"username": "testuser"}
+    @patch('plugins.certification.artefacts.get_user_handle')
+    def test_artefacts_by_user_handle(self, mock_get_user_handle):
+        mock_get_user_handle.return_value = {"username": "testuser"}
 
         artefacts_response = [self.artefact1, self.artefact2]
         result = artefacts_by_user_handle(artefacts_response, None, None, False)
@@ -107,9 +107,9 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         self.assertEqual(len(result["testuser"]), 1)
         self.assertEqual(result["testuser"][0].id, 1)
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_by_user_handle_with_filter(self, mock_get_assignee_handle):
-        mock_get_assignee_handle.return_value = {"username": "testuser"}
+    @patch('plugins.certification.artefacts.get_user_handle')
+    def test_artefacts_by_user_handle_with_filter(self, mock_get_user_handle):
+        mock_get_user_handle.return_value = {"username": "testuser"}
 
         artefacts_response = [self.artefact1, self.artefact2]
         result = artefacts_by_user_handle(artefacts_response, "artefact 1", None, False)
@@ -121,9 +121,9 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         result = artefacts_by_user_handle(artefacts_response, "artefact 2", None, False)
         self.assertNotIn("testuser", result)
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_by_user_handle_with_assigned_to_filter(self, mock_get_assignee_handle):
-        mock_get_assignee_handle.return_value = {"username": "testuser"}
+    @patch('plugins.certification.artefacts.get_user_handle')
+    def test_artefacts_by_user_handle_with_assigned_to_filter(self, mock_get_user_handle):
+        mock_get_user_handle.return_value = {"username": "testuser"}
 
         artefacts_response = [self.artefact1, self.artefact2]
         result = artefacts_by_user_handle(artefacts_response, None, "testuser", False)
@@ -135,9 +135,9 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         result = artefacts_by_user_handle(artefacts_response, None, "otheruser", False)
         self.assertNotIn("testuser", result)
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_by_user_handle_with_pending_filter(self, mock_get_assignee_handle):
-        mock_get_assignee_handle.return_value = {"username": "testuser"}
+    @patch('plugins.certification.artefacts.get_user_handle')
+    def test_artefacts_by_user_handle_with_pending_filter(self, mock_get_user_handle):
+        mock_get_user_handle.return_value = {"username": "testuser"}
 
         artefacts_response = [self.artefact1, self.artefact2]
         result = artefacts_by_user_handle(artefacts_response, None, None, True)

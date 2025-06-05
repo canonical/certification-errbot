@@ -3,7 +3,7 @@ from test_observer.models import ArtefactStatus, ArtefactResponse
 from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
 from test_observer.client import Client as TestObserverClient
 
-from user_handle_cache import get_assignee_handle
+from user_handle_cache import get_user_handle
 from typing import List, Dict
 
 import logging
@@ -131,7 +131,7 @@ def artefacts_by_user_handle(
             continue
         
         if assignee and assignee.launchpad_email:
-            assignee_handle = get_assignee_handle(assignee.launchpad_email)["username"]
+            assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
         else:
             assignee_handle = "No assignee"
 
@@ -171,7 +171,7 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
                 continue
 
             if assignee and assignee.launchpad_email:
-                assignee_handle = get_assignee_handle(assignee.launchpad_email)["username"]
+                assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
             else:
                 assignee_handle = None
 
