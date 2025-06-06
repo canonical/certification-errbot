@@ -101,7 +101,9 @@ class PullRequestCache:
                 if not page_prs:
                     break
                     
-                prs.extend(page_prs)
+                # Filter out draft PRs before adding to cache
+                non_draft_prs = [pr for pr in page_prs if not pr.get("draft", False)]
+                prs.extend(non_draft_prs)
                 page += 1
                 
             except requests.exceptions.RequestException as e:
@@ -197,6 +199,48 @@ class PullRequestCache:
             "total_prs": total_prs,
             "cache_expired": self.is_cache_expired()
         }
+    
+    def get_team_members(self, team_name: str) -> List[str]:
+        """
+        Get list of GitHub usernames for members of a specific team.
+        Returns list of usernames, empty list if team not found or error occurs.
+        """
+        if not team_name:
+            logger.warning("No team name provided")
+            return []
+            
+        headers = self._get_headers()
+        members = []
+        page = 1
+        per_page = 100
+        
+        while True:
+            url = f"https://api.github.com/orgs/{self.github_org}/teams/{team_name}/members"
+            params = {"page": page, "per_page": per_page}
+            
+            try:
+                response = requests.get(url, headers=headers, params=params)
+                
+                # Handle 404 for teams that don't exist or are not accessible
+                if response.status_code == 404:
+                    logger.warning(f"Team {self.github_org}/{team_name} not found or not accessible")
+                    return []
+                    
+                response.raise_for_status()
+                
+                page_members = response.json()
+                if not page_members:
+                    break
+                    
+                members.extend([member["login"] for member in page_members])
+                page += 1
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Error fetching team members for {self.github_org}/{team_name}: {e}")
+                return []
+        
+        logger.info(f"Found {len(members)} members in team {team_name}")
+        return members
 
 # Global cache instance - will be initialized with repository filter in certification.py
 pr_cache = None

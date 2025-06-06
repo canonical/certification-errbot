@@ -1,13 +1,9 @@
 import os
 from datetime import datetime
-import requests
 import logging
 
 from dotenv import load_dotenv
 from errbot import BotPlugin, botcmd, re_botcmd
-
-# Load environment variables from .env file if present
-load_dotenv()
 
 from c3.client import AuthenticatedClient as C3Client
 from c3.api.physicalmachinesview.physicalmachinesview_list import sync_detailed as get_physicalmachinesview
@@ -22,6 +18,8 @@ from apscheduler.triggers.cron import CronTrigger
 
 import ssl_fix
 
+# Load environment variables from .env file if present
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 
@@ -32,6 +30,7 @@ mattermost_token = os.environ.get("ERRBOT_TOKEN")
 mattermost_base_url = f"https://{os.environ.get('ERRBOT_SERVER')}/api/v4"
 github_token = os.environ.get("GITHUB_TOKEN")
 github_org = os.environ.get("GITHUB_ORG")
+github_team = os.environ.get("GITHUB_TEAM")
 
 if not c3_client_id or not c3_client_secret:
     raise Exception("C3_CLIENT_ID and C3_CLIENT_SECRET must be set")
@@ -57,11 +56,13 @@ DEFAULT_REPOS = [
     "certification-ops",
     "charm-integration-testing",
     "checkbox",
+    "fcbtest",
     "hardware-api",
     "hexr",
     "hwcert-jenkins-jobs",
     "hwcert-jenkins-tools",
     "openapi-rest-proxy",
+    "project_comp",
     "sqa-cloud-deployment-pipeline",
     "test_observer",
     "test_scheduler",
@@ -72,8 +73,14 @@ DEFAULT_REPOS = [
     "weebl",
     "weebl-tools",
     "yarf",
-    "zapper"
 ]
+
+# Get repositories from environment variable or use defaults
+github_repositories_env = os.environ.get("GITHUB_REPOSITORIES")
+if github_repositories_env:
+    GITHUB_REPOS = [repo.strip() for repo in github_repositories_env.split(',') if repo.strip()]
+else:
+    GITHUB_REPOS = DEFAULT_REPOS
 
 
 class CertificationPlugin(BotPlugin):
@@ -82,8 +89,8 @@ class CertificationPlugin(BotPlugin):
     """
     def __init__(self, bot, name):
         super().__init__(bot, name)
-        # Initialize PR cache with default repository filter
-        self.pr_cache = PullRequestCache(repo_filter=DEFAULT_REPOS)
+        # Initialize PR cache with configured repository filter
+        self.pr_cache = PullRequestCache(repo_filter=GITHUB_REPOS)
     
     def activate(self):
         super().activate()
@@ -93,9 +100,9 @@ class CertificationPlugin(BotPlugin):
         # Daily artefact digest (Mon-Fri 9:00 UTC)
         digest_trigger = CronTrigger(day_of_week='mon-fri', hour=9, minute=00, timezone='UTC')
         scheduler.add_job(self.polled_digest_sending, digest_trigger)
-        
-        # PR cache refresh (every 15 minutes)
-        pr_cache_trigger = CronTrigger(minute='*/2', timezone='UTC')
+
+        # PR cache refresh (every 5 minutes)
+        pr_cache_trigger = CronTrigger(minute='*/5', timezone='UTC')
         scheduler.add_job(self.refresh_pr_cache, pr_cache_trigger)
         
         scheduler.start()
@@ -105,6 +112,100 @@ class CertificationPlugin(BotPlugin):
 
     def polled_digest_sending(self):
         send_artefact_summaries(self)
+        self.send_team_pr_summaries()
+    
+    def _format_pr_summary(self, github_username: str, pr_data: dict, is_digest: bool = False) -> str:
+        """
+        Format PR summary message for a user. Shared between !prs command and digest.
+        
+        Args:
+            github_username: GitHub username
+            pr_data: Dict with 'assigned' and 'authored_unassigned' PR lists
+            is_digest: True for digest format, False for command response
+        
+        Returns:
+            Formatted message string
+        """
+        prs_requested_to_review = pr_data["assigned"]  # These are PRs where user is in requested_reviewers
+        authored_prs_with_no_requested_reviewer = pr_data["authored_unassigned"]
+        
+        if not prs_requested_to_review and not authored_prs_with_no_requested_reviewer:
+            if is_digest:
+                return None  # Skip digest for users with no PRs
+            else:
+                cache_stats = self.pr_cache.get_cache_stats()
+                return f"No PRs with @{github_username} as requested reviewer and no unassigned PRs authored by @{github_username} across {cache_stats['total_repositories']} repositories in {github_org}."
+        
+        if is_digest:
+            msg = f"Good morning @{github_username}! Here's your daily PR summary:\n\n"
+        else:
+            msg = ""
+        
+        if prs_requested_to_review:
+            msg += f"**PRs pending review from @{github_username}:**\n"
+            for pr in prs_requested_to_review:
+                repo_name = pr.get("repository", "unknown")
+                if is_digest:
+                    msg += f"- [{pr['title']}]({pr['html_url']}) ({repo_name})\n"
+                else:
+                    msg += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
+            msg += "\n" if is_digest else ""
+        
+        if authored_prs_with_no_requested_reviewer:
+            if not is_digest and prs_requested_to_review:
+                msg += "\n"
+            msg += f"**PRs authored by @{github_username} with no reviewer assigned:**\n"
+            for pr in authored_prs_with_no_requested_reviewer:
+                repo_name = pr.get("repository", "unknown")
+                if is_digest:
+                    msg += f"- [{pr['title']}]({pr['html_url']}) ({repo_name})\n"
+                else:
+                    msg += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
+        
+        return msg
+
+    def send_team_pr_summaries(self):
+        """
+        Send daily PR summaries to all members of the configured GitHub team.
+        """
+        if not github_team:
+            logger.debug("No GitHub team configured, skipping team PR summaries")
+            return
+            
+        try:
+            # Get team members
+            team_members = self.pr_cache.get_team_members(github_team)
+            if not team_members:
+                logger.warning(f"No members found for team {github_team}")
+                return
+                
+            logger.info(f"Sending PR summaries to {len(team_members)} team members")
+            
+            for github_username in team_members:
+                logger.info(f"Sending PR summary to {github_username}")
+
+                try:
+                    # Get PR data for this user
+                    pr_data = self.pr_cache.get_prs_for_user(github_username)
+                    
+                    # Format message using shared logic
+                    msg = self._format_pr_summary(github_username, pr_data, is_digest=True)
+                    
+                    # Skip if no PRs for this user
+                    if not msg:
+                        logger.info(f"No PRs found for {github_username}, skipping")
+                        continue
+                    
+                    # Send direct message to user
+                    identifier = self.build_identifier(f"@{github_username}")
+                    self.send(identifier, msg)
+                    logger.info(f"Sent PR summary to {github_username}")
+                    
+                except Exception as e:
+                    logger.error(f"Error sending PR summary to {github_username}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Error sending team PR summaries: {e}")
     
     def refresh_pr_cache(self):
         """Refresh the PR cache with latest data from filtered repositories"""
@@ -113,6 +214,7 @@ class CertificationPlugin(BotPlugin):
             logger.info("PR cache refreshed successfully")
         except Exception as e:
             logger.error(f"Error refreshing PR cache: {e}")
+        
 
     @botcmd(split_args_with=' ')
     def artefacts(self, msg, args):
@@ -121,7 +223,7 @@ class CertificationPlugin(BotPlugin):
     @botcmd(split_args_with=" ")
     def prs(self, msg, args):
         """
-        List PRs assigned to you or another user, plus unassigned PRs authored by you
+        List PRs where you are a requested reviewer or another user, plus unassigned PRs authored by you
         Usage: !prs [mattermost_username]
         Default username: your own username (mapped from LDAP)
         Now searches across ALL repositories in the configured GitHub organization
@@ -175,6 +277,8 @@ class CertificationPlugin(BotPlugin):
         try:
             # Get PRs for the user from cache
             pr_data = self.pr_cache.get_prs_for_user(github_username)
+            
+            # Log the findings
             prs_requested_to_review = pr_data["assigned"]
             authored_prs_with_no_requested_reviewer = pr_data["authored_unassigned"]
             
@@ -182,29 +286,11 @@ class CertificationPlugin(BotPlugin):
             is_self = not (args and len(args) > 0 and args[0].strip())  # No meaningful argument means looking at own PRs
             user_prefix = "you" if is_self else f"@{args[0].lstrip('@')}"
 
-            logger.info(f"Assigned PRs for {user_prefix}: {len(prs_requested_to_review)} found")
+            logger.info(f"PRs requesting review from {user_prefix}: {len(prs_requested_to_review)} found")
             logger.info(f"Authored unassigned PRs for {user_prefix}: {len(authored_prs_with_no_requested_reviewer)} found")
             
-            if not prs_requested_to_review and not authored_prs_with_no_requested_reviewer:
-                cache_stats = self.pr_cache.get_cache_stats()
-                return f"No PRs assigned to {user_prefix} and no unassigned PRs authored by {user_prefix} across {cache_stats['total_repositories']} repositories in {github_org}."
-            
-            response = ""
-            
-            if prs_requested_to_review:
-                response += f"PRs pending review from {user_prefix}:\n\n"
-                for pr in prs_requested_to_review:
-                    repo_name = pr.get("repository", "unknown")
-                    response += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
-            
-            if authored_prs_with_no_requested_reviewer:
-                if response:
-                    response += "\n"
-                response += f"PRs authored by {user_prefix} with no reviewer assigned:\n\n"
-                for pr in authored_prs_with_no_requested_reviewer:
-                    repo_name = pr.get("repository", "unknown")
-                    response += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
-
+            # Use shared formatting logic
+            response = self._format_pr_summary(github_username, pr_data, is_digest=False)
             return response
             
         except Exception as e:

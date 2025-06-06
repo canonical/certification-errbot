@@ -55,6 +55,14 @@ config:
         GitHub organization name to fetch PRs from.
       default: "canonical"
       type: string
+    github-repositories:
+      description: |
+        Comma-separated list of repository names to monitor for PRs. If not set, uses default list.
+      type: string
+    github-team:
+      description: |
+        GitHub team name to send daily PR notifications for. Team members will receive PR summaries at 9am UTC Mon-Fri.
+      type: string
     ldap-server:
       description: |
         LDAP server URL for user lookups.

@@ -2,6 +2,11 @@ import logging
 import os
 import sys
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if present
+load_dotenv()
+
 # BACKEND = "Text"  # Errbot will start in text mode (console only mode) and will answer commands from there.
 BACKEND = "Mattermost"
 

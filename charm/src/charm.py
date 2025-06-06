@@ -89,6 +89,8 @@ class ErrbotCharm(ops.CharmBase):
                             "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
                             "GITHUB_TOKEN": self.model.config["github-token"],
                             "GITHUB_ORG": self.model.config["github-org"],
+                            "GITHUB_REPOSITORIES": self.model.config["github-repositories"],
+                            "GITHUB_TEAM": self.model.config["github-team"],
                             "LDAP_SERVER": self.model.config["ldap-server"],
                             "LDAP_BASE_DN": self.model.config["ldap-base-dn"],
                             "LDAP_BIND_DN": self.model.config["ldap-bind-dn"],
