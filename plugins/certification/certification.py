@@ -1,7 +1,13 @@
-from errbot import BotPlugin, botcmd, re_botcmd
 import os
 from datetime import datetime
 import requests
+import logging
+
+from dotenv import load_dotenv
+from errbot import BotPlugin, botcmd, re_botcmd
+
+# Load environment variables from .env file if present
+load_dotenv()
 
 from c3.client import AuthenticatedClient as C3Client
 from c3.api.physicalmachinesview.physicalmachinesview_list import sync_detailed as get_physicalmachinesview
@@ -9,13 +15,13 @@ from c3_auth import get_access_token as get_c3_access_token
 from artefacts import reply_with_artefacts_summary, send_artefact_summaries
 from ldap import get_github_username_from_mattermost_handle, get_email_from_mattermost_handle
 from github import get_github_username_from_email
+from pr_cache import PullRequestCache
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 import ssl_fix
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -42,14 +48,33 @@ c3_access_token = get_c3_access_token(C3_BASE_URL, c3_client_id, c3_client_secre
 
 now = datetime.now().date()
 
-# Predefined list of repositories to check for PRs
+# Default repositories to monitor for PRs
 DEFAULT_REPOS = [
+    "blueprints",
+    "certification-docs",
+    "certification-lab-ci",
+    "certification-lab-manager",
+    "certification-ops",
+    "charm-integration-testing",
     "checkbox",
-    "testflinger", 
-    "hwcert-jenkins-jobs", 
-    "certification-docs", 
-    "certification-ops"
+    "hardware-api",
+    "hexr",
+    "hwcert-jenkins-jobs",
+    "hwcert-jenkins-tools",
+    "openapi-rest-proxy",
+    "sqa-cloud-deployment-pipeline",
+    "test_observer",
+    "test_scheduler",
+    "testflinger",
+    "testflinger-agent-charm-configs",
+    "ubuntu-gui-testing",
+    "ubuntu.com",
+    "weebl",
+    "weebl-tools",
+    "yarf",
+    "zapper"
 ]
+
 
 class CertificationPlugin(BotPlugin):
     """
@@ -57,17 +82,37 @@ class CertificationPlugin(BotPlugin):
     """
     def __init__(self, bot, name):
         super().__init__(bot, name)
+        # Initialize PR cache with default repository filter
+        self.pr_cache = PullRequestCache(repo_filter=DEFAULT_REPOS)
     
     def activate(self):
         super().activate()
 
         scheduler = BackgroundScheduler()
-        trigger = CronTrigger(day_of_week='mon-fri', hour=9, minute=00, timezone='UTC')
-        scheduler.add_job(self.polled_digest_sending, trigger)
+        
+        # Daily artefact digest (Mon-Fri 9:00 UTC)
+        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=9, minute=00, timezone='UTC')
+        scheduler.add_job(self.polled_digest_sending, digest_trigger)
+        
+        # PR cache refresh (every 15 minutes)
+        pr_cache_trigger = CronTrigger(minute='*/2', timezone='UTC')
+        scheduler.add_job(self.refresh_pr_cache, pr_cache_trigger)
+        
         scheduler.start()
+        
+        # Initial PR cache population
+        self.refresh_pr_cache()
 
     def polled_digest_sending(self):
         send_artefact_summaries(self)
+    
+    def refresh_pr_cache(self):
+        """Refresh the PR cache with latest data from filtered repositories"""
+        try:
+            self.pr_cache.refresh_cache()
+            logger.info("PR cache refreshed successfully")
+        except Exception as e:
+            logger.error(f"Error refreshing PR cache: {e}")
 
     @botcmd(split_args_with=' ')
     def artefacts(self, msg, args):
@@ -79,6 +124,7 @@ class CertificationPlugin(BotPlugin):
         List PRs assigned to you or another user, plus unassigned PRs authored by you
         Usage: !prs [mattermost_username]
         Default username: your own username (mapped from LDAP)
+        Now searches across ALL repositories in the configured GitHub organization
         """
         github_username = None
         
@@ -126,63 +172,43 @@ class CertificationPlugin(BotPlugin):
         if not github_token:
             return "GitHub token not configured. Please set the GITHUB_TOKEN environment variable."
         
-        headers = {
-            "Authorization": f"token {github_token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-        
         try:
-            prs_requested_to_review = []
-            authored_prs_with_no_requested_reviewer = []
-            
-            # Use predefined repositories with configured organization
-            for repo_name in DEFAULT_REPOS:
-                # Get PRs assigned to the user
-                prs_url = f"https://api.github.com/repos/{github_org}/{repo_name}/pulls?state=open"
-                prs_response = requests.get(prs_url, headers=headers)
-                
-                if prs_response.status_code == 200:
-                    prs = prs_response.json()
-                    for pr in prs:
-                        requested_reviewers = pr.get("requested_reviewers", [])
-                        author = pr.get("user", {}).get("login", "")
-                        
-                        # Check if PR is assigned to the user
-                        if any(reviewer["login"].lower() == github_username.lower() for reviewer in requested_reviewers):
-                            prs_requested_to_review.append(pr)
-                        # Check if PR is authored by user but has no assignees
-                        elif author.lower() == github_username.lower() and len(requested_reviewers) == 0:
-                            authored_prs_with_no_requested_reviewer.append(pr)
-                else:
-                    return f"Error fetching PRs from {github_org}/{repo_name}: {prs_response.status_code} - {prs_response.text}"
+            # Get PRs for the user from cache
+            pr_data = self.pr_cache.get_prs_for_user(github_username)
+            prs_requested_to_review = pr_data["assigned"]
+            authored_prs_with_no_requested_reviewer = pr_data["authored_unassigned"]
             
             # Determine if we're looking at the requesting user's PRs or someone else's
             is_self = not (args and len(args) > 0 and args[0].strip())  # No meaningful argument means looking at own PRs
             user_prefix = "you" if is_self else f"@{args[0].lstrip('@')}"
 
-            logger.info(f"Assigned PRs for {user_prefix}: {prs_requested_to_review}")
-            logger.info(f"Authored unassigned PRs for {user_prefix}: {authored_prs_with_no_requested_reviewer}")
+            logger.info(f"Assigned PRs for {user_prefix}: {len(prs_requested_to_review)} found")
+            logger.info(f"Authored unassigned PRs for {user_prefix}: {len(authored_prs_with_no_requested_reviewer)} found")
             
             if not prs_requested_to_review and not authored_prs_with_no_requested_reviewer:
-                return f"No PRs assigned to {user_prefix} and no unassigned PRs authored by {user_prefix} in the monitored repositories."
+                cache_stats = self.pr_cache.get_cache_stats()
+                return f"No PRs assigned to {user_prefix} and no unassigned PRs authored by {user_prefix} across {cache_stats['total_repositories']} repositories in {github_org}."
             
             response = ""
             
             if prs_requested_to_review:
                 response += f"PRs pending review from {user_prefix}:\n\n"
                 for pr in prs_requested_to_review:
-                    response += f"- [{pr['html_url']}]({pr['html_url']}): {pr['title']}\n"
+                    repo_name = pr.get("repository", "unknown")
+                    response += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
             
             if authored_prs_with_no_requested_reviewer:
                 if response:
                     response += "\n"
                 response += f"PRs authored by {user_prefix} with no reviewer assigned:\n\n"
                 for pr in authored_prs_with_no_requested_reviewer:
-                    response += f"- [{pr['html_url']}]({pr['html_url']}): {pr['title']}\n"
-                
+                    repo_name = pr.get("repository", "unknown")
+                    response += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
+
             return response
             
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
+            logger.error(f"Error getting PRs from cache: {e}")
             return f"Error fetching PRs: {str(e)}"
 
     @botcmd(split_args_with=" ", name="cid")
