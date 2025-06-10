@@ -79,6 +79,14 @@ config:
       description: |
         LDAP bind password for authentication.
       type: string
+    jira-server:
+      description: |
+        Jira server URL for issue tracking integration.
+      type: string
+    jira-token:
+      description: |
+        Jira API token for authentication.
+      type: string
 
 containers:
   errbot:

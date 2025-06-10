@@ -53,9 +53,10 @@ uv add package-name
 ### Plugin Structure
 
 The certification plugin (`plugins/certification/`) contains:
-- `certification.py`: Main plugin with bot commands (`!artefacts`, `!prs`, `!cid`)
+- `certification.py`: Main plugin with bot commands (`!artefacts`, `!prs`, `!cid`, `!jira`, `!team_jira`)
 - `artefacts.py`: Test Observer artefact management and notifications
 - `github.py`: GitHub API integration for PR management
+- `jira_api.py`: Jira API integration for issue tracking
 - `ldap.py`: LDAP integration for user mapping
 - `mattermost_api.py`: Mattermost API utilities
 - `c3_auth.py`: C3 authentication handling
@@ -66,7 +67,8 @@ The certification plugin (`plugins/certification/`) contains:
 - **C3 API**: Auto-generated client at `plugins/certification/c3/` for certification database access
 - **Test Observer API**: Auto-generated client for test artefact tracking
 - **GitHub API**: For PR monitoring across predefined repositories (checkbox, testflinger, hwcert-jenkins-jobs, certification-docs, certification-ops)
-- **LDAP**: For mapping Mattermost usernames to GitHub accounts
+- **Jira API**: For issue tracking integration with team members
+- **LDAP**: For mapping Mattermost usernames to GitHub accounts and email addresses
 - **Scheduled Jobs**: APScheduler for daily artefact digest notifications (Mon-Fri 9:00 UTC)
 
 ### Configuration
@@ -79,6 +81,7 @@ Required environment variables include:
 - `ERRBOT_TOKEN`, `ERRBOT_SERVER`, `ERRBOT_TEAM`, `ERRBOT_ADMINS`
 - `C3_CLIENT_ID`, `C3_CLIENT_SECRET`
 - `GITHUB_TOKEN`, `GITHUB_ORG`
+- `JIRA_SERVER`, `JIRA_TOKEN`
 - `LDAP_SERVER`, `LDAP_BASE_DN`, `LDAP_BIND_DN`, `LDAP_BIND_PASSWORD`
 
 ### Testing Strategy
@@ -90,3 +93,5 @@ Tests use unittest with mocking for external API calls. Test configuration inclu
 - `!artefacts [filters]`: Display test artefacts with optional filtering
 - `!prs [username]`: Show GitHub PRs assigned to user (auto-maps from Mattermost via LDAP)
 - `!cid <canonical_id>`: Look up machine information from C3 database
+- `!jira [username]`: Show Jira issues assigned to user (maps Mattermost username to email via LDAP)
+- `!team_jira`: Show Jira issues assigned to all GitHub team members

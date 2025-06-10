@@ -12,6 +12,7 @@ from artefacts import reply_with_artefacts_summary, send_artefact_summaries
 from ldap import get_github_username_from_mattermost_handle, get_email_from_mattermost_handle
 from github import get_github_username_from_email
 from pr_cache import PullRequestCache
+from jira_api import get_jira_issues_for_mattermost_handle, get_jira_issues_for_github_team_members
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -98,7 +99,7 @@ class CertificationPlugin(BotPlugin):
         scheduler = BackgroundScheduler()
         
         # Daily artefact digest (Mon-Fri 9:00 UTC)
-        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=9, minute=00, timezone='UTC')
+        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=7, minute=10, timezone='UTC')
         scheduler.add_job(self.polled_digest_sending, digest_trigger)
 
         # PR cache refresh (every 5 minutes)
@@ -111,10 +112,10 @@ class CertificationPlugin(BotPlugin):
         self.refresh_pr_cache()
 
     def polled_digest_sending(self):
-        send_artefact_summaries(self)
+        # send_artefact_summaries(self)
         self.send_team_pr_summaries()
     
-    def _format_pr_summary(self, github_username: str, pr_data: dict, is_digest: bool = False) -> str:
+    def _format_pr_summary(self, github_username: str, pr_data: dict, is_digest: bool = False) -> str | None:
         """
         Format PR summary message for a user. Shared between !prs command and digest.
         
@@ -318,4 +319,84 @@ class CertificationPlugin(BotPlugin):
                     msg = f"{make} | {model} | {tf_provision_type}\n"
 
             return msg
+
+    @botcmd(split_args_with=" ")
+    def jira(self, msg, args):
+        """
+        List Jira issues assigned to you or another user
+        Usage: !jira [mattermost_username]
+        Default username: your own username (mapped from LDAP to email)
+        """
+        mattermost_username = None
+        
+        # Parse arguments
+        if args and len(args) > 0 and args[0].strip():
+            # If Mattermost username is provided
+            mattermost_username = args[0].lstrip('@')  # Remove @ prefix if present
+        else:
+            # Use requesting user's Mattermost username
+            mattermost_username = msg.frm.username
+            
+        try:
+            # Get Jira issues for the user
+            issues = get_jira_issues_for_mattermost_handle(mattermost_username)
+            
+            if not issues:
+                return f"No open Jira issues assigned to @{mattermost_username}"
+            
+            # Format the response
+            response = f"**Jira issues assigned to @{mattermost_username}:**\n\n"
+            
+            for issue in issues:
+                response += f"- [{issue['key']}]({issue['url']}) - {issue['summary']}\n"
+                response += f"  Status: {issue['status']} | Priority: {issue['priority']}\n\n"
+            
+            response += f"Total: {len(issues)} issue(s)"
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error fetching Jira issues for {mattermost_username}: {e}")
+            return f"Error fetching Jira issues: {str(e)}"
+
+    @botcmd(split_args_with=" ")
+    def team_jira(self, msg, args):
+        """
+        List Jira issues assigned to GitHub team members
+        Usage: !team_jira
+        Uses the configured GitHub team
+        """
+        if not github_team:
+            return "No GitHub team configured. Please set the GITHUB_TEAM environment variable."
+            
+        try:
+            # Get team members
+            team_members = self.pr_cache.get_team_members(github_team)
+            if not team_members:
+                return f"No members found for team {github_team}"
+                
+            # Get Jira issues for all team members
+            team_issues = get_jira_issues_for_github_team_members(team_members)
+            
+            if not team_issues:
+                return f"No open Jira issues assigned to any members of team {github_team}"
+            
+            # Format the response
+            response = f"**Jira issues assigned to team {github_team}:**\n\n"
+            
+            total_issues = 0
+            for github_username, issues in team_issues.items():
+                if issues:
+                    response += f"**@{github_username}:**\n"
+                    for issue in issues:
+                        response += f"- [{issue['key']}]({issue['url']}) - {issue['summary']}\n"
+                        response += f"  Status: {issue['status']} | Priority: {issue['priority']}\n"
+                    response += "\n"
+                    total_issues += len(issues)
+            
+            response += f"Total: {total_issues} issue(s) across {len(team_issues)} team member(s)"
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error fetching team Jira issues: {e}")
+            return f"Error fetching team Jira issues: {str(e)}"
 

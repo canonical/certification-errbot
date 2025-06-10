@@ -97,8 +97,9 @@ def get_email_from_mattermost_handle(mattermost_handle: str) -> Optional[str]:
         
         # Search for user by Mattermost handle - try multiple possible attributes
         search_filters = [
-            f"(uid={mattermost_handle})",
-            f"(cn={mattermost_handle})",
+            f"(mozillaNickname={mattermost_handle})",
+            f"(mail={mattermost_handle})",
+            f"(gitHubID={mattermost_handle})",
         ]
         
         for search_filter in search_filters:
@@ -110,6 +111,7 @@ def get_email_from_mattermost_handle(mattermost_handle: str) -> Optional[str]:
             
             if conn.entries:
                 entry = conn.entries[0]
+                logger.debug(entry)
                 email = entry.mail.value if hasattr(entry, 'mail') else None
                 return email
         
