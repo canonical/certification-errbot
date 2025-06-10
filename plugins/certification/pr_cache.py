@@ -171,16 +171,25 @@ class PullRequestCache:
         for repo_name, prs in self.cache.items():
             for pr in prs:
                 requested_reviewers = pr.get("requested_reviewers", [])
+                assignees = pr.get("assignees", [])
                 author = pr.get("user", {}).get("login", "")
                 
-                # Check if PR is assigned to the user for review
-                if any(reviewer["login"].lower() == github_username.lower() for reviewer in requested_reviewers):
+                # Check if PR is assigned to the user for review or as assignee
+                is_requested_reviewer = any(reviewer["login"].lower() == github_username.lower() for reviewer in requested_reviewers)
+                is_assignee = any(assignee["login"].lower() == github_username.lower() for assignee in assignees)
+                
+                if is_requested_reviewer or is_assignee:
                     pr_with_repo = pr.copy()
                     pr_with_repo["repository"] = repo_name
+                    pr_with_repo["user_role"] = []
+                    if is_requested_reviewer:
+                        pr_with_repo["user_role"].append("reviewer")
+                    if is_assignee:
+                        pr_with_repo["user_role"].append("assignee")
                     assigned_prs.append(pr_with_repo)
                 
-                # Check if PR is authored by user but has no reviewers assigned
-                elif author.lower() == github_username.lower() and len(requested_reviewers) == 0:
+                # Check if PR is authored by user but has no reviewers or assignees
+                elif author.lower() == github_username.lower() and len(requested_reviewers) == 0 and len(assignees) == 0:
                     pr_with_repo = pr.copy()
                     pr_with_repo["repository"] = repo_name
                     authored_unassigned_prs.append(pr_with_repo)

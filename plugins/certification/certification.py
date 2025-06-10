@@ -99,7 +99,7 @@ class CertificationPlugin(BotPlugin):
         scheduler = BackgroundScheduler()
         
         # Daily artefact digest (Mon-Fri 9:00 UTC)
-        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=7, minute=10, timezone='UTC')
+        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=7, minute=0, timezone='UTC')
         scheduler.add_job(self.polled_digest_sending, digest_trigger)
 
         # PR cache refresh (every 5 minutes)
@@ -127,36 +127,46 @@ class CertificationPlugin(BotPlugin):
         Returns:
             Formatted message string
         """
-        prs_requested_to_review = pr_data["assigned"]  # These are PRs where user is in requested_reviewers
-        authored_prs_with_no_requested_reviewer = pr_data["authored_unassigned"]
+        prs_assigned_to_user = pr_data["assigned"]  # These are PRs where user is requested reviewer or assignee
+        authored_prs_with_no_assignment = pr_data["authored_unassigned"]
         
-        if not prs_requested_to_review and not authored_prs_with_no_requested_reviewer:
+        if not prs_assigned_to_user and not authored_prs_with_no_assignment:
             if is_digest:
                 return None  # Skip digest for users with no PRs
             else:
                 cache_stats = self.pr_cache.get_cache_stats()
-                return f"No PRs with @{github_username} as requested reviewer and no unassigned PRs authored by @{github_username} across {cache_stats['total_repositories']} repositories in {github_org}."
+                return f"No PRs with @{github_username} as requested reviewer or assignee, and no unassigned PRs authored by @{github_username} across {cache_stats['total_repositories']} repositories in {github_org}."
         
         if is_digest:
             msg = f"Good morning @{github_username}! Here's your daily PR summary:\n\n"
         else:
             msg = ""
         
-        if prs_requested_to_review:
-            msg += f"**PRs pending review from @{github_username}:**\n"
-            for pr in prs_requested_to_review:
+        if prs_assigned_to_user:
+            msg += f"**PRs assigned to @{github_username}:**\n"
+            for pr in prs_assigned_to_user:
                 repo_name = pr.get("repository", "unknown")
+                user_roles = pr.get("user_role", [])
+                role_indicator = ""
+                if user_roles:
+                    if "reviewer" in user_roles and "assignee" in user_roles:
+                        role_indicator = " (reviewer + assignee)"
+                    elif "reviewer" in user_roles:
+                        role_indicator = " (reviewer)"
+                    elif "assignee" in user_roles:
+                        role_indicator = " (assignee)"
+                
                 if is_digest:
-                    msg += f"- [{pr['title']}]({pr['html_url']}) ({repo_name})\n"
+                    msg += f"- [{pr['title']}]({pr['html_url']}) ({repo_name}){role_indicator}\n"
                 else:
-                    msg += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}\n"
+                    msg += f"- [{pr['html_url']}]({pr['html_url']}) ({repo_name}): {pr['title']}{role_indicator}\n"
             msg += "\n" if is_digest else ""
         
-        if authored_prs_with_no_requested_reviewer:
-            if not is_digest and prs_requested_to_review:
+        if authored_prs_with_no_assignment:
+            if not is_digest and prs_assigned_to_user:
                 msg += "\n"
-            msg += f"**PRs authored by @{github_username} with no reviewer assigned:**\n"
-            for pr in authored_prs_with_no_requested_reviewer:
+            msg += f"**PRs authored by @{github_username} with no reviewer or assignee:**\n"
+            for pr in authored_prs_with_no_assignment:
                 repo_name = pr.get("repository", "unknown")
                 if is_digest:
                     msg += f"- [{pr['title']}]({pr['html_url']}) ({repo_name})\n"
@@ -224,7 +234,7 @@ class CertificationPlugin(BotPlugin):
     @botcmd(split_args_with=" ")
     def prs(self, msg, args):
         """
-        List PRs where you are a requested reviewer or another user, plus unassigned PRs authored by you
+        List PRs where you are a requested reviewer or assignee, plus unassigned PRs authored by you
         Usage: !prs [mattermost_username]
         Default username: your own username (mapped from LDAP)
         Now searches across ALL repositories in the configured GitHub organization
@@ -280,15 +290,15 @@ class CertificationPlugin(BotPlugin):
             pr_data = self.pr_cache.get_prs_for_user(github_username)
             
             # Log the findings
-            prs_requested_to_review = pr_data["assigned"]
-            authored_prs_with_no_requested_reviewer = pr_data["authored_unassigned"]
+            prs_assigned_to_user = pr_data["assigned"]
+            authored_prs_with_no_assignment = pr_data["authored_unassigned"]
             
             # Determine if we're looking at the requesting user's PRs or someone else's
             is_self = not (args and len(args) > 0 and args[0].strip())  # No meaningful argument means looking at own PRs
             user_prefix = "you" if is_self else f"@{args[0].lstrip('@')}"
 
-            logger.info(f"PRs requesting review from {user_prefix}: {len(prs_requested_to_review)} found")
-            logger.info(f"Authored unassigned PRs for {user_prefix}: {len(authored_prs_with_no_requested_reviewer)} found")
+            logger.info(f"PRs assigned to {user_prefix}: {len(prs_assigned_to_user)} found")
+            logger.info(f"Authored unassigned PRs for {user_prefix}: {len(authored_prs_with_no_assignment)} found")
             
             # Use shared formatting logic
             response = self._format_pr_summary(github_username, pr_data, is_digest=False)
