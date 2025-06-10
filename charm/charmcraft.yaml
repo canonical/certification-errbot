@@ -87,6 +87,10 @@ config:
       description: |
         Jira API token for authentication.
       type: string
+    jira-email:
+      description: |
+        Jira email address for API access.
+      type: string
 
 containers:
   errbot:

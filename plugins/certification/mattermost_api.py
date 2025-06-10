@@ -51,3 +51,14 @@ def get_user_by_mattermost_id(token, base_url, user_id) -> UserDetails:
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return response.json()
+
+def get_mattermost_handle_by_email(token, base_url, email) -> str:
+    """
+    Get Mattermost handle (username) by email address
+    Returns the username if found, None if not found
+    """
+    try:
+        user_details = get_user_by_email(token, base_url, email)
+        return user_details.get('username')
+    except Exception:
+        return None

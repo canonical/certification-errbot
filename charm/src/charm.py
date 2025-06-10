@@ -97,6 +97,7 @@ class ErrbotCharm(ops.CharmBase):
                             "LDAP_BIND_PASSWORD": self.model.config["ldap-bind-password"],
                             "JIRA_SERVER": self.model.config["jira-server"],
                             "JIRA_TOKEN": self.model.config["jira-token"],
+                            "JIRA_EMAIL": self.model.config["jira-email"],
                         },
                     }
                 },
