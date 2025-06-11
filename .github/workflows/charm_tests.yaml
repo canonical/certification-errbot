@@ -16,10 +16,10 @@ jobs:
     runs-on: [self-hosted, linux, large, jammy, x64]
     steps:
       - uses: actions/checkout@v4
-      - name: Install tox
-        run: pip install tox
+      - name: Install uv and set up Python
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6
       - name: Run tox checks
-        run: tox
+        run: uvx --with tox-uv tox
     defaults:
       run:
         working-directory: charm
