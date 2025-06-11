@@ -13,11 +13,9 @@ concurrency:
 jobs:
   tox-checks:
     name: Tox checks
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: sudo apt install nodejs -y
       - name: Install tox
         run: pip install tox
       - name: Run tox checks
