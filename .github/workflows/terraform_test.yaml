@@ -21,6 +21,7 @@ jobs:
       - name: Run terraform checks
         run: |
           terraform fmt -check
+          terraform init
           terraform validate
     defaults:
       run:
