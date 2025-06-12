@@ -7,7 +7,7 @@ from plugins.certification.artefacts import (
     send_artefact_summaries,
     artefacts_by_user_handle,
 )
-from plugins.certification.test_observer.models import ArtefactStatus, ArtefactResponse
+from test_observer.models import ArtefactStatus, ArtefactResponse
 
 
 class ArtefactsTestBase(unittest.TestCase):
@@ -27,6 +27,7 @@ class ArtefactsTestBase(unittest.TestCase):
             family="family1",
             track="track1",
             store="store1",
+            branch="branch1",
             series="series1",
             repo="repo1",
             os="os1",
@@ -36,7 +37,8 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url",
             stage="stage1",
             bug_link="bug_link",
-            created_at=datetime.now().date() - timedelta(days=10),
+            archived=False,
+            created_at=datetime.now() - timedelta(days=10),
         )
 
         self.artefact2 = ArtefactResponse(
@@ -51,6 +53,7 @@ class ArtefactsTestBase(unittest.TestCase):
             family="family2",
             track="track2",
             store="store2",
+            branch="branch2",
             series="series2",
             repo="repo2",
             os="os2",
@@ -60,7 +63,8 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url2",
             stage="stage2",
             bug_link="bug_link2",
-            created_at=datetime.now().date() - timedelta(days=10),
+            archived=False,
+            created_at=datetime.now() - timedelta(days=10),
         )
 
 

@@ -27,7 +27,7 @@ Required for local development and when APIs change:
 ### Testing
 ```bash
 # Run tests
-uv run pytest
+uv run pytest tests
 
 # Run charm integration tests
 cd charm && charmcraft test lxd
