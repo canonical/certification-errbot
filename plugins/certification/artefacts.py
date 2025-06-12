@@ -1,6 +1,8 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from test_observer.models import ArtefactStatus, ArtefactResponse
-from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import sync_detailed as get_artefacts
+from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import (
+    sync_detailed as get_artefacts,
+)
 from test_observer.client import Client as TestObserverClient
 
 from user_handle_cache import get_user_handle
@@ -12,11 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 def format_artefact_message(artefact: ArtefactResponse) -> str:
-    due_date_str = f" (due {artefact.due_date.strftime('%d-%m-%Y')})" if artefact.due_date else ""
+    due_date_str = (
+        f" (due {artefact.due_date.strftime('%d-%m-%Y')})" if artefact.due_date else ""
+    )
     completed_reviews = artefact.completed_environment_reviews_count
     all_reviews = artefact.all_environment_reviews_count
-    review_percentage = round((completed_reviews / all_reviews) * 100) if all_reviews > 0 else 0
+    review_percentage = (
+        round((completed_reviews / all_reviews) * 100) if all_reviews > 0 else 0
+    )
     return f"- **[{artefact.name} {artefact.version}](https://test-observer.canonical.com/#/{artefact.family}s/{artefact.id})**: {due_date_str} - {completed_reviews}/{all_reviews} reviews ({review_percentage:.0f}%)\n"
+
 
 def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     """
@@ -26,7 +33,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     When no argument is provided, returns the summary for the sender
     (artefacts filtered with them as the assignee).
-    
+
     Optional arguments to the command:
     - name-contains: filtering by artefact name substring
     - assigned-to: filtering by exact match to user's Mattermost handle
@@ -48,19 +55,21 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     if "all" in args and (artifact_filter or assigned_to_filter):
         return "You can't use 'all' with 'name-contains' or 'assigned-to'"
-    
+
     if "all" in args and "pending" in args:
         return "You can't use 'all' with 'pending'"
-    
+
     if len([arg for arg in args if arg.startswith("name-contains:")]) > 1:
         return "You can't use multiple 'name-contains' arguments"
-    
+
     if len([arg for arg in args if arg.startswith("assigned-to:")]) > 1:
         return "You can't use multiple 'assigned-to' arguments"
 
-    test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
+    test_observer_client = TestObserverClient(
+        base_url="https://test-observer-api.canonical.com"
+    )
 
-    out_msg = ''
+    out_msg = ""
 
     filter_by_sender_as_assignee = True
 
@@ -72,22 +81,28 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
         if not isinstance(r.parsed, list):
             return "Error retrieving artefacts"
 
-        artefacts_by_user = artefacts_by_user_handle(r.parsed, artifact_filter, assigned_to_filter, "pending" in args)
+        artefacts_by_user = artefacts_by_user_handle(
+            r.parsed, artifact_filter, assigned_to_filter, "pending" in args
+        )
 
         if "all" in args or not filter_by_sender_as_assignee:
             user_artefacts = artefacts_by_user
         else:
-            sender_handle = target_user.username 
+            sender_handle = target_user.username
             if sender_handle in artefacts_by_user:
                 user_artefacts = {sender_handle: artefacts_by_user[sender_handle]}
             else:
                 user_artefacts = {}
 
         for user, artefacts in sorted(user_artefacts.items()):
-            artefacts.sort(key=lambda x: (x.assignee is None,
-                                           x.due_date is None,
-                                           False if x.due_date is None else x.due_date < now,
-                                           x.due_date or datetime.max.date()))
+            artefacts.sort(
+                key=lambda x: (
+                    x.assignee is None,
+                    x.due_date is None,
+                    False if x.due_date is None else x.due_date < now,
+                    x.due_date or datetime.max.date(),
+                )
+            )
             if user == "No assignee":
                 out_msg += f"**{user}**\n"
             else:
@@ -101,16 +116,18 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
         if unassigned_artefacts:
             artefacts_by_user["No assignee"] = unassigned_artefacts
 
-    if out_msg == '':
+    if out_msg == "":
         out_msg = f"No pending artefacts (assigned to filter: {assigned_to_filter}, name filter: {artifact_filter})"
 
     return out_msg
 
+
 def artefacts_by_user_handle(
-        artefacts_response: list[ArtefactResponse],
-        artifact_filter: str | None,
-        assigned_to_filter: str | None,
-        pending: bool) -> Dict[str, List[ArtefactResponse]]:
+    artefacts_response: list[ArtefactResponse],
+    artifact_filter: str | None,
+    assigned_to_filter: str | None,
+    pending: bool,
+) -> Dict[str, List[ArtefactResponse]]:
     artefacts_by_user: Dict[str, List[ArtefactResponse]] = {}
 
     now = datetime.now().date()
@@ -120,7 +137,11 @@ def artefacts_by_user_handle(
         if artefact.status == ArtefactStatus.APPROVED:
             continue
 
-        if artefact.status == ArtefactStatus.MARKED_AS_FAILED and artefact.due_date and artefact.due_date < one_week_ago:
+        if (
+            artefact.status == ArtefactStatus.MARKED_AS_FAILED
+            and artefact.due_date
+            and artefact.due_date < one_week_ago
+        ):
             continue
 
         if artifact_filter and artifact_filter not in artefact.name.lower():
@@ -129,7 +150,7 @@ def artefacts_by_user_handle(
         assignee = artefact.assignee
         if not assignee and not artefact.due_date:
             continue
-        
+
         if assignee and assignee.launchpad_email:
             assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
         else:
@@ -145,14 +166,17 @@ def artefacts_by_user_handle(
             artefacts_by_user[assignee_handle] = []
 
         artefacts_by_user[assignee_handle].append(artefact)
-    
+
     return artefacts_by_user
+
 
 def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse]]:
     """
     Get all pending (not approved or failed) artefacts by user's Mattermost handle
     """
-    test_observer_client = TestObserverClient(base_url='https://test-observer-api.canonical.com')
+    test_observer_client = TestObserverClient(
+        base_url="https://test-observer-api.canonical.com"
+    )
 
     with test_observer_client:
         r = get_artefacts(client=test_observer_client)
@@ -163,7 +187,10 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
         artefacts_by_user: Dict[str | None, List[ArtefactResponse]] = {}
 
         for artefact in r.parsed:
-            if artefact.status in [ArtefactStatus.APPROVED, ArtefactStatus.MARKED_AS_FAILED]:
+            if artefact.status in [
+                ArtefactStatus.APPROVED,
+                ArtefactStatus.MARKED_AS_FAILED,
+            ]:
                 continue
 
             assignee = artefact.assignee
@@ -182,6 +209,7 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
 
         return artefacts_by_user
 
+
 def send_artefact_summaries(sender):
     """
     Send a digest of pending Test Observer artefacts per user.
@@ -193,7 +221,7 @@ def send_artefact_summaries(sender):
             continue
 
         if user is not None:
-            msg = ''
+            msg = ""
             msg += f"Hello @{user}! You have some test artefacts to review:\n"
             for artefact in artefacts:
                 msg += format_artefact_message(artefact)
