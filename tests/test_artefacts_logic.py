@@ -20,6 +20,8 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 1",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            comment="",
+            archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
             completed_environment_reviews_count=1,
@@ -27,6 +29,7 @@ class ArtefactsTestBase(unittest.TestCase):
             family="family1",
             track="track1",
             store="store1",
+            branch="",
             series="series1",
             repo="repo1",
             os="os1",
@@ -36,7 +39,7 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url",
             stage="stage1",
             bug_link="bug_link",
-            created_at=datetime.now().date() - timedelta(days=10),
+            created_at=datetime.now() - timedelta(days=10),
         )
 
         self.artefact2 = ArtefactResponse(
@@ -44,6 +47,9 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 2",
             version="1.0",
             status=ArtefactStatus.MARKED_AS_FAILED,
+            comment="",
+            archived=False,
+            branch="",
             due_date=datetime.now().date() - timedelta(days=10),
             assignee=self.assignee,
             completed_environment_reviews_count=0,
@@ -60,7 +66,7 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url2",
             stage="stage2",
             bug_link="bug_link2",
-            created_at=datetime.now().date() - timedelta(days=10),
+            created_at=datetime.now() - timedelta(days=10),
         )
 
 
