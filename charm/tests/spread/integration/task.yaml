@@ -9,10 +9,10 @@ execute: |
   "$PWD/../../../certification-errbot_amd64.charm" errbot \
   --resource errbot-image="${oci_image}" \
   --config log-level=info \
-  --config errbot-team='foobar' \
-  --config errbot-server='https://mattermost.example.com' \
-  --config errbot-token='foobar' \
-  --config errbot-admins='\@mz2 \@jocave' \
+  --config mattermost-team='foobar' \
+  --config mattermost-server='https://mattermost.example.com' \
+  --config mattermost-token='foobar' \
+  --config mattermost-admins='\@mz2 \@jocave' \
   --config c3-client-id='foo' \
   --config c3-client-secret='bar'
 
