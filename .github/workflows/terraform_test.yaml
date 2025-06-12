@@ -1,0 +1,27 @@
+name: Run terraform checks
+
+on:
+  push:
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform_tests.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  terraform-checks:
+    name: Terraform checks
+    runs-on: [self-hosted, linux, large, noble, x64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Terraform
+        run: sudo snap install terraform --classic
+      - name: Run terraform checks
+        run: |
+          terraform fmt -check
+          terraform validate
+    defaults:
+      run:
+        working-directory: terraform
