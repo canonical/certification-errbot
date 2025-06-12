@@ -11,7 +11,7 @@ run_with_retries() {
             --url https://certification.canonical.com/api/v2/openapi \
             --meta none \
             --output-path plugins/certification/test_observer \
-            --overwrite 2>/dev/null; then
+            --overwrite; then
             return 0
         else
             if [ $attempt -lt $MAX_RETRIES ]; then
