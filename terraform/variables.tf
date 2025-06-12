@@ -38,4 +38,5 @@ variable "c3_client_secret" {
 variable "log_level" {
   description = ""
   type        = string
+  default     = "debug"
 }
