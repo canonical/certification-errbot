@@ -98,6 +98,7 @@ class ErrbotCharm(ops.CharmBase):
                             "JIRA_SERVER": self.model.config["jira-server"],
                             "JIRA_TOKEN": self.model.config["jira-token"],
                             "JIRA_EMAIL": self.model.config["jira-email"],
+                            "JIRA_FILTER_ID": self.model.config["jira-filter-id"],
                         },
                     }
                 },

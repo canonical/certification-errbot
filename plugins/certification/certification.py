@@ -103,7 +103,7 @@ class CertificationPlugin(BotPlugin):
         scheduler = BackgroundScheduler()
         
         # Daily artefact digest (Mon-Fri 9:00 UTC)
-        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=14, minute=33, timezone='UTC')
+        digest_trigger = CronTrigger(day_of_week='mon-fri', hour=8, minute=35, timezone='UTC')
         scheduler.add_job(self.polled_digest_sending, digest_trigger)
 
         # PR cache refresh (every 5 minutes)
@@ -147,7 +147,7 @@ class CertificationPlugin(BotPlugin):
                 return f"No PRs with @{github_username} as requested reviewer or assignee, and no unassigned PRs authored by @{github_username} across {cache_stats['total_repositories']} repositories in {github_org}."
         
         if is_digest:
-            msg = f"Good morning @{github_username}! Here's your daily PR summary:\n\n"
+            msg = f"Hello @{github_username}!\n\n"
         else:
             msg = ""
         

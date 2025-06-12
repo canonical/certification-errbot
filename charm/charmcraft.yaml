@@ -91,6 +91,10 @@ config:
       description: |
         Jira email address for API access.
       type: string
+    jira-filter-id:
+      description: |
+        Jira filter ID to use for fetching issues.
+      type: string
 
 containers:
   errbot:
