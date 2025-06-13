@@ -8,7 +8,8 @@ def get_access_token(base_url: str, client_id: str, client_secret: str) -> str:
         data={"grant_type": "client_credentials", "scope": "read write"},
     )
     if not response.ok:
-        raise RuntimeError(f"Failed to log in to C3 via {base_url}/oauth2/token: {response.status_code} {response.text}")
-    
+        raise RuntimeError(
+            f"Failed to log in to C3 via {base_url}/oauth2/token: {response.status_code} {response.text}"
+        )
+
     return response.json()["access_token"]
-    

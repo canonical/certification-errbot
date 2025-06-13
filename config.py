@@ -2,6 +2,11 @@ import logging
 import os
 import sys
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if present
+load_dotenv()
+
 # BACKEND = "Text"  # Errbot will start in text mode (console only mode) and will answer commands from there.
 BACKEND = "Mattermost"
 
@@ -9,7 +14,9 @@ BOT_DATA_DIR = r"./data"
 BOT_EXTRA_PLUGIN_DIR = r"./plugins"
 
 py_major_minor = f"{sys.version_info.major}.{sys.version_info.minor}"
-BOT_EXTRA_BACKEND_DIR = f".venv/lib/python{py_major_minor}/site-packages/err-backend-mattermost"
+BOT_EXTRA_BACKEND_DIR = (
+    f".venv/lib/python{py_major_minor}/site-packages/err-backend-mattermost"
+)
 
 BOT_LOG_FILE = r"./errbot.log"
 BOT_LOG_LEVEL = logging.DEBUG

@@ -11,7 +11,7 @@ BOT_EXTRA_BACKEND_DIR = r"./backend-plugins"
 BOT_LOG_FILE = r"./errbot.log"
 BOT_LOG_LEVEL = logging.INFO
 
-BOT_ADMINS = ["@jocave","mz2"]
+BOT_ADMINS = ["@jocave", "mz2"]
 
 BOT_IDENTITY = {
     # Required
