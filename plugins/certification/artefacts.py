@@ -40,18 +40,24 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     - all: returns all artefacts.
     - pending: list only in 'undecided' state.
     """
+    logger.info(f"reply_with_artefacts_summary called with target_user: {target_user.username}, args: {args}")
 
     artifact_filter = None
     assigned_to_filter = None
+    filter_by_sender_as_assignee = True
 
     for arg in args:
         if arg.startswith("name-contains:"):
             artifact_filter = arg.split("name-contains:", 1)[1].lower()
             filter_by_sender_as_assignee = False
+            logger.info(f"Set artifact_filter to: {artifact_filter}")
 
         if arg.startswith("assigned-to:"):
             assigned_to_filter = arg.split("assigned-to:", 1)[1].lower()
             filter_by_sender_as_assignee = False
+            logger.info(f"Set assigned_to_filter to: {assigned_to_filter}")
+
+    logger.info(f"Final filters - artifact_filter: {artifact_filter}, assigned_to_filter: {assigned_to_filter}, filter_by_sender_as_assignee: {filter_by_sender_as_assignee}")
 
     if "all" in args and (artifact_filter or assigned_to_filter):
         return "You can't use 'all' with 'name-contains' or 'assigned-to'"
@@ -71,30 +77,38 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     out_msg = ""
 
-    filter_by_sender_as_assignee = True
-
     now = datetime.now().date()
 
     with test_observer_client:
+        logger.info("Fetching artefacts from Test Observer API")
         r = get_artefacts(client=test_observer_client)
 
         if not isinstance(r.parsed, list):
+            logger.error("API response is not a list")
             return "Error retrieving artefacts"
 
+        logger.info(f"Retrieved {len(r.parsed)} artefacts from API")
         artefacts_by_user = artefacts_by_user_handle(
             r.parsed, artifact_filter, assigned_to_filter, "pending" in args
         )
+        logger.info(f"Processed artefacts by user: {list(artefacts_by_user.keys())} (total users: {len(artefacts_by_user)})")
 
         if "all" in args or not filter_by_sender_as_assignee:
             user_artefacts = artefacts_by_user
+            logger.info(f"Using all artefacts (all={('all' in args)}, filter_by_sender={filter_by_sender_as_assignee})")
         else:
             sender_handle = target_user.username
+            logger.info(f"Filtering for sender: {sender_handle}")
             if sender_handle in artefacts_by_user:
                 user_artefacts = {sender_handle: artefacts_by_user[sender_handle]}
+                logger.info(f"Found {len(user_artefacts[sender_handle])} artefacts for {sender_handle}")
             else:
                 user_artefacts = {}
+                logger.info(f"No artefacts found for {sender_handle}")
 
+        logger.info(f"Processing {len(user_artefacts)} users with artefacts")
         for user, artefacts in sorted(user_artefacts.items()):
+            logger.info(f"Processing user: {user} with {len(artefacts)} artefacts")
             artefacts.sort(
                 key=lambda x: (
                     x.assignee is None,
@@ -118,7 +132,11 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     if out_msg == "":
         out_msg = f"No pending artefacts (assigned to filter: {assigned_to_filter}, name filter: {artifact_filter})"
+        logger.info("No artefacts to display, returning empty message")
+    else:
+        logger.info(f"Returning message with {len(out_msg)} characters")
 
+    logger.info(f"Final response: {out_msg[:200]}..." if len(out_msg) > 200 else f"Final response: {out_msg}")
     return out_msg
 
 
@@ -128,13 +146,24 @@ def artefacts_by_user_handle(
     assigned_to_filter: str | None,
     pending: bool,
 ) -> Dict[str, List[ArtefactResponse]]:
+    logger.info(f"artefacts_by_user_handle called with {len(artefacts_response)} artefacts, artifact_filter: {artifact_filter}, assigned_to_filter: {assigned_to_filter}, pending: {pending}")
     artefacts_by_user: Dict[str, List[ArtefactResponse]] = {}
 
     now = datetime.now().date()
     one_week_ago = now - timedelta(weeks=1)
+    
+    filtered_count = 0
+    processed_count = 0
 
     for artefact in artefacts_response:
+        processed_count += 1
+        
+        # Log every 10th artefact for debugging
+        if processed_count % 10 == 1:
+            logger.info(f"Processing artefact {processed_count}/{len(artefacts_response)}: {artefact.name} (status: {artefact.status})")
+            
         if artefact.status == ArtefactStatus.APPROVED:
+            logger.debug(f"Skipping approved artefact: {artefact.name}")
             continue
 
         if (
@@ -142,31 +171,51 @@ def artefacts_by_user_handle(
             and artefact.due_date
             and artefact.due_date < one_week_ago
         ):
+            logger.debug(f"Skipping old failed artefact: {artefact.name}")
             continue
 
         if artifact_filter and artifact_filter not in artefact.name.lower():
+            logger.debug(f"Skipping artefact due to name filter: {artefact.name}")
             continue
 
         assignee = artefact.assignee
         if not assignee and not artefact.due_date:
+            logger.debug(f"Skipping artefact with no assignee and no due date: {artefact.name}")
             continue
 
         if assignee and assignee.launchpad_email:
-            assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
+            try:
+                assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
+                logger.debug(f"Mapped {assignee.launchpad_email} to {assignee_handle}")
+            except Exception as e:
+                logger.warning(f"Failed to get user handle for {assignee.launchpad_email}: {e}")
+                assignee_handle = "No assignee"
         else:
             assignee_handle = "No assignee"
+            logger.debug(f"Artefact {artefact.name} has no assignee")
 
-        if assigned_to_filter and assigned_to_filter != assignee_handle.lower():
+        if assigned_to_filter and assigned_to_filter.lower() != assignee_handle.lower():
+            logger.info(f"Skipping artefact due to assignee filter mismatch: {artefact.name} (looking for: '{assigned_to_filter}', found: '{assignee_handle}')")
             continue
 
         if pending and (artefact.status in [ArtefactStatus.MARKED_AS_FAILED]):
+            logger.debug(f"Skipping failed artefact due to pending filter: {artefact.name}")
             continue
 
+        # This artefact will be included
+        filtered_count += 1
+        
         if assignee_handle not in artefacts_by_user:
             artefacts_by_user[assignee_handle] = []
+            logger.debug(f"Created new list for user: {assignee_handle}")
 
         artefacts_by_user[assignee_handle].append(artefact)
+        logger.info(f"INCLUDED artefact: {artefact.name} for user {assignee_handle} (status: {artefact.status})")
 
+    logger.info(f"Filtered {filtered_count} artefacts from {processed_count} total across {len(artefacts_by_user)} users")
+    for user, user_artefacts in artefacts_by_user.items():
+        logger.info(f"User {user}: {len(user_artefacts)} artefacts")
+    
     return artefacts_by_user
 
 

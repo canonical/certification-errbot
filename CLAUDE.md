@@ -83,6 +83,9 @@ Required environment variables include:
 - `GITHUB_TOKEN`, `GITHUB_ORG`
 - `JIRA_SERVER`, `JIRA_TOKEN`, `JIRA_EMAIL`, `JIRA_FILTER_ID`, `JIRA_CURRENT_SPRINT_ONLY` (optional, defaults to "false")
 - `LDAP_SERVER`, `LDAP_BASE_DN`, `LDAP_BIND_DN`, `LDAP_BIND_PASSWORD`
+- `LLM_API_SERVER` (optional, defaults to "http://localhost:11434" for Ollama)
+- `LLM_API_TOKEN` (optional, for authenticated LLM APIs)
+- `LLM_MODEL_NAME` (optional, defaults to "deepseek-r1:70b")
 
 ### Testing Strategy
 
@@ -95,3 +98,4 @@ Tests use unittest with mocking for external API calls. Test configuration inclu
 - `!cid <canonical_id>`: Look up machine information from C3 database
 - `!jira [username]`: Show Jira issues assigned to user (maps Mattermost username to email via LDAP)
 - `!team_jira`: Show Jira issues assigned to all GitHub team members
+- `!sprint_summary`: Generate AI-powered summary of current sprint tasks using configured LLM

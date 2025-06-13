@@ -44,6 +44,60 @@ def get_jira_client() -> Optional[JIRA]:
     return _jira_client
 
 
+def identify_story_points_field():
+    """
+    Helper function to identify the correct story points field in Jira
+    Fetches a few issues and logs all fields to help identify the story points field
+    """
+    client = get_jira_client()
+    if not client:
+        logger.error("Failed to get Jira client for field identification")
+        return
+        
+    try:
+        # Get a few recent issues to analyze their fields
+        issues = client.search_issues(
+            jql_str="ORDER BY created DESC",
+            maxResults=3,
+            fields="*all"
+        )
+        
+        if not issues:
+            logger.warning("No issues found for field analysis")
+            return
+            
+        logger.info("=== JIRA FIELD ANALYSIS FOR STORY POINTS ===")
+        
+        for issue in issues:
+            logger.info(f"\nAnalyzing issue: {issue.key} - {issue.fields.summary}")
+            
+            # Check all custom fields
+            story_point_candidates = []
+            for field_name in dir(issue.fields):
+                if field_name.startswith('customfield_'):
+                    field_value = getattr(issue.fields, field_name, None)
+                    if field_value is not None:
+                        if isinstance(field_value, (int, float)):
+                            story_point_candidates.append((field_name, field_value, "numeric"))
+                            logger.info(f"  {field_name}: {field_value} (NUMERIC - potential story points)")
+                        elif hasattr(field_value, 'value') and isinstance(field_value.value, (int, float)):
+                            story_point_candidates.append((field_name, field_value.value, "object.value"))
+                            logger.info(f"  {field_name}.value: {field_value.value} (OBJECT.VALUE - potential story points)")
+                        elif str(field_value).replace('.', '').isdigit():
+                            story_point_candidates.append((field_name, field_value, "string_numeric"))
+                            logger.info(f"  {field_name}: {field_value} (STRING NUMERIC - potential story points)")
+            
+            if story_point_candidates:
+                logger.info(f"Story point candidates for {issue.key}: {story_point_candidates}")
+            else:
+                logger.info(f"No story point candidates found for {issue.key}")
+                
+        logger.info("=== END FIELD ANALYSIS ===")
+        
+    except Exception as e:
+        logger.error(f"Error during field identification: {str(e)}")
+
+
 def refresh_jira_issues_cache():
     """
     Refresh the Jira issues cache by fetching all issues from the saved filter
@@ -94,7 +148,7 @@ def refresh_jira_issues_cache():
                 jql_str=jql,
                 startAt=start_at,
                 maxResults=max_results,
-                fields="key,summary,status,priority,assignee,customfield_10016",  # customfield_10016 is typically story points
+                fields="*all",  # Fetch all fields to identify story points field
             )
 
             if not issues:
@@ -104,6 +158,33 @@ def refresh_jira_issues_cache():
             logger.info(
                 f"Fetched {len(issues)} issues (total so far: {len(all_issues)})"
             )
+            
+            # Log custom fields from the first issue to help identify story points field
+            if start_at == 0 and issues:
+                first_issue = issues[0]
+                logger.info(f"Analyzing custom fields for issue {first_issue.key}")
+                
+                # Log all custom fields that might contain story points
+                custom_fields = {}
+                for field_name in dir(first_issue.fields):
+                    if field_name.startswith('customfield_'):
+                        field_value = getattr(first_issue.fields, field_name, None)
+                        custom_fields[field_name] = field_value
+                        # Log numeric fields that might be story points
+                        if isinstance(field_value, (int, float)) and field_value > 0:
+                            logger.info(f"  {field_name}: {field_value} (numeric - potential story points)")
+                        elif field_value is not None:
+                            logger.info(f"  {field_name}: {field_value} (type: {type(field_value)})")
+                
+                logger.info(f"Total custom fields found: {len(custom_fields)}")
+                
+                # Also log standard fields that might contain story points
+                standard_fields = ['timeestimate', 'timeoriginalestimate', 'aggregatetimeestimate']
+                for field_name in standard_fields:
+                    if hasattr(first_issue.fields, field_name):
+                        field_value = getattr(first_issue.fields, field_name)
+                        if field_value:
+                            logger.info(f"Standard field {field_name}: {field_value}")
 
             # If we got fewer results than requested, we're done
             if len(issues) < max_results:
@@ -132,6 +213,7 @@ def refresh_jira_issues_cache():
 
                 # Get story points (customfield_10016 is typically story points in Jira Cloud)
                 story_points = getattr(issue.fields, "customfield_10016", None)
+                logger.debug(f"Issue {issue.key}: story_points from customfield_10016 = {story_points} (type: {type(story_points)})")
 
                 # Determine if issue is completed based on status category
                 status_category = getattr(issue.fields.status, "statusCategory", None)

@@ -174,7 +174,7 @@ class PullRequestCache:
     def get_prs_for_user(self, github_username: str) -> dict:
         """
         Get PRs relevant to a specific GitHub user.
-        Returns dict with 'assigned' and 'authored_unassigned' lists.
+        Returns dict with 'assigned', 'authored_unassigned', and 'authored_approved' lists.
         """
         # Refresh cache if expired
         if self.is_cache_expired():
@@ -183,6 +183,7 @@ class PullRequestCache:
 
         assigned_prs = []
         authored_unassigned_prs = []
+        authored_approved_prs = []
 
         # Search through all cached PRs
         for repo_name, prs in self.cache.items():
@@ -211,19 +212,24 @@ class PullRequestCache:
                         pr_with_repo["user_role"].append("assignee")
                     assigned_prs.append(pr_with_repo)
 
-                # Check if PR is authored by user but has no reviewers or assignees
-                elif (
-                    author.lower() == github_username.lower()
-                    and len(requested_reviewers) == 0
-                    and len(assignees) == 0
-                ):
+                # Check if PR is authored by user
+                elif author.lower() == github_username.lower():
                     pr_with_repo = pr.copy()
                     pr_with_repo["repository"] = repo_name
-                    authored_unassigned_prs.append(pr_with_repo)
+                    
+                    # Check if it has no reviewers or assignees
+                    if len(requested_reviewers) == 0 and len(assignees) == 0:
+                        authored_unassigned_prs.append(pr_with_repo)
+                    else:
+                        # Check if it has approvals - fetch review data
+                        has_approvals = self._check_pr_has_approvals(repo_name, pr["number"])
+                        if has_approvals:
+                            authored_approved_prs.append(pr_with_repo)
 
         return {
             "assigned": assigned_prs,
             "authored_unassigned": authored_unassigned_prs,
+            "authored_approved": authored_approved_prs,
         }
 
     def get_cache_stats(self) -> dict:
@@ -281,6 +287,33 @@ class PullRequestCache:
 
         logger.info(f"Found {len(members)} members in team {team_name}")
         return members
+
+    def _check_pr_has_approvals(self, repo_name: str, pr_number: int) -> bool:
+        """
+        Check if a specific PR has any approved reviews.
+        Returns True if PR has at least one approved review.
+        """
+        headers = self._get_headers()
+        
+        try:
+            url = f"https://api.github.com/repos/{self.github_org}/{repo_name}/pulls/{pr_number}/reviews"
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code == 200:
+                reviews = response.json()
+                # Check if any review has state "APPROVED"
+                for review in reviews:
+                    if review.get("state") == "APPROVED":
+                        return True
+            elif response.status_code == 404:
+                logger.debug(f"PR {repo_name}#{pr_number} not found or not accessible")
+            else:
+                logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {e}")
+            
+        return False
 
 
 # Global cache instance - will be initialized with repository filter in certification.py
