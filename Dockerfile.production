@@ -35,6 +35,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+RUN mkdir -p data
+
 COPY --from=builder --chown=app:app /app /app
 
 ENV PATH="/app/.venv/bin:$PATH"

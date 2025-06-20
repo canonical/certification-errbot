@@ -17,7 +17,8 @@ dependencies = [
 [tool.uv.sources]
 err-backend-mattermost = { git = "https://github.com/rwielk/err-backend-mattermost.git", branch = "NETDEV-1336/ensure-py310-compatibility" }
 
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
 [dependency-groups]
-dev = [
-    "pytest>=8.3.4",
-]
+dev = ["pytest>=8.3.4", "ruff>=0.11.12"]

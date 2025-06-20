@@ -1,12 +1,16 @@
 import unittest
-from unittest.mock import patch, MagicMock
-
 from datetime import datetime, timedelta
-from plugins.certification.artefacts import reply_with_artefacts_summary, send_artefact_summaries, artefacts_by_user_handle
-from plugins.certification.test_observer.models import ArtefactStatus, ArtefactResponse
+from unittest.mock import MagicMock, patch
+
+from plugins.certification.artefacts import (
+    artefacts_by_user_handle,
+    reply_with_artefacts_summary,
+    send_artefact_summaries,
+)
+from plugins.certification.test_observer.models import ArtefactResponse, ArtefactStatus
+
 
 class ArtefactsTestBase(unittest.TestCase):
-
     def setUp(self):
         self.user = MagicMock(username="testuser", email="testuser@example.com")
         self.assignee = MagicMock(launchpad_email="testuser@example.com")
@@ -16,6 +20,8 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 1",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            comment="",
+            archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
             completed_environment_reviews_count=1,
@@ -23,6 +29,7 @@ class ArtefactsTestBase(unittest.TestCase):
             family="family1",
             track="track1",
             store="store1",
+            branch="",
             series="series1",
             repo="repo1",
             os="os1",
@@ -32,7 +39,7 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url",
             stage="stage1",
             bug_link="bug_link",
-            created_at=datetime.now().date() - timedelta(days=10),
+            created_at=datetime.now() - timedelta(days=10),
         )
 
         self.artefact2 = ArtefactResponse(
@@ -40,6 +47,9 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 2",
             version="1.0",
             status=ArtefactStatus.MARKED_AS_FAILED,
+            comment="",
+            archived=False,
+            branch="",
             due_date=datetime.now().date() - timedelta(days=10),
             assignee=self.assignee,
             completed_environment_reviews_count=0,
@@ -56,28 +66,36 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url2",
             stage="stage2",
             bug_link="bug_link2",
-            created_at=datetime.now().date() - timedelta(days=10),
+            created_at=datetime.now() - timedelta(days=10),
         )
 
-class TestArtefactsSummary(ArtefactsTestBase):
 
-    @patch('plugins.certification.artefacts.TestObserverClient')
-    @patch('plugins.certification.artefacts.get_artefacts')
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_summary(self, mock_get_assignee_handle, mock_get_artefacts, MockTestObserverClient):
+class TestArtefactsSummary(ArtefactsTestBase):
+    @patch("plugins.certification.artefacts.TestObserverClient")
+    @patch("plugins.certification.artefacts.get_artefacts")
+    @patch("plugins.certification.artefacts.get_assignee_handle")
+    def test_artefacts_summary(
+        self, mock_get_assignee_handle, mock_get_artefacts, MockTestObserverClient
+    ):
         mock_get_assignee_handle.return_value = {"username": "testuser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2]
 
         result = reply_with_artefacts_summary(self.user, ["assigned-to:testuser"])
         self.assertIn("**@testuser**", result)
-        self.assertIn("**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**", result)
-        self.assertNotIn("**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**", result)
+        self.assertIn(
+            "**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**",
+            result,
+        )
+        self.assertNotIn(
+            "**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**",
+            result,
+        )
 
     # Add more tests for different scenarios
 
-class TestArtefactsSummarySending(ArtefactsTestBase):
 
-    @patch('plugins.certification.artefacts.pending_artefacts_by_user_handle')
+class TestArtefactsSummarySending(ArtefactsTestBase):
+    @patch("plugins.certification.artefacts.pending_artefacts_by_user_handle")
     def test_artefacts_digest(self, mock_pending_artefacts_by_user_handle):
         mock_pending_artefacts_by_user_handle.return_value = {
             "testuser": [self.artefact1]
@@ -89,14 +107,20 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
         send_artefact_summaries(sender)
 
         sent_message = sender.send.call_args[0][1]
-        self.assertIn('Hello @testuser!', sent_message)
-        self.assertIn('You have some test artefacts to review:', sent_message)
-        self.assertIn('**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**', sent_message)
-        self.assertNotIn('**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**', sent_message)
+        self.assertIn("Hello @testuser!", sent_message)
+        self.assertIn("You have some test artefacts to review:", sent_message)
+        self.assertIn(
+            "**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**",
+            sent_message,
+        )
+        self.assertNotIn(
+            "**[Artefact 2 1.0](https://test-observer.canonical.com/#/family2s/2)**",
+            sent_message,
+        )
+
 
 class TestArtefactsByUserHandle(ArtefactsTestBase):
-
-    @patch('plugins.certification.artefacts.get_assignee_handle')
+    @patch("plugins.certification.artefacts.get_assignee_handle")
     def test_artefacts_by_user_handle(self, mock_get_assignee_handle):
         mock_get_assignee_handle.return_value = {"username": "testuser"}
 
@@ -107,7 +131,7 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         self.assertEqual(len(result["testuser"]), 1)
         self.assertEqual(result["testuser"][0].id, 1)
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
+    @patch("plugins.certification.artefacts.get_assignee_handle")
     def test_artefacts_by_user_handle_with_filter(self, mock_get_assignee_handle):
         mock_get_assignee_handle.return_value = {"username": "testuser"}
 
@@ -121,8 +145,10 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         result = artefacts_by_user_handle(artefacts_response, "artefact 2", None, False)
         self.assertNotIn("testuser", result)
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_by_user_handle_with_assigned_to_filter(self, mock_get_assignee_handle):
+    @patch("plugins.certification.artefacts.get_assignee_handle")
+    def test_artefacts_by_user_handle_with_assigned_to_filter(
+        self, mock_get_assignee_handle
+    ):
         mock_get_assignee_handle.return_value = {"username": "testuser"}
 
         artefacts_response = [self.artefact1, self.artefact2]
@@ -135,8 +161,10 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         result = artefacts_by_user_handle(artefacts_response, None, "otheruser", False)
         self.assertNotIn("testuser", result)
 
-    @patch('plugins.certification.artefacts.get_assignee_handle')
-    def test_artefacts_by_user_handle_with_pending_filter(self, mock_get_assignee_handle):
+    @patch("plugins.certification.artefacts.get_assignee_handle")
+    def test_artefacts_by_user_handle_with_pending_filter(
+        self, mock_get_assignee_handle
+    ):
         mock_get_assignee_handle.return_value = {"username": "testuser"}
 
         artefacts_response = [self.artefact1, self.artefact2]
@@ -146,5 +174,6 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         self.assertEqual(len(result["testuser"]), 1)
         self.assertEqual(result["testuser"][0].id, 1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
