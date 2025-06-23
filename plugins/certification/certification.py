@@ -167,7 +167,7 @@ class CertificationPlugin(BotPlugin):
         self.send_team_pr_summaries()
 
     def _format_pr_summary(
-        self, github_username: str, pr_data: dict, is_digest: bool = False
+        self, github_username: str, pr_data: dict, is_digest: bool = False, mattermost_handle: str = None
     ) -> str | None:
         """
         Format PR summary message for a user. Shared between !prs command and digest.
@@ -176,6 +176,7 @@ class CertificationPlugin(BotPlugin):
             github_username: GitHub username
             pr_data: Dict with 'assigned', 'authored_unassigned', and 'authored_approved' PR lists
             is_digest: True for digest format, False for command response
+            mattermost_handle: Optional Mattermost handle for digest greeting
 
         Returns:
             Formatted message string
@@ -198,7 +199,9 @@ class CertificationPlugin(BotPlugin):
                 return f"No PRs with @{github_username} as requested reviewer or assignee, and no unassigned or approved PRs authored by @{github_username} across {cache_stats['total_repositories']} repositories in {github_org}."
 
         if is_digest:
-            msg = f"Hello @{github_username}!\n\n"
+            # Use Mattermost handle for greeting if provided, otherwise fall back to GitHub username
+            greeting_name = mattermost_handle if mattermost_handle else github_username
+            msg = f"Hello @{greeting_name}!\n\n"
         else:
             msg = ""
 
@@ -289,7 +292,7 @@ class CertificationPlugin(BotPlugin):
 
             # Format PR message using shared logic
             pr_msg = self._format_pr_summary(
-                github_username, pr_data, is_digest=is_digest
+                github_username, pr_data, is_digest=is_digest, mattermost_handle=mattermost_username
             )
 
             # Get Jira issues for this user
@@ -384,9 +387,9 @@ class CertificationPlugin(BotPlugin):
                         continue
 
                     # Send direct message to user
-                    identifier = self.build_identifier(f"@{github_username}")
+                    identifier = self.build_identifier(f"@{mattermost_handle}")
                     self.send(identifier, combined_msg)
-                    logger.info(f"Sent daily summary (PRs + Jira) to {github_username}")
+                    logger.info(f"Sent daily summary (PRs + Jira) to {mattermost_handle} (GitHub: {github_username})")
 
                 except Exception as e:
                     logger.error(
