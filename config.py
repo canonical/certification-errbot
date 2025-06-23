@@ -26,6 +26,9 @@ if "ERRBOT_ADMINS" not in os.environ:
 BOT_ADMINS = os.environ.get("ERRBOT_ADMINS", "").split(",")
 
 
+# Digest configuration
+DIGEST_SEND_TIME = os.environ.get("DIGEST_SEND_TIME", "6:30")  # Default to 6:30 UTC
+
 BOT_IDENTITY = {
     # Required
     "team": os.environ.get("ERRBOT_TEAM"),

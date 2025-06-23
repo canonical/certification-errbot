@@ -95,6 +95,11 @@ config:
       description: |
         Jira filter ID to use for fetching issues.
       type: string
+    digest-send-time:
+      description: |
+        Time to send the daily digest in HH:MM format (24-hour, UTC). For example: "09:00" for 9am UTC.
+      default: "06:30"
+      type: string
 
 containers:
   errbot:

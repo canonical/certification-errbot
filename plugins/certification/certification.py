@@ -4,6 +4,7 @@ import logging
 
 from dotenv import load_dotenv
 from errbot import BotPlugin, botcmd
+from config import DIGEST_SEND_TIME
 
 from c3.client import AuthenticatedClient as C3Client
 from c3.api.physicalmachinesview.physicalmachinesview_list import (
@@ -132,11 +133,20 @@ class CertificationPlugin(BotPlugin):
 
         scheduler = BackgroundScheduler()
 
-        # Daily artefact digest (Mon-Fri 9:00 UTC)
+        # Parse the digest send time from config
+        try:
+            hour, minute = map(int, DIGEST_SEND_TIME.split(":"))
+        except ValueError:
+            # Default to 6:30 if parsing fails
+            hour, minute = 6, 30
+            self.log.warning(f"Invalid DIGEST_SEND_TIME format: {DIGEST_SEND_TIME}, using default 6:30")
+
+        # Daily artefact digest (Mon-Fri at configured time UTC)
         digest_trigger = CronTrigger(
-            day_of_week="mon-fri", hour=6, minute=6, timezone="UTC"
+            day_of_week="mon-fri", hour=hour, minute=minute, timezone="UTC"
         )
         scheduler.add_job(self.polled_digest_sending, digest_trigger)
+        self.log.info(f"Scheduled daily digest for {hour:02d}:{minute:02d} UTC")
 
         # PR cache refresh (every 5 minutes)
         pr_cache_trigger = CronTrigger(minute="*/5", timezone="UTC")
