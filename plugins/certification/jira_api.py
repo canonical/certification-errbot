@@ -8,6 +8,42 @@ from ldap import get_email_from_mattermost_handle, get_email_from_github_usernam
 
 logger = logging.getLogger(__name__)
 
+
+def get_priority_sort_key(priority: str) -> int:
+    """
+    Convert Jira priority name to a numeric sort key.
+    Lower numbers = higher priority (will be sorted first).
+    """
+    priority_mapping = {
+        "highest": 1,
+        "high": 2, 
+        "medium": 3,
+        "low": 4,
+        "lowest": 5,
+        "none": 6,
+        "": 6,  # Empty priority treated as lowest
+    }
+    return priority_mapping.get(priority.lower(), 6)
+
+
+def is_review_status(status_name: str) -> bool:
+    """
+    Determine if a Jira status indicates the issue is in review.
+    Common review status names include variations of "review", "pending", etc.
+    """
+    if not status_name:
+        return False
+    
+    status_lower = status_name.lower()
+    review_keywords = [
+        "review", "reviewing", "in review", "under review", "code review",
+        "pending review", "waiting for review", "ready for review",
+        "peer review", "technical review", "design review"
+    ]
+    
+    return any(keyword in status_lower for keyword in review_keywords)
+
+
 JIRA_SERVER = os.environ.get("JIRA_SERVER")
 JIRA_TOKEN = os.environ.get("JIRA_TOKEN")
 JIRA_EMAIL = os.environ.get("JIRA_EMAIL")
@@ -211,26 +247,29 @@ def refresh_jira_issues_cache():
                 if email not in jira_issues_cache:
                     jira_issues_cache[email] = []
 
-                # Get story points (customfield_10016 is typically story points in Jira Cloud)
-                story_points = getattr(issue.fields, "customfield_10016", None)
-                logger.debug(f"Issue {issue.key}: story_points from customfield_10016 = {story_points} (type: {type(story_points)})")
+                # Get story points (customfield_10024 per user requirements)
+                story_points = getattr(issue.fields, "customfield_10024", None)
+                logger.debug(f"Issue {issue.key}: story_points from customfield_10024 = {story_points} (type: {type(story_points)})")
 
-                # Determine if issue is completed based on status category
+                # Determine issue state based on status
+                status_name = issue.fields.status.name
                 status_category = getattr(issue.fields.status, "statusCategory", None)
                 is_completed = (
                     status_category and status_category.name.lower() == "done"
                 )
+                is_in_review = is_review_status(status_name)
 
                 jira_issues_cache[email].append(
                     {
                         "key": issue.key,
                         "summary": issue.fields.summary,
-                        "status": issue.fields.status.name,
+                        "status": status_name,
                         "priority": issue.fields.priority.name
                         if issue.fields.priority
                         else "None",
                         "story_points": story_points,
                         "is_completed": is_completed,
+                        "is_in_review": is_in_review,
                         "url": f"{JIRA_SERVER}/browse/{issue.key}",
                     }
                 )
@@ -252,43 +291,75 @@ def get_jira_issues_for_user(
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     Get Jira issues assigned to a user by email address from cache
-    Separates active and completed issues
+    Separates active, review, completed, and untriaged issues, sorted by priority
 
     Args:
         email: User's email address (account ID)
         max_results: Maximum number of issues to return per category
 
     Returns:
-        Dictionary with 'active' and 'completed' lists of issue dictionaries
+        Dictionary with 'active', 'review', 'completed', and 'untriaged' lists of issue dictionaries
     """
     if email in jira_issues_cache:
         cached_issues = jira_issues_cache[email]
 
-        # Separate active and completed issues
-        active_issues = [
-            issue for issue in cached_issues if not issue.get("is_completed", False)
+        # Separate issues by state and priority
+        # Untriaged = not completed AND (no priority OR priority is "None")
+        untriaged_issues = [
+            issue for issue in cached_issues 
+            if not issue.get("is_completed", False) 
+            and (not issue.get("priority") or issue.get("priority", "").lower() in ["none", ""])
         ]
+        
+        # Active = not completed, not in review, AND has valid priority
+        active_issues = [
+            issue for issue in cached_issues 
+            if not issue.get("is_completed", False) 
+            and not issue.get("is_in_review", False)
+            and issue.get("priority") 
+            and issue.get("priority", "").lower() not in ["none", ""]
+        ]
+        
+        # Review = not completed, in review, AND has valid priority
+        review_issues = [
+            issue for issue in cached_issues 
+            if not issue.get("is_completed", False) 
+            and issue.get("is_in_review", False)
+            and issue.get("priority") 
+            and issue.get("priority", "").lower() not in ["none", ""]
+        ]
+        
         completed_issues = [
             issue for issue in cached_issues if issue.get("is_completed", False)
         ]
 
-        # Sort by priority and limit results
+        # Sort by priority (highest priority first) and limit results
         active_sorted = sorted(
-            active_issues, key=lambda x: x.get("priority", "None"), reverse=True
+            active_issues, key=lambda x: get_priority_sort_key(x.get("priority", ""))
+        )[:max_results]
+        review_sorted = sorted(
+            review_issues, key=lambda x: get_priority_sort_key(x.get("priority", ""))
         )[:max_results]
         completed_sorted = sorted(
-            completed_issues, key=lambda x: x.get("priority", "None"), reverse=True
+            completed_issues, key=lambda x: get_priority_sort_key(x.get("priority", ""))
         )[:max_results]
+        # Untriaged issues don't need priority sorting (they have no priority)
+        untriaged_sorted = untriaged_issues[:max_results]
 
-        result = {"active": active_sorted, "completed": completed_sorted}
+        result = {
+            "active": active_sorted, 
+            "review": review_sorted, 
+            "completed": completed_sorted,
+            "untriaged": untriaged_sorted
+        }
 
         logger.info(
-            f"Found {len(active_sorted)} active and {len(completed_sorted)} completed Jira issues for {email}"
+            f"Found {len(active_sorted)} active, {len(review_sorted)} review, {len(completed_sorted)} completed, and {len(untriaged_sorted)} untriaged Jira issues for {email}"
         )
         return result
 
     logger.info(f"No cached issues found for {email}")
-    return {"active": [], "completed": []}
+    return {"active": [], "review": [], "completed": [], "untriaged": []}
 
 
 def get_jira_issues_for_mattermost_handle(

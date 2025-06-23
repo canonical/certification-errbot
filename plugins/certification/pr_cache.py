@@ -174,7 +174,7 @@ class PullRequestCache:
     def get_prs_for_user(self, github_username: str) -> dict:
         """
         Get PRs relevant to a specific GitHub user.
-        Returns dict with 'assigned', 'authored_unassigned', and 'authored_approved' lists.
+        Returns dict with 'assigned', 'authored_unassigned', 'authored_approved', and 'authored_changes_requested' lists.
         """
         # Refresh cache if expired
         if self.is_cache_expired():
@@ -184,6 +184,7 @@ class PullRequestCache:
         assigned_prs = []
         authored_unassigned_prs = []
         authored_approved_prs = []
+        authored_changes_requested_prs = []
 
         # Search through all cached PRs
         for repo_name, prs in self.cache.items():
@@ -221,15 +222,18 @@ class PullRequestCache:
                     if len(requested_reviewers) == 0 and len(assignees) == 0:
                         authored_unassigned_prs.append(pr_with_repo)
                     else:
-                        # Check if it has approvals - fetch review data
-                        has_approvals = self._check_pr_has_approvals(repo_name, pr["number"])
-                        if has_approvals:
+                        # Check review status - fetch review data
+                        review_status = self._get_pr_review_status(repo_name, pr["number"])
+                        if review_status["has_changes_requested"]:
+                            authored_changes_requested_prs.append(pr_with_repo)
+                        elif review_status["has_approvals"]:
                             authored_approved_prs.append(pr_with_repo)
 
         return {
             "assigned": assigned_prs,
             "authored_unassigned": authored_unassigned_prs,
             "authored_approved": authored_approved_prs,
+            "authored_changes_requested": authored_changes_requested_prs,
         }
 
     def get_cache_stats(self) -> dict:
@@ -288,10 +292,10 @@ class PullRequestCache:
         logger.info(f"Found {len(members)} members in team {team_name}")
         return members
 
-    def _check_pr_has_approvals(self, repo_name: str, pr_number: int) -> bool:
+    def _get_pr_review_status(self, repo_name: str, pr_number: int) -> dict:
         """
-        Check if a specific PR has any approved reviews.
-        Returns True if PR has at least one approved review.
+        Get review status for a specific PR.
+        Returns dict with 'has_approvals' and 'has_changes_requested' booleans.
         """
         headers = self._get_headers()
         
@@ -301,10 +305,21 @@ class PullRequestCache:
             
             if response.status_code == 200:
                 reviews = response.json()
-                # Check if any review has state "APPROVED"
+                has_approvals = False
+                has_changes_requested = False
+                
+                # Check review states
                 for review in reviews:
-                    if review.get("state") == "APPROVED":
-                        return True
+                    state = review.get("state")
+                    if state == "APPROVED":
+                        has_approvals = True
+                    elif state == "CHANGES_REQUESTED":
+                        has_changes_requested = True
+                
+                return {
+                    "has_approvals": has_approvals,
+                    "has_changes_requested": has_changes_requested
+                }
             elif response.status_code == 404:
                 logger.debug(f"PR {repo_name}#{pr_number} not found or not accessible")
             else:
@@ -312,8 +327,18 @@ class PullRequestCache:
                 
         except requests.exceptions.RequestException as e:
             logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {e}")
-            
-        return False
+        
+        # Default to no approvals or changes requested if error occurs
+        return {"has_approvals": False, "has_changes_requested": False}
+
+    def _check_pr_has_approvals(self, repo_name: str, pr_number: int) -> bool:
+        """
+        Legacy method for backward compatibility.
+        Check if a specific PR has any approved reviews.
+        Returns True if PR has at least one approved review.
+        """
+        status = self._get_pr_review_status(repo_name, pr_number)
+        return status["has_approvals"]
 
 
 # Global cache instance - will be initialized with repository filter in certification.py
