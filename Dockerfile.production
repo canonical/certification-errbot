@@ -18,6 +18,9 @@ ADD . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-python-downloads
 
+RUN ./bin/generate-c3-client.sh
+RUN ./bin/generate-test-observer-client.sh
+
 FROM ubuntu:24.04
 ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"
