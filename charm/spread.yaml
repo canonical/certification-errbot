@@ -13,7 +13,7 @@ backends:
   lxd:
     type: adhoc
     allocate: |
-      BASE="${BASE:-noble}"
+      BASE="${BASE:-jammy}"
       VM_NAME="${VM_NAME:-charm-tests-ubuntu-${BASE}-${RANDOM}}"
       DISK="${DISK:-20}"
       CPU="${CPU:-4}"

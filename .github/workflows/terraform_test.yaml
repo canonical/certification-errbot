@@ -13,7 +13,7 @@ concurrency:
 jobs:
   terraform-checks:
     name: Terraform checks
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: [self-hosted, linux, large, jammy, x64]
     steps:
       - uses: actions/checkout@v4
       - name: Install Terraform

@@ -90,7 +90,7 @@ jobs:
       contents: read
       packages: read
     
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: [self-hosted, linux, large, jammy, x64]
     needs:
       - define-matrix
       - lib-check
