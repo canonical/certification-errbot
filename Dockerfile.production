@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 AS builder
 RUN apt-get update && \
-    apt-get install -y python3.12 git && \
+    apt-get install -y python3.10 git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -32,7 +32,7 @@ LABEL name="certification-errbot" \
     license="GPL-3.0"
 
 RUN apt-get update && \
-    apt-get install -y python3.12 python3.12-gdbm && \
+    apt-get install -y python3.10 python3.10-gdbm && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
