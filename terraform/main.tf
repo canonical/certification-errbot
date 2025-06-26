@@ -15,5 +15,8 @@ resource "juju_application" "errbot" {
     mattermost-admins = var.mattermost_admins
     c3-client-id      = var.c3_client_id
     c3-client-secret  = var.c3_client_secret
+    http-proxy        = var.http_proxy
+    https-proxy       = var.https_proxy
+    no-proxy          = var.no_proxy
   }
 }
