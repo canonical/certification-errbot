@@ -46,15 +46,15 @@ config:
       description: |
         OAuth client secret for the C3 v2 API.
       type: string
-    http_proxy:
+    http-proxy:
       type: string
       default: ""
       description: HTTP proxy for accessing external HTTP resources
-    https_proxy:
+    https-proxy:
       type: string
       default: ""
       description: HTTPS proxy for accessing external HTTPS resources
-    no_proxy:
+    no-proxy:
       type: string
       default: "localhost,127.0.0.1,::1"
       description: Resources that we should be able to access bypassing proxy
