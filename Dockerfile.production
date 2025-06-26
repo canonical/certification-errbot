@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS builder
+FROM ubuntu:22.04 AS builder
 RUN apt-get update && \
     apt-get install -y python3.12 git && \
     apt-get clean && \
@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN ./bin/generate-c3-client.sh
 RUN ./bin/generate-test-observer-client.sh
 
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"
 ENV ERRBOT_SERVER="chat.canonical.com"

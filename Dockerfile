@@ -1,5 +1,5 @@
 # Use the specified base image
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"

@@ -15,7 +15,7 @@ concurrency:
 jobs:
   lib-check:
     name: Check libraries
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -29,7 +29,7 @@ jobs:
 
   pack-charm:
     name: Build charm
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -65,7 +65,7 @@ jobs:
 
   define-matrix:
     name: Define spread matrix
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     outputs:
       suites: ${{ steps.suites.outputs.suites }}
     steps:
@@ -78,7 +78,7 @@ jobs:
       - name: Generate matrix list
         id: suites
         run: |
-          list="$(charmcraft test --list github-ci | sed "s|github-ci:ubuntu-24.04:tests/spread/||g" | jq -r -ncR '[inputs | select(length>0)]')"
+          list="$(charmcraft test --list github-ci | sed "s|github-ci:ubuntu-22.04:tests/spread/||g" | jq -r -ncR '[inputs | select(length>0)]')"
           echo "suites=$list"
           echo "suites=$list" >> $GITHUB_OUTPUT
         working-directory: charm
@@ -124,7 +124,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          charmcraft.spread -artifacts ./artifacts -v "github-ci:ubuntu-24.04:tests/spread/${{ matrix.suite }}"
+          charmcraft.spread -artifacts ./artifacts -v "github-ci:ubuntu-22.04:tests/spread/${{ matrix.suite }}"
         working-directory: charm
         env:
           GHCR_PACKAGE_API_USER: ${{ github.actor }}
