@@ -21,8 +21,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
 
       - name: Resolve dev dependencies
         run: uv sync --dev
