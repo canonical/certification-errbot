@@ -21,4 +21,7 @@ err-backend-mattermost = { git = "https://github.com/rwielk/err-backend-mattermo
 select = ["E4", "E7", "E9", "F", "I"]
 
 [dependency-groups]
-dev = ["pytest>=8.3.4", "ruff>=0.11.12"]
+dev = [
+ "pytest>=8.4.1",
+ "ruff>=0.11.12",
+]
