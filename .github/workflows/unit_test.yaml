@@ -1,6 +1,10 @@
 name: Run Unit Tests
 
-on: [push, pull_request]
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -14,6 +18,9 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.5.x"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
 
       - name: Resolve dev dependencies
         run: uv sync --dev

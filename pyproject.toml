@@ -3,7 +3,7 @@ name = "certification-errbot"
 version = "0.1.0"
 description = "Hardware Certification plugins to errbot"
 readme = "README.md"
-requires-python = "~=3.12"
+requires-python = "~=3.10"
 dependencies = [
     "errbot==6.2.0",
     "err-backend-mattermost==3.0.0",
@@ -21,4 +21,7 @@ err-backend-mattermost = { git = "https://github.com/rwielk/err-backend-mattermo
 select = ["E4", "E7", "E9", "F", "I"]
 
 [dependency-groups]
-dev = ["pytest>=8.3.4", "ruff>=0.11.12"]
+dev = [
+ "pytest>=8.4.1",
+ "ruff>=0.11.12",
+]

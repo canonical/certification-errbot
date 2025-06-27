@@ -8,7 +8,7 @@ description: |
   errbot configured for mattermost,
   with Canonical Hardware Certification team relevant plugins.
 
-base: ubuntu@24.04
+base: ubuntu@22.04
 
 platforms:
   amd64:
