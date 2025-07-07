@@ -1,0 +1,25 @@
+name: Run charm tests
+
+on:
+  push:
+    paths:
+      - 'charm/**'
+      - '.github/workflows/charm_tests.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tox-checks:
+    name: Tox checks
+    runs-on: [self-hosted, linux, large, jammy, x64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tox
+        run: sudo apt install tox -y
+      - name: Run tox checks
+        run: tox
+    defaults:
+      run:
+        working-directory: charm

@@ -8,7 +8,7 @@ description: |
   errbot configured for mattermost,
   with Canonical Hardware Certification team relevant plugins.
 
-base: ubuntu@24.04
+base: ubuntu@22.04
 
 platforms:
   amd64:
@@ -22,21 +22,21 @@ config:
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"
       type: string
-    errbot-team:
+    mattermost-team:
       description: |
         The Mattermost team name.
       type: string
-    errbot-server:
+    mattermost-server:
       description: |
         The Mattermost server address for Errbot.
       type: string
-    errbot-token:
+    mattermost-token:
       description: |
-        The token for Errbot authentication.
+        Mattermost API token for Errbot.
       type: string
-    errbot-admins:
+    mattermost-admins:
       description: |
-        List of handles (prefixed with @, separated by space) who act as bot admins.
+        A comma separated list of mattermost handles who can act as bot admins.
       type: string
     c3-client-id:
       description: |
@@ -100,6 +100,18 @@ config:
         Time to send the daily digest in HH:MM format (24-hour, UTC). For example: "09:00" for 9am UTC.
       default: "06:30"
       type: string
+    http-proxy:
+      type: string
+      default: ""
+      description: HTTP proxy for accessing external HTTP resources
+    https-proxy:
+      type: string
+      default: ""
+      description: HTTPS proxy for accessing external HTTPS resources
+    no-proxy:
+      type: string
+      default: "localhost,127.0.0.1,::1"
+      description: Resources that we should be able to access bypassing proxy
 
 containers:
   errbot:

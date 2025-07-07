@@ -1,30 +1,34 @@
+import logging
 import os
 from datetime import datetime
-import logging
 
-from dotenv import load_dotenv
-from errbot import BotPlugin, botcmd
-from config import DIGEST_SEND_TIME
-
-from c3.client import AuthenticatedClient as C3Client
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from artefacts import reply_with_artefacts_summary
 from c3.api.physicalmachinesview.physicalmachinesview_list import (
     sync_detailed as get_physicalmachinesview,
 )
+from c3.client import AuthenticatedClient as C3Client
 from c3_auth import get_access_token as get_c3_access_token
-from artefacts import reply_with_artefacts_summary
+from dotenv import load_dotenv
+from errbot import BotPlugin, botcmd
+from github import get_github_username_from_email
+from jira_api import (
+    get_jira_issues_for_github_team_members,
+    get_jira_issues_for_mattermost_handle,
+    jira_issues_cache,
+    refresh_jira_issues_cache,
+)
 from ldap import (
-    get_github_username_from_mattermost_handle,
     get_email_from_mattermost_handle,
+    get_github_username_from_mattermost_handle,
     get_mattermost_handle_from_github_username,
 )
-from github import get_github_username_from_email
 from pr_cache import PullRequestCache
-from jira_api import (
-    get_jira_issues_for_mattermost_handle,
-    get_jira_issues_for_github_team_members,
-    refresh_jira_issues_cache,
-    jira_issues_cache,
-)
+
+from config import DIGEST_SEND_TIME
+
+logger = logging.getLogger(__name__)
 
 try:
     from llm_api import get_llm_client
@@ -37,11 +41,6 @@ except ImportError as e:
     def get_llm_client():
         return None
 
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-
-import ssl_fix  # noqa: F401
 
 # Load environment variables from .env file if present
 load_dotenv()
@@ -139,7 +138,9 @@ class CertificationPlugin(BotPlugin):
         except ValueError:
             # Default to 6:30 if parsing fails
             hour, minute = 6, 30
-            self.log.warning(f"Invalid DIGEST_SEND_TIME format: {DIGEST_SEND_TIME}, using default 6:30")
+            self.log.warning(
+                f"Invalid DIGEST_SEND_TIME format: {DIGEST_SEND_TIME}, using default 6:30"
+            )
 
         # Daily artefact digest (Mon-Fri at configured time UTC)
         digest_trigger = CronTrigger(
@@ -189,11 +190,15 @@ class CertificationPlugin(BotPlugin):
         repo_name = pr.get("repository", "unknown")
         pr_number = pr.get("number", "unknown")
         html_url = pr.get("html_url", "")
-        
+
         return f"[{github_org}/{repo_name} #{pr_number}]({html_url})"
 
     def _format_pr_summary(
-        self, github_username: str, pr_data: dict, is_digest: bool = False, mattermost_handle: str = None
+        self,
+        github_username: str,
+        pr_data: dict,
+        is_digest: bool = False,
+        mattermost_handle: str = None,
     ) -> str | None:
         """
         Format PR summary message for a user. Shared between !prs command and digest.
@@ -282,7 +287,9 @@ class CertificationPlugin(BotPlugin):
 
         if authored_approved_prs:
             if not is_digest and (
-                prs_assigned_to_user or authored_prs_with_no_assignment or authored_changes_requested_prs
+                prs_assigned_to_user
+                or authored_prs_with_no_assignment
+                or authored_changes_requested_prs
             ):
                 msg += "\n"
             msg += "**Approved PRs, pending merge:**\n"
@@ -335,28 +342,52 @@ class CertificationPlugin(BotPlugin):
 
             # Format PR message using shared logic
             pr_msg = self._format_pr_summary(
-                github_username, pr_data, is_digest=is_digest, mattermost_handle=mattermost_username
+                github_username,
+                pr_data,
+                is_digest=is_digest,
+                mattermost_handle=mattermost_username,
             )
 
             # Get Jira issues for this user
             jira_issues = get_jira_issues_for_mattermost_handle(mattermost_username)
             jira_msg = None
 
-            if jira_issues["active"] or jira_issues.get("review", []) or jira_issues["completed"] or jira_issues.get("untriaged", []):
+            if (
+                jira_issues["active"]
+                or jira_issues.get("review", [])
+                or jira_issues["completed"]
+                or jira_issues.get("untriaged", [])
+            ):
                 # Calculate story point totals (as whole numbers)
-                active_sp = int(sum(issue['story_points'] or 0 for issue in jira_issues["active"]))
-                review_sp = int(sum(issue['story_points'] or 0 for issue in jira_issues.get("review", [])))
-                completed_sp = int(sum(issue['story_points'] or 0 for issue in jira_issues["completed"]))
-                untriaged_sp = int(sum(issue['story_points'] or 0 for issue in jira_issues.get("untriaged", [])))
+                active_sp = int(
+                    sum(issue["story_points"] or 0 for issue in jira_issues["active"])
+                )
+                review_sp = int(
+                    sum(
+                        issue["story_points"] or 0
+                        for issue in jira_issues.get("review", [])
+                    )
+                )
+                completed_sp = int(
+                    sum(
+                        issue["story_points"] or 0 for issue in jira_issues["completed"]
+                    )
+                )
+                untriaged_sp = int(
+                    sum(
+                        issue["story_points"] or 0
+                        for issue in jira_issues.get("untriaged", [])
+                    )
+                )
                 total_sp = active_sp + review_sp + completed_sp + untriaged_sp
-                
+
                 jira_msg = "**Your Jira issues:**\n\n"
 
                 if jira_issues["active"]:
                     active_sp_text = "story point" if active_sp == 1 else "story points"
                     jira_msg += f"**Active ({active_sp} {active_sp_text}):**\n"
                     for issue in jira_issues["active"]:
-                        story_points = self._format_story_points(issue['story_points'])
+                        story_points = self._format_story_points(issue["story_points"])
                         jira_msg += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
                         jira_msg += f"  Status: {issue['status']}\n"
                     jira_msg += "\n"
@@ -365,30 +396,36 @@ class CertificationPlugin(BotPlugin):
                     review_sp_text = "story point" if review_sp == 1 else "story points"
                     jira_msg += f"**In Review ({review_sp} {review_sp_text}):**\n"
                     for issue in jira_issues["review"]:
-                        story_points = self._format_story_points(issue['story_points'])
+                        story_points = self._format_story_points(issue["story_points"])
                         jira_msg += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
                         jira_msg += f"  Status: {issue['status']}\n"
                     jira_msg += "\n"
 
                 if jira_issues["completed"]:
-                    completed_sp_text = "story point" if completed_sp == 1 else "story points"
+                    completed_sp_text = (
+                        "story point" if completed_sp == 1 else "story points"
+                    )
                     jira_msg += f"**Recently Completed ({completed_sp} {completed_sp_text}):**\n"
                     completed_links = []
                     for issue in jira_issues["completed"]:
                         # Format: Priority: [KEY](url "Title")
-                        completed_links.append(f"{issue['priority']}: [{issue['key']}]({issue['url']} \"{issue['summary']}\")")
+                        completed_links.append(
+                            f'{issue["priority"]}: [{issue["key"]}]({issue["url"]} "{issue["summary"]}")'
+                        )
                     jira_msg += "- " + ", ".join(completed_links) + "\n\n"
 
                 if jira_issues.get("untriaged", []):
-                    untriaged_sp_text = "story point" if untriaged_sp == 1 else "story points"
+                    untriaged_sp_text = (
+                        "story point" if untriaged_sp == 1 else "story points"
+                    )
                     jira_msg += f"**⚠️ Untriaged issues in the active pulse ({untriaged_sp} {untriaged_sp_text}):**\n"
                     jira_msg += "*These should either have been triaged or should not be in the current pulse*\n"
                     for issue in jira_issues["untriaged"]:
-                        story_points = self._format_story_points(issue['story_points'])
+                        story_points = self._format_story_points(issue["story_points"])
                         jira_msg += f"- [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
                         jira_msg += f"  Status: {issue['status']}\n"
                     jira_msg += "\n"
-                
+
                 # Add total summary if there are any issues
                 total_sp_text = "story point" if total_sp == 1 else "story points"
                 jira_msg += f"**Total: {total_sp} {total_sp_text}**\n"
@@ -456,7 +493,9 @@ class CertificationPlugin(BotPlugin):
                     # Send direct message to user
                     identifier = self.build_identifier(f"@{mattermost_handle}")
                     self.send(identifier, combined_msg)
-                    logger.info(f"Sent daily summary (PRs + Jira) to {mattermost_handle} (GitHub: {github_username})")
+                    logger.info(
+                        f"Sent daily summary (PRs + Jira) to {mattermost_handle} (GitHub: {github_username})"
+                    )
 
                 except Exception as e:
                     logger.error(
@@ -573,23 +612,33 @@ class CertificationPlugin(BotPlugin):
             # Get Jira issues for the user
             issues = get_jira_issues_for_mattermost_handle(mattermost_username)
 
-            if not issues["active"] and not issues.get("review", []) and not issues["completed"] and not issues.get("untriaged", []):
+            if (
+                not issues["active"]
+                and not issues.get("review", [])
+                and not issues["completed"]
+                and not issues.get("untriaged", [])
+            ):
                 return f"No Jira issues assigned to @{mattermost_username}"
 
             # Calculate story point totals (as whole numbers)
-            active_story_points = int(sum(
-                issue['story_points'] or 0 for issue in issues["active"]
-            ))
-            review_story_points = int(sum(
-                issue['story_points'] or 0 for issue in issues.get("review", [])
-            ))
-            completed_story_points = int(sum(
-                issue['story_points'] or 0 for issue in issues["completed"]
-            ))
-            untriaged_story_points = int(sum(
-                issue['story_points'] or 0 for issue in issues.get("untriaged", [])
-            ))
-            total_story_points = active_story_points + review_story_points + completed_story_points + untriaged_story_points
+            active_story_points = int(
+                sum(issue["story_points"] or 0 for issue in issues["active"])
+            )
+            review_story_points = int(
+                sum(issue["story_points"] or 0 for issue in issues.get("review", []))
+            )
+            completed_story_points = int(
+                sum(issue["story_points"] or 0 for issue in issues["completed"])
+            )
+            untriaged_story_points = int(
+                sum(issue["story_points"] or 0 for issue in issues.get("untriaged", []))
+            )
+            total_story_points = (
+                active_story_points
+                + review_story_points
+                + completed_story_points
+                + untriaged_story_points
+            )
 
             # Format the response
             response = f"**Jira issues assigned to @{mattermost_username} in the current pulse:**\n\n"
@@ -599,7 +648,7 @@ class CertificationPlugin(BotPlugin):
                 sp_text = "story point" if active_story_points == 1 else "story points"
                 response += f"**Active ({active_story_points} {sp_text}):**\n"
                 for issue in issues["active"]:
-                    story_points = self._format_story_points(issue['story_points'])
+                    story_points = self._format_story_points(issue["story_points"])
                     response += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points} ({issue['status']})\n"
                 response += "\n"
 
@@ -608,27 +657,33 @@ class CertificationPlugin(BotPlugin):
                 sp_text = "story point" if review_story_points == 1 else "story points"
                 response += f"**In Review ({review_story_points} {sp_text}):**\n"
                 for issue in issues["review"]:
-                    story_points = self._format_story_points(issue['story_points'])
+                    story_points = self._format_story_points(issue["story_points"])
                     response += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points} ({issue['status']})\n"
                 response += "\n"
 
             # Show completed issues separately (compact format)
             if issues["completed"]:
-                sp_text = "story point" if completed_story_points == 1 else "story points"
+                sp_text = (
+                    "story point" if completed_story_points == 1 else "story points"
+                )
                 response += f"**Completed during the pulse ({completed_story_points} {sp_text}):**\n"
                 completed_links = []
                 for issue in issues["completed"]:
                     # Format: Priority: [KEY](url "Title")
-                    completed_links.append(f"{issue['priority']}: [{issue['key']}]({issue['url']} \"{issue['summary']}\")")
+                    completed_links.append(
+                        f'{issue["priority"]}: [{issue["key"]}]({issue["url"]} "{issue["summary"]}")'
+                    )
                 response += "- " + ", ".join(completed_links) + "\n\n"
 
             # Show untriaged issues (these need attention!)
             if issues.get("untriaged", []):
-                sp_text = "story point" if untriaged_story_points == 1 else "story points"
+                sp_text = (
+                    "story point" if untriaged_story_points == 1 else "story points"
+                )
                 response += f"**⚠️ Untriaged issues in the active pulse ({untriaged_story_points} {sp_text}):**\n"
                 response += "*These should either have been triaged or should not be in the current pulse*\n"
                 for issue in issues["untriaged"]:
-                    story_points = self._format_story_points(issue['story_points'])
+                    story_points = self._format_story_points(issue["story_points"])
                     response += f"- [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points} ({issue['status']})\n"
                 response += "\n"
 
@@ -674,15 +729,40 @@ class CertificationPlugin(BotPlugin):
             total_active_sp = 0
             total_completed_sp = 0
             total_untriaged_sp = 0
-            
+
             for github_username, user_issues in team_issues.items():
-                if user_issues["active"] or user_issues.get("review", []) or user_issues["completed"] or user_issues.get("untriaged", []):
+                if (
+                    user_issues["active"]
+                    or user_issues.get("review", [])
+                    or user_issues["completed"]
+                    or user_issues.get("untriaged", [])
+                ):
                     # Calculate user's story points
-                    user_active_sp = int(sum(issue['story_points'] or 0 for issue in user_issues["active"]))
-                    user_review_sp = int(sum(issue['story_points'] or 0 for issue in user_issues.get("review", [])))
-                    user_completed_sp = int(sum(issue['story_points'] or 0 for issue in user_issues["completed"]))
-                    user_untriaged_sp = int(sum(issue['story_points'] or 0 for issue in user_issues.get("untriaged", [])))
-                    
+                    user_active_sp = int(
+                        sum(
+                            issue["story_points"] or 0
+                            for issue in user_issues["active"]
+                        )
+                    )
+                    user_review_sp = int(
+                        sum(
+                            issue["story_points"] or 0
+                            for issue in user_issues.get("review", [])
+                        )
+                    )
+                    user_completed_sp = int(
+                        sum(
+                            issue["story_points"] or 0
+                            for issue in user_issues["completed"]
+                        )
+                    )
+                    user_untriaged_sp = int(
+                        sum(
+                            issue["story_points"] or 0
+                            for issue in user_issues.get("untriaged", [])
+                        )
+                    )
+
                     # Get the actual Mattermost handle for this GitHub user
                     mattermost_handle = get_mattermost_handle_from_github_username(
                         github_username
@@ -698,10 +778,14 @@ class CertificationPlugin(BotPlugin):
 
                     # Show active issues
                     if user_issues["active"]:
-                        active_sp_text = "story point" if user_active_sp == 1 else "story points"
+                        active_sp_text = (
+                            "story point" if user_active_sp == 1 else "story points"
+                        )
                         response += f"  *Active ({user_active_sp} {active_sp_text}):*\n"
                         for issue in user_issues["active"]:
-                            story_points = self._format_story_points(issue['story_points'])
+                            story_points = self._format_story_points(
+                                issue["story_points"]
+                            )
                             response += f"  - {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
                             response += f"    Status: {issue['status']}\n"
                         total_active += len(user_issues["active"])
@@ -709,33 +793,49 @@ class CertificationPlugin(BotPlugin):
 
                     # Show review issues
                     if user_issues.get("review", []):
-                        review_sp_text = "story point" if user_review_sp == 1 else "story points"
-                        response += f"  *In Review ({user_review_sp} {review_sp_text}):*\n"
+                        review_sp_text = (
+                            "story point" if user_review_sp == 1 else "story points"
+                        )
+                        response += (
+                            f"  *In Review ({user_review_sp} {review_sp_text}):*\n"
+                        )
                         for issue in user_issues["review"]:
-                            story_points = self._format_story_points(issue['story_points'])
+                            story_points = self._format_story_points(
+                                issue["story_points"]
+                            )
                             response += f"  - {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
                             response += f"    Status: {issue['status']}\n"
-                        total_active += len(user_issues["review"])  # Count review as active
+                        total_active += len(
+                            user_issues["review"]
+                        )  # Count review as active
                         total_active_sp += user_review_sp
 
                     # Show completed issues (compact format)
                     if user_issues["completed"]:
-                        completed_sp_text = "story point" if user_completed_sp == 1 else "story points"
+                        completed_sp_text = (
+                            "story point" if user_completed_sp == 1 else "story points"
+                        )
                         response += f"  *Recently Completed ({user_completed_sp} {completed_sp_text}):*\n"
                         completed_links = []
                         for issue in user_issues["completed"]:
                             # Format: Priority: [KEY](url "Title")
-                            completed_links.append(f"{issue['priority']}: [{issue['key']}]({issue['url']} \"{issue['summary']}\")")
+                            completed_links.append(
+                                f'{issue["priority"]}: [{issue["key"]}]({issue["url"]} "{issue["summary"]}")'
+                            )
                         response += "  - " + ", ".join(completed_links) + "\n"
                         total_completed += len(user_issues["completed"])
                         total_completed_sp += user_completed_sp
 
                     # Show untriaged issues
                     if user_issues.get("untriaged", []):
-                        untriaged_sp_text = "story point" if user_untriaged_sp == 1 else "story points"
+                        untriaged_sp_text = (
+                            "story point" if user_untriaged_sp == 1 else "story points"
+                        )
                         response += f"  *⚠️ Untriaged ({user_untriaged_sp} {untriaged_sp_text}):*\n"
                         for issue in user_issues["untriaged"]:
-                            story_points = self._format_story_points(issue['story_points'])
+                            story_points = self._format_story_points(
+                                issue["story_points"]
+                            )
                             response += f"  - [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
                             response += f"    Status: {issue['status']}\n"
                         total_untriaged += len(user_issues["untriaged"])
@@ -745,16 +845,20 @@ class CertificationPlugin(BotPlugin):
 
             # Format team totals with proper singular/plural
             active_sp_text = "story point" if total_active_sp == 1 else "story points"
-            completed_sp_text = "story point" if total_completed_sp == 1 else "story points"
-            untriaged_sp_text = "story point" if total_untriaged_sp == 1 else "story points"
-            
+            completed_sp_text = (
+                "story point" if total_completed_sp == 1 else "story points"
+            )
+            untriaged_sp_text = (
+                "story point" if total_untriaged_sp == 1 else "story points"
+            )
+
             response += f"**Total: {total_active} active ({total_active_sp} {active_sp_text}), {total_completed} completed ({total_completed_sp} {completed_sp_text})"
-            
+
             if total_untriaged > 0:
                 response += f", {total_untriaged} untriaged ({total_untriaged_sp} {untriaged_sp_text})"
-            
+
             response += " issues**"
-            
+
             if total_untriaged > 0:
                 response += f"\n\n⚠️ **Warning: {total_untriaged} untriaged issues need attention!**"
             return response

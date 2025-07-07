@@ -1,10 +1,11 @@
+import logging
+
 from mattermost_api import (
     get_user_by_email,
     get_user_by_name,
-    mattermost_token,
     mattermost_base_url,
+    mattermost_token,
 )
-import logging
 
 logger = logging.getLogger(__name__)
 

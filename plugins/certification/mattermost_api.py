@@ -1,6 +1,7 @@
-import requests
 from os import environ
-from typing import TypedDict, Any, Dict
+from typing import Any, Dict, TypedDict
+
+import requests
 
 mattermost_token = environ.get("ERRBOT_TOKEN")
 mattermost_base_url = f"https://{environ.get('ERRBOT_SERVER')}/api/v4"

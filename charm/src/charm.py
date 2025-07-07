@@ -16,8 +16,7 @@ import logging
 from typing import cast
 
 import ops
-from ops.model import BlockedStatus
-from ops.pebble import ExecError, Layer
+from ops.pebble import LayerDict, ServiceDict
 
 logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
@@ -31,22 +30,8 @@ class ErrbotCharm(ops.CharmBase):
         framework.observe(self.on["errbot"].pebble_ready, self._on_errbot_pebble_ready)
         framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _ensure_data_directory_exists(self, container):
-        """Create a directory to contain the bot's transient state."""
-        process = container.exec(["mkdir", "-p", "data"], working_dir="/app")
-
-        try:
-            stdout, _ = process.wait_output()
-            logger.info(stdout)
-        except ExecError as e:
-            logger.error(e.stdout)
-            logger.error(e.stderr)
-            self.unit.status = BlockedStatus("Creating data directory failed")
-
     def _on_errbot_pebble_ready(self, event: ops.PebbleReadyEvent):
         container = event.workload
-        self._ensure_data_directory_exists(container)
-
         container.add_layer("errbot", self._pebble_layer, combine=True)
         container.replan()
         self.unit.status = ops.ActiveStatus()
@@ -70,40 +55,41 @@ class ErrbotCharm(ops.CharmBase):
 
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
-        return Layer(
-            {
-                "summary": "errbot layer",
-                "description": "pebble config layer for errbot",
-                "services": {
-                    "errbot": {
-                        "override": "replace",
-                        "summary": "errbot",
-                        "command": "errbot",
-                        "startup": "enabled",
-                        "environment": {
-                            "ERRBOT_TOKEN": self.model.config["errbot-token"],
-                            "ERRBOT_TEAM": self.model.config["errbot-team"],
-                            "ERRBOT_SERVER": self.model.config["errbot-server"],
-                            "ERRBOT_ADMINS": self.model.config["errbot-admins"],
-                            "C3_CLIENT_ID": self.model.config["c3-client-id"],
-                            "C3_CLIENT_SECRET": self.model.config["c3-client-secret"],
-                            "GITHUB_TOKEN": self.model.config["github-token"],
-                            "GITHUB_ORG": self.model.config["github-org"],
-                            "GITHUB_REPOSITORIES": self.model.config["github-repositories"],
-                            "GITHUB_TEAM": self.model.config["github-team"],
-                            "LDAP_SERVER": self.model.config["ldap-server"],
-                            "LDAP_BASE_DN": self.model.config["ldap-base-dn"],
-                            "LDAP_BIND_DN": self.model.config["ldap-bind-dn"],
-                            "LDAP_BIND_PASSWORD": self.model.config["ldap-bind-password"],
-                            "JIRA_SERVER": self.model.config["jira-server"],
-                            "JIRA_TOKEN": self.model.config["jira-token"],
-                            "JIRA_EMAIL": self.model.config["jira-email"],
-                            "JIRA_FILTER_ID": self.model.config["jira-filter-id"],
-                            "DIGEST_SEND_TIME": self.model.config["digest-send-time"],
-                        },
-                    }
-                },
-            }
+        return LayerDict(
+            summary="errbot layer",
+            description="pebble config layer for errbot",
+            services={
+                "errbot": ServiceDict(
+                    override="replace",
+                    summary="errbot",
+                    command="errbot",
+                    startup="enabled",
+                    environment={
+                        "ERRBOT_TOKEN": str(self.model.config["mattermost-token"]),
+                        "ERRBOT_TEAM": str(self.model.config["mattermost-team"]),
+                        "ERRBOT_SERVER": str(self.model.config["mattermost-server"]),
+                        "ERRBOT_ADMINS": str(self.model.config["mattermost-admins"]),
+                        "C3_CLIENT_ID": str(self.model.config["c3-client-id"]),
+                        "C3_CLIENT_SECRET": str(self.model.config["c3-client-secret"]),
+                        "HTTP_PROXY": str(self.model.config["http-proxy"]),
+                        "HTTPS_PROXY": str(self.model.config["https-proxy"]),
+                        "NO_PROXY": str(self.model.config["no-proxy"]),
+                        "GITHUB_TOKEN": str(self.model.config["github-token"]),
+                        "GITHUB_ORG": str(self.model.config["github-org"]),
+                        "GITHUB_REPOSITORIES": str(self.model.config["github-repositories"]),
+                        "GITHUB_TEAM": str(self.model.config["github-team"]),
+                        "LDAP_SERVER": str(self.model.config["ldap-server"]),
+                        "LDAP_BASE_DN": str(self.model.config["ldap-base-dn"]),
+                        "LDAP_BIND_DN": str(self.model.config["ldap-bind-dn"]),
+                        "LDAP_BIND_PASSWORD": str(self.model.config["ldap-bind-password"]),
+                        "JIRA_SERVER": str(self.model.config["jira-server"]),
+                        "JIRA_TOKEN": str(self.model.config["jira-token"]),
+                        "JIRA_EMAIL": str(self.model.config["jira-email"]),
+                        "JIRA_FILTER_ID": str(self.model.config["jira-filter-id"]),
+                        "DIGEST_SEND_TIME": str(self.model.config["digest-send-time"]),
+                    },
+                ),
+            },
         )
 
 

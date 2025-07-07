@@ -1,6 +1,4 @@
 import unittest
-from unittest.mock import patch, MagicMock
-
 from datetime import datetime, timedelta
 from plugins.certification.artefacts import (
     reply_with_artefacts_summary,
@@ -20,6 +18,8 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 1",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            comment="",
+            archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
             completed_environment_reviews_count=1,
@@ -46,6 +46,9 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 2",
             version="1.0",
             status=ArtefactStatus.MARKED_AS_FAILED,
+            comment="",
+            archived=False,
+            branch="",
             due_date=datetime.now().date() - timedelta(days=10),
             assignee=self.assignee,
             completed_environment_reviews_count=0,

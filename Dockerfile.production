@@ -1,6 +1,6 @@
-FROM ubuntu:24.04 AS builder
+FROM ubuntu:22.04 AS builder
 RUN apt-get update && \
-    apt-get install -y python3.12 git && \
+    apt-get install -y python3-venv git build-essential python3-dev libffi-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -18,7 +18,10 @@ ADD . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-python-downloads
 
-FROM ubuntu:24.04
+RUN ./bin/generate-c3-client.sh
+RUN ./bin/generate-test-observer-client.sh
+
+FROM ubuntu:22.04
 ENV ERRBOT_TOKEN=""
 ENV ERRBOT_TEAM="Canonical"
 ENV ERRBOT_SERVER="chat.canonical.com"
@@ -29,11 +32,13 @@ LABEL name="certification-errbot" \
     license="GPL-3.0"
 
 RUN apt-get update && \
-    apt-get install -y python3.12 python3.12-gdbm && \
+    apt-get install -y python3.10 python3.10-gdbm && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+RUN mkdir -p data
 
 COPY --from=builder --chown=app:app /app /app
 
