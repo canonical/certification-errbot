@@ -1,7 +1,8 @@
-import os
 import json
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Dict, Optional
+
 import requests
 from requests.exceptions import RequestException, Timeout
 

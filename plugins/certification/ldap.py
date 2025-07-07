@@ -1,13 +1,13 @@
-import ldap3
-import os
 import logging
+import os
 from typing import Optional
 
+import ldap3
 from mattermost_api import (
-    get_user_by_name,
     get_mattermost_handle_by_email,
-    mattermost_token,
+    get_user_by_name,
     mattermost_base_url,
+    mattermost_token,
 )
 
 logger = logging.getLogger(__name__)

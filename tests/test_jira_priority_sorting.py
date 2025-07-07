@@ -3,6 +3,7 @@
 Test for Jira priority sorting functionality
 """
 import unittest
+
 from plugins.certification.jira_api import get_priority_sort_key
 
 

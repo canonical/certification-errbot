@@ -4,6 +4,7 @@ Test for the new "changes requested" PR functionality
 """
 import unittest
 from unittest.mock import MagicMock, patch
+
 from plugins.certification.pr_cache import PullRequestCache
 
 

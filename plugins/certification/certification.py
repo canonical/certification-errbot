@@ -241,7 +241,7 @@ class CertificationPlugin(BotPlugin):
         if prs_assigned_to_user:
             msg += "**PRs pending your review:**\n"
             for pr in prs_assigned_to_user:
-                repo_name = pr.get("repository", "unknown")
+                pr.get("repository", "unknown")
                 user_roles = pr.get("user_role", [])
                 role_indicator = ""
                 if user_roles:

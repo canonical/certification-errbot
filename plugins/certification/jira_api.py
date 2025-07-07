@@ -1,10 +1,10 @@
-import os
 import logging
-from typing import List, Optional, Dict, Any
+import os
+from typing import Any, Dict, List, Optional
+
 from jira import JIRA
 from jira.exceptions import JIRAError
-
-from ldap import get_email_from_mattermost_handle, get_email_from_github_username
+from ldap import get_email_from_github_username, get_email_from_mattermost_handle
 
 logger = logging.getLogger(__name__)
 
