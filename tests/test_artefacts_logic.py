@@ -1,11 +1,14 @@
 import unittest
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+from test_observer.models import ArtefactResponse, ArtefactStatus
+
 from plugins.certification.artefacts import (
+    artefacts_by_user_handle,
     reply_with_artefacts_summary,
     send_artefact_summaries,
-    artefacts_by_user_handle,
 )
-from test_observer.models import ArtefactStatus, ArtefactResponse
 
 
 class ArtefactsTestBase(unittest.TestCase):
@@ -37,7 +40,6 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url",
             stage="stage1",
             bug_link="bug_link",
-            archived=False,
             created_at=datetime.now() - timedelta(days=10),
         )
 
@@ -48,7 +50,6 @@ class ArtefactsTestBase(unittest.TestCase):
             status=ArtefactStatus.MARKED_AS_FAILED,
             comment="",
             archived=False,
-            branch="",
             due_date=datetime.now().date() - timedelta(days=10),
             assignee=self.assignee,
             completed_environment_reviews_count=0,
@@ -66,7 +67,6 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url2",
             stage="stage2",
             bug_link="bug_link2",
-            archived=False,
             created_at=datetime.now() - timedelta(days=10),
         )
 
