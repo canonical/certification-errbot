@@ -13,7 +13,7 @@ concurrency:
 jobs:
   tox-checks:
     name: Tox checks
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     steps:
       - uses: actions/checkout@v4
       - name: Install tox
