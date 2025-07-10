@@ -1,6 +1,7 @@
 name: Publish OCI Image and charm
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
