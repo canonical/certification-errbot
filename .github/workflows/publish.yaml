@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-publish-image:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, xlarge, jammy, x64]
 
     steps:
       - name: Checkout repository
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: write # workflow pushes a tag
       packages: read
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, xlarge, jammy, x64]
     needs:
       - build-and-publish-image
     steps:
