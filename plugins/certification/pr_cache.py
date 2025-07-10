@@ -18,9 +18,14 @@ class PullRequestCache:
     Periodically fetches and caches PR data to reduce API calls.
     """
 
-    def __init__(self, repo_filter: Optional[List[str]] = None):
-        self.github_token = os.environ.get("GITHUB_TOKEN")
-        self.github_org = os.environ.get("GITHUB_ORG")
+    def __init__(
+        self,
+        repo_filter: Optional[List[str]] = None,
+        github_token: str | None = None,
+        github_org: str | None = None,
+    ):
+        self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
+        self.github_org = github_org or os.environ.get("GITHUB_ORG")
         self.repo_filter = repo_filter  # If provided, only fetch PRs from these repos
         self.cache: Dict[str, List[dict]] = {}  # repo_name -> list of PRs
         self.last_updated: Optional[datetime] = None
@@ -217,13 +222,15 @@ class PullRequestCache:
                 elif author.lower() == github_username.lower():
                     pr_with_repo = pr.copy()
                     pr_with_repo["repository"] = repo_name
-                    
+
                     # Check if it has no reviewers or assignees
                     if len(requested_reviewers) == 0 and len(assignees) == 0:
                         authored_unassigned_prs.append(pr_with_repo)
                     else:
                         # Check review status - fetch review data
-                        review_status = self._get_pr_review_status(repo_name, pr["number"])
+                        review_status = self._get_pr_review_status(
+                            repo_name, pr["number"]
+                        )
                         if review_status["has_changes_requested"]:
                             authored_changes_requested_prs.append(pr_with_repo)
                         elif review_status["has_approvals"]:
@@ -298,16 +305,16 @@ class PullRequestCache:
         Returns dict with 'has_approvals' and 'has_changes_requested' booleans.
         """
         headers = self._get_headers()
-        
+
         try:
             url = f"https://api.github.com/repos/{self.github_org}/{repo_name}/pulls/{pr_number}/reviews"
             response = requests.get(url, headers=headers)
-            
+
             if response.status_code == 200:
                 reviews = response.json()
                 has_approvals = False
                 has_changes_requested = False
-                
+
                 # Check review states
                 for review in reviews:
                     state = review.get("state")
@@ -315,19 +322,21 @@ class PullRequestCache:
                         has_approvals = True
                     elif state == "CHANGES_REQUESTED":
                         has_changes_requested = True
-                
+
                 return {
                     "has_approvals": has_approvals,
-                    "has_changes_requested": has_changes_requested
+                    "has_changes_requested": has_changes_requested,
                 }
             elif response.status_code == 404:
                 logger.debug(f"PR {repo_name}#{pr_number} not found or not accessible")
             else:
-                logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {response.status_code}")
-                
+                logger.warning(
+                    f"Error fetching reviews for {repo_name}#{pr_number}: {response.status_code}"
+                )
+
         except requests.exceptions.RequestException as e:
             logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {e}")
-        
+
         # Default to no approvals or changes requested if error occurs
         return {"has_approvals": False, "has_changes_requested": False}
 
