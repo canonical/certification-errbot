@@ -3,7 +3,7 @@ name = "certification-errbot"
 version = "0.1.0"
 description = "Hardware Certification plugins to errbot"
 readme = "README.md"
-requires-python = "~=3.13"
+requires-python = "~=3.10"
 dependencies = [
     "errbot==6.2.0",
     "err-backend-mattermost==3.0.0",
