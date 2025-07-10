@@ -4,7 +4,7 @@ variable "c3_client_id" {
 }
 
 variable "c3_client_secret" {
-  description = ""
+  description = "certification.canonical.com client secret"
   type        = string
 }
 
@@ -94,7 +94,7 @@ variable "ldap_server" {
 }
 
 variable "log_level" {
-  description = ""
+  description = "Charm log level"
   type        = string
   default     = "debug"
 }
