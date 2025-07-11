@@ -48,6 +48,12 @@ variable "https_proxy" {
   default     = ""
 }
 
+variable "jira_current_sprint_only" {
+  description = "Filtering by current sprint when fetching jira issues"
+  type        = bool
+  default     = false
+}
+
 variable "jira_email" {
   description = "Jira email address for API access"
   type        = string

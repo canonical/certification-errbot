@@ -53,6 +53,10 @@ config:
       type: string
       default: ""
       description: HTTPS proxy for accessing external HTTPS resources
+    jira-current-sprint-only:
+      type: boolean
+      default: false
+      description: Filtering by current sprint when fetching jira issues
     jira-email:
       description: |
         Jira email address for API access.

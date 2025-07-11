@@ -78,6 +78,9 @@ class ErrbotCharm(ops.CharmBase):
                         "GITHUB_TOKEN": str(self.model.config["github-token"]),
                         "HTTPS_PROXY": str(self.model.config["https-proxy"]),
                         "HTTP_PROXY": str(self.model.config["http-proxy"]),
+                        "JIRA_CURRENT_SPRINT_ONLY": str(
+                            self.model.config["jira-current-sprint-only"]
+                        ),
                         "JIRA_EMAIL": str(self.model.config["jira-email"]),
                         "JIRA_FILTER_ID": str(self.model.config["jira-filter-id"]),
                         "JIRA_SERVER": str(self.model.config["jira-server"]),
