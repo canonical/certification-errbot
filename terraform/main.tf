@@ -19,7 +19,7 @@ resource "juju_application" "errbot" {
     https-proxy              = var.https_proxy
     jira-current-sprint-only = var.jira_current_sprint_only
     jira-email               = var.jira_email
-    jira-filter              = var.jira_filter_id
+    jira-filter-id           = var.jira_filter_id
     jira-server              = var.jira_server
     jira-token               = var.jira_token
     ldap-base-dn             = var.ldap_base_dn
