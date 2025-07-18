@@ -1,32 +1,32 @@
-import logging
+# ruff: noqa: I001, E402
+
 import os
 from datetime import datetime
+import logging
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-from artefacts import reply_with_artefacts_summary
+from dotenv import load_dotenv
+from errbot import BotPlugin, botcmd
+from config import DIGEST_SEND_TIME
+
+from c3.client import AuthenticatedClient as C3Client
 from c3.api.physicalmachinesview.physicalmachinesview_list import (
     sync_detailed as get_physicalmachinesview,
 )
-from c3.client import AuthenticatedClient as C3Client
 from c3_auth import get_access_token as get_c3_access_token
-from dotenv import load_dotenv
-from errbot import BotPlugin, botcmd
-from github import get_github_username_from_email
-from jira_api import (
-    get_jira_issues_for_github_team_members,
-    get_jira_issues_for_mattermost_handle,
-    jira_issues_cache,
-    refresh_jira_issues_cache,
-)
+from artefacts import reply_with_artefacts_summary
 from ldap import (
-    get_email_from_mattermost_handle,
     get_github_username_from_mattermost_handle,
+    get_email_from_mattermost_handle,
     get_mattermost_handle_from_github_username,
 )
+from github import get_github_username_from_email
 from pr_cache import PullRequestCache
-
-from config import DIGEST_SEND_TIME
+from jira_api import (
+    get_jira_issues_for_mattermost_handle,
+    get_jira_issues_for_github_team_members,
+    refresh_jira_issues_cache,
+    jira_issues_cache,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +42,13 @@ except ImportError as e:
         return None
 
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+import ssl_fix  # noqa: F401
+
 # Load environment variables from .env file if present
 load_dotenv()
-logger = logging.getLogger(__name__)
 
 
 c3_client_id = os.environ.get("C3_CLIENT_ID")
@@ -241,7 +245,7 @@ class CertificationPlugin(BotPlugin):
         if prs_assigned_to_user:
             msg += "**PRs pending your review:**\n"
             for pr in prs_assigned_to_user:
-                pr.get("repository", "unknown")
+                repo_name = pr.get("repository", "unknown")
                 user_roles = pr.get("user_role", [])
                 role_indicator = ""
                 if user_roles:
