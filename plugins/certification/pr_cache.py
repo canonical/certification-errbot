@@ -190,6 +190,7 @@ class PullRequestCache:
         authored_unassigned_prs = []
         authored_approved_prs = []
         authored_changes_requested_prs = []
+        authored_pending_review_prs = []
 
         # Search through all cached PRs
         for repo_name, prs in self.cache.items():
@@ -235,12 +236,16 @@ class PullRequestCache:
                             authored_changes_requested_prs.append(pr_with_repo)
                         elif review_status["has_approvals"]:
                             authored_approved_prs.append(pr_with_repo)
+                        else:
+                            # Has reviewers/assignees but no review activity yet
+                            authored_pending_review_prs.append(pr_with_repo)
 
         return {
             "assigned": assigned_prs,
             "authored_unassigned": authored_unassigned_prs,
             "authored_approved": authored_approved_prs,
             "authored_changes_requested": authored_changes_requested_prs,
+            "authored_pending_review": authored_pending_review_prs,
         }
 
     def get_cache_stats(self) -> dict:
