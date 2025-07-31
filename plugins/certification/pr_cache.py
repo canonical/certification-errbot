@@ -185,6 +185,7 @@ class PullRequestCache:
         authored_unassigned_prs = []
         authored_approved_prs = []
         authored_changes_requested_prs = []
+        authored_pending_review_prs = []
 
         # Search through all cached PRs
         for repo_name, prs in self.cache.items():
@@ -218,8 +219,9 @@ class PullRequestCache:
                     pr_with_repo = pr.copy()
                     pr_with_repo["repository"] = repo_name
                     
-                    # Check if it has no reviewers or assignees
-                    if len(requested_reviewers) == 0 and len(assignees) == 0:
+                    # Check if it has no reviewers, teams, or assignees
+                    requested_teams = pr.get("requested_teams", [])
+                    if len(requested_reviewers) == 0 and len(requested_teams) == 0 and len(assignees) == 0:
                         authored_unassigned_prs.append(pr_with_repo)
                     else:
                         # Check review status - fetch review data
@@ -228,12 +230,16 @@ class PullRequestCache:
                             authored_changes_requested_prs.append(pr_with_repo)
                         elif review_status["has_approvals"]:
                             authored_approved_prs.append(pr_with_repo)
+                        else:
+                            # Has reviewers/assignees but no review activity yet
+                            authored_pending_review_prs.append(pr_with_repo)
 
         return {
             "assigned": assigned_prs,
             "authored_unassigned": authored_unassigned_prs,
             "authored_approved": authored_approved_prs,
             "authored_changes_requested": authored_changes_requested_prs,
+            "authored_pending_review": authored_pending_review_prs,
         }
 
     def get_cache_stats(self) -> dict:

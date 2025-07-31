@@ -213,12 +213,14 @@ class CertificationPlugin(BotPlugin):
         authored_prs_with_no_assignment = pr_data["authored_unassigned"]
         authored_approved_prs = pr_data.get("authored_approved", [])
         authored_changes_requested_prs = pr_data.get("authored_changes_requested", [])
+        authored_pending_review_prs = pr_data.get("authored_pending_review", [])
 
         if (
             not prs_assigned_to_user
             and not authored_prs_with_no_assignment
             and not authored_approved_prs
             and not authored_changes_requested_prs
+            and not authored_pending_review_prs
         ):
             if is_digest:
                 return None  # Skip digest for users with no PRs
@@ -266,9 +268,23 @@ class CertificationPlugin(BotPlugin):
                     msg += f"- {pr_link}: {pr['title']}\n"
             msg += "\n" if is_digest else ""
 
-        if authored_changes_requested_prs:
+        if authored_pending_review_prs:
             if not is_digest and (
                 prs_assigned_to_user or authored_prs_with_no_assignment
+            ):
+                msg += "\n"
+            msg += "**PRs you authored that are awaiting review:**\n"
+            for pr in authored_pending_review_prs:
+                pr_link = self._format_pr_link(pr, github_org)
+                if is_digest:
+                    msg += f"- [{pr['title']}]({pr['html_url']}) {pr_link}\n"
+                else:
+                    msg += f"- {pr_link}: {pr['title']}\n"
+            msg += "\n" if is_digest else ""
+
+        if authored_changes_requested_prs:
+            if not is_digest and (
+                prs_assigned_to_user or authored_prs_with_no_assignment or authored_pending_review_prs
             ):
                 msg += "\n"
             msg += "**PRs you authored where changes have been requested:**\n"
@@ -282,7 +298,7 @@ class CertificationPlugin(BotPlugin):
 
         if authored_approved_prs:
             if not is_digest and (
-                prs_assigned_to_user or authored_prs_with_no_assignment or authored_changes_requested_prs
+                prs_assigned_to_user or authored_prs_with_no_assignment or authored_pending_review_prs or authored_changes_requested_prs
             ):
                 msg += "\n"
             msg += "**Approved PRs, pending merge:**\n"
