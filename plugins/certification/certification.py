@@ -18,6 +18,7 @@ from ldap import (
     get_github_username_from_mattermost_handle,
     get_email_from_mattermost_handle,
     get_mattermost_handle_from_github_username,
+    get_email_from_github_username,
 )
 from github import get_github_username_from_email
 from pr_cache import PullRequestCache
@@ -26,6 +27,7 @@ from jira_api import (
     get_jira_issues_for_github_team_members,
     refresh_jira_issues_cache,
     jira_issues_cache,
+    get_jira_issues_for_user,
 )
 
 logger = logging.getLogger(__name__)
@@ -353,11 +355,17 @@ class CertificationPlugin(BotPlugin):
             return None
 
     def _generate_user_digest(
-        self, github_username: str, mattermost_username: str, is_digest: bool = False
+        self, github_username: str, mattermost_username: str, is_digest: bool = False, use_github_for_jira: bool = False
     ) -> str | None:
         """
         Generate a combined PR and Jira digest for a user.
         Shared between !digest command and daily digest.
+        
+        Args:
+            github_username: GitHub username
+            mattermost_username: Mattermost username (may be GitHub username as fallback)
+            is_digest: True for digest format, False for command response
+            use_github_for_jira: If True, lookup Jira issues via GitHub username->email instead of Mattermost handle
         """
         try:
             # Get PR data for this user
@@ -372,7 +380,18 @@ class CertificationPlugin(BotPlugin):
             )
 
             # Get Jira issues for this user
-            jira_issues = get_jira_issues_for_mattermost_handle(mattermost_username)
+            if use_github_for_jira:
+                # Use GitHub username to find email, then get Jira issues
+                # This is the same approach as get_jira_issues_for_github_team_members
+                email = get_email_from_github_username(github_username)
+                if email:
+                    jira_issues = get_jira_issues_for_user(email)
+                else:
+                    # No email found, no Jira issues
+                    jira_issues = {"active": [], "review": [], "completed": [], "untriaged": []}
+            else:
+                # Use Mattermost handle approach (for manual commands)
+                jira_issues = get_jira_issues_for_mattermost_handle(mattermost_username)
             jira_msg = None
 
             if (
@@ -496,14 +515,15 @@ class CertificationPlugin(BotPlugin):
                         github_username
                     )
                     if not mattermost_handle:
-                        mattermost_handle = github_username  # Fallback
                         logger.warning(
-                            f"Could not find Mattermost handle for {github_username}, using GitHub username"
+                            f"Could not find Mattermost handle for {github_username}, skipping digest"
                         )
+                        continue
 
                     # Generate digest using shared logic
+                    # Use GitHub-based Jira lookup for periodic digest to ensure robustness
                     combined_msg = self._generate_user_digest(
-                        github_username, mattermost_handle, is_digest=True
+                        github_username, mattermost_handle, is_digest=True, use_github_for_jira=True
                     )
 
                     # Skip if no PRs or Jira issues for this user
