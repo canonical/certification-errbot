@@ -47,9 +47,6 @@ class PullRequestCache:
         """Get list of repositories to fetch PRs from"""
         if self.repo_filter:
             # Use the provided filter list
-            logger.info(
-                f"Using filtered repository list: {len(self.repo_filter)} repositories"
-            )
             return self.repo_filter.copy()
         else:
             # Fetch all repositories from the organization
@@ -83,7 +80,6 @@ class PullRequestCache:
                 )
                 break
 
-        logger.info(f"Found {len(repos)} repositories in {self.github_org}")
         return repos
 
     def _fetch_prs_for_repo(self, repo_name: str) -> Optional[List[dict]]:
@@ -134,9 +130,6 @@ class PullRequestCache:
                 if self.repo_filter
                 else "(all repos)"
             )
-            logger.info(
-                f"Refreshing PR cache for organization {self.github_org} {filter_info}"
-            )
 
             # Get repositories to fetch
             repo_names = self._get_repositories_to_fetch()
@@ -152,16 +145,12 @@ class PullRequestCache:
                     new_cache[repo_name] = prs
                     total_prs += len(prs)
                     successful_repos += 1
-                    logger.debug(f"Cached {len(prs)} PRs for {repo_name}")
                 else:
                     logger.warning(f"Failed to fetch PRs for {repo_name}, skipping")
 
             self.cache = new_cache
             self.last_updated = datetime.now()
 
-            logger.info(
-                f"PR cache refreshed successfully. {total_prs} PRs across {successful_repos}/{len(repo_names)} repositories"
-            )
             return True
 
         except Exception as e:
@@ -183,7 +172,6 @@ class PullRequestCache:
         """
         # Refresh cache if expired
         if self.is_cache_expired():
-            logger.info("PR cache expired, refreshing...")
             self.refresh_cache()
 
         assigned_prs = []
@@ -306,7 +294,6 @@ class PullRequestCache:
                 )
                 return []
 
-        logger.info(f"Found {len(members)} members in team {team_name}")
         return members
 
     def _get_pr_review_status(self, repo_name: str, pr_number: int) -> dict:
@@ -338,7 +325,7 @@ class PullRequestCache:
                     "has_changes_requested": has_changes_requested,
                 }
             elif response.status_code == 404:
-                logger.debug(f"PR {repo_name}#{pr_number} not found or not accessible")
+                logger.warning(f"PR {repo_name}#{pr_number} not found or not accessible (404)")
             else:
                 logger.warning(
                     f"Error fetching reviews for {repo_name}#{pr_number}: {response.status_code}"

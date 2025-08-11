@@ -45,9 +45,6 @@ def get_email_from_mattermost_handle_api(mattermost_handle: str) -> Optional[str
         if email:
             # Cache the result
             mattermost_email_cache[mattermost_handle] = email
-            logger.info(
-                f"Found email {email} for Mattermost handle {mattermost_handle}"
-            )
             return email
         else:
             logger.warning(f"No email found for Mattermost handle {mattermost_handle}")
@@ -91,7 +88,6 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
 
         # Search for user by email from Mattermost API
         search_filter = f"(mail={email})"
-        logger.debug(f"Searching LDAP with filter: {search_filter}")
 
         conn.search(
             search_base=LDAP_BASE_DN,
@@ -99,20 +95,9 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
             attributes=["*"],  # Get all attributes to see what's available
         )
 
-        logger.debug(f"Search returned {len(conn.entries)} entries")
 
         if conn.entries:
             entry = conn.entries[0]
-            logger.debug(f"Entry DN: {entry.entry_dn}")
-            logger.debug(
-                f"Available attribute keys: {list(entry.entry_attributes_as_dict.keys())}"
-            )
-
-            # Log all attribute values for debugging
-            logger.info(f"All LDAP attributes for {handle} (email: {email}):")
-            for attr_name, attr_values in entry.entry_attributes_as_dict.items():
-                if attr_name.lower() != "jpegphoto":  # Skip binary photo data
-                    logger.info(f"  {attr_name}: {attr_values}")
 
             github_username = (
                 entry.gitHubID.value if hasattr(entry, "gitHubID") else None
@@ -121,16 +106,12 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
             if github_username:
                 # Cache the result
                 _ldap_cache[handle] = github_username
-                logger.info(
-                    f"Found GitHub username {github_username} for Mattermost handle {handle}"
-                )
                 return github_username
             else:
-                logger.debug("No githubUsername attribute found in this entry")
+                logger.warning(f"No GitHub username (gitHubID) found in LDAP for {handle}")
 
         # Cache negative result
         _ldap_cache[handle] = None
-        logger.info(f"No GitHub username found for Mattermost handle {handle}")
         return None
 
     except Exception as e:
@@ -160,7 +141,6 @@ def get_email_from_github_username(github_username: str) -> Optional[str]:
 
         # Search for user by GitHub username using GitHubID attribute
         search_filter = f"(gitHubID={github_username})"
-        logger.debug(f"Searching LDAP with filter: {search_filter}")
 
         conn.search(
             search_base=LDAP_BASE_DN,
@@ -168,21 +148,17 @@ def get_email_from_github_username(github_username: str) -> Optional[str]:
             attributes=["mail", "gitHubID"],
         )
 
-        logger.debug(f"Search returned {len(conn.entries)} entries")
 
         if conn.entries:
             entry = conn.entries[0]
             email = entry.mail.value if hasattr(entry, "mail") else None
 
             if email:
-                logger.info(
-                    f"Found email {email} for GitHub username {github_username}"
-                )
                 return email
             else:
                 logger.warning(f"No email found for GitHub username {github_username}")
         else:
-            logger.info(f"No LDAP entry found for GitHub username {github_username}")
+            logger.warning(f"No LDAP entry found for GitHub username {github_username}")
 
         return None
 
@@ -216,9 +192,6 @@ def get_mattermost_handle_from_github_username(github_username: str) -> Optional
         mattermost_token, mattermost_base_url, email
     )
     if mattermost_handle:
-        logger.info(
-            f"Found Mattermost handle {mattermost_handle} for GitHub username {github_username}"
-        )
         return mattermost_handle
     else:
         logger.warning(

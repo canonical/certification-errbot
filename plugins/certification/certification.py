@@ -492,7 +492,7 @@ class CertificationPlugin(BotPlugin):
         Send daily summaries (PRs + Jira issues) to all members of the configured GitHub team.
         """
         if not github_team:
-            logger.debug("No GitHub team configured, skipping team PR summaries")
+            logger.warning("No GitHub team configured, skipping team PR summaries")
             return
 
         try:
@@ -502,12 +502,8 @@ class CertificationPlugin(BotPlugin):
                 logger.warning(f"No members found for team {github_team}")
                 return
 
-            logger.info(
-                f"Sending daily summaries (PRs + Jira) to {len(team_members)} team members"
-            )
 
             for github_username in team_members:
-                logger.info(f"Sending daily summary to {github_username}")
 
                 try:
                     # Get Mattermost username for this GitHub user
@@ -528,17 +524,11 @@ class CertificationPlugin(BotPlugin):
 
                     # Skip if no PRs or Jira issues for this user
                     if not combined_msg:
-                        logger.info(
-                            f"No PRs or Jira issues found for {github_username}, skipping"
-                        )
                         continue
 
                     # Send direct message to user
                     identifier = self.build_identifier(f"@{mattermost_handle}")
                     self.send(identifier, combined_msg)
-                    logger.info(
-                        f"Sent daily summary (PRs + Jira) to {mattermost_handle} (GitHub: {github_username})"
-                    )
 
                 except Exception as e:
                     logger.error(
@@ -552,18 +542,13 @@ class CertificationPlugin(BotPlugin):
         """Refresh the PR cache with latest data from filtered repositories"""
         try:
             self.pr_cache.refresh_cache()
-            logger.info("PR cache refreshed successfully")
         except Exception as e:
             logger.error(f"Error refreshing PR cache: {e}")
 
     @botcmd(split_args_with=" ")
     def artefacts(self, msg, args):
-        logger.info(
-            f"!artefacts command called by {msg.frm.username} with args: {args}"
-        )
         try:
             result = reply_with_artefacts_summary(msg.frm, args)
-            logger.info(f"!artefacts command returning {len(result)} characters")
             return result
         except Exception as e:
             logger.error(f"Error in !artefacts command: {e}", exc_info=True)
@@ -962,7 +947,6 @@ class CertificationPlugin(BotPlugin):
             prompt = self._create_sprint_summary_prompt(active_issues, completed_issues)
 
             # Generate summary using LLM
-            logger.info(f"Generating sprint summary using {llm_client.model_name}")
             summary = llm_client.generate_completion(
                 prompt, max_tokens=2000, temperature=0.3
             )
