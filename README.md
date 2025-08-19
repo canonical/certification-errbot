@@ -11,6 +11,22 @@ ERRBOT_TOKEN=... \
 ERRBOT_TEAM=canonical uv run errbot
 ```
 
+## Running tests
+
+```bash
+# Run all unit tests
+uv run pytest tests
+
+# Run specific test file
+uv run pytest tests/test_pr_cache_refresh.py
+
+# Run tests with verbose output
+uv run pytest tests -v
+
+# Run tests with coverage
+uv run pytest tests --cov=plugins/certification
+```
+
 ## Generating Test Observer and C3 libraries
 
 Test Observer and C3 client libraries are built automatically as part of the OCI image.

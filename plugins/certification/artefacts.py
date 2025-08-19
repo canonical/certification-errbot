@@ -53,7 +53,6 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
             assigned_to_filter = arg.split("assigned-to:", 1)[1].lower()
             filter_by_sender_as_assignee = False
 
-
     if "all" in args and (artifact_filter or assigned_to_filter):
         return "You can't use 'all' with 'name-contains' or 'assigned-to'"
 
@@ -118,8 +117,6 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
 
     if out_msg == "":
         out_msg = f"No pending artefacts (assigned to filter: {assigned_to_filter}, name filter: {artifact_filter})"
-    else:
-
     return out_msg
 
 
@@ -135,14 +132,8 @@ def artefacts_by_user_handle(
     one_week_ago = now - timedelta(weeks=1)
 
     filtered_count = 0
-    processed_count = 0
 
     for artefact in artefacts_response:
-        processed_count += 1
-
-        # Log every 10th artefact for debugging
-        if processed_count % 10 == 1:
-
         if artefact.status == ArtefactStatus.APPROVED:
             continue
 
@@ -184,8 +175,6 @@ def artefacts_by_user_handle(
             artefacts_by_user[assignee_handle] = []
 
         artefacts_by_user[assignee_handle].append(artefact)
-
-    for user, user_artefacts in artefacts_by_user.items():
 
     return artefacts_by_user
 
