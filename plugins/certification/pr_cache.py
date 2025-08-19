@@ -125,12 +125,6 @@ class PullRequestCache:
     def refresh_cache(self) -> bool:
         """Refresh the entire PR cache with data from specified repositories"""
         try:
-            filter_info = (
-                f"(filtered: {len(self.repo_filter)} repos)"
-                if self.repo_filter
-                else "(all repos)"
-            )
-
             # Get repositories to fetch
             repo_names = self._get_repositories_to_fetch()
 
@@ -168,7 +162,8 @@ class PullRequestCache:
     def get_prs_for_user(self, github_username: str) -> dict:
         """
         Get PRs relevant to a specific GitHub user.
-        Returns dict with 'assigned', 'authored_unassigned', 'authored_approved', and 'authored_changes_requested' lists.
+        Returns dict with 'assigned', 'authored_unassigned', 'authored_approved', 
+        'authored_changes_requested', 'authored_pending_review', and 'authored_unknown_status' lists.
         """
         # Refresh cache if expired
         if self.is_cache_expired():
@@ -179,6 +174,7 @@ class PullRequestCache:
         authored_approved_prs = []
         authored_changes_requested_prs = []
         authored_pending_review_prs = []
+        authored_unknown_status_prs = []
 
         # Search through all cached PRs
         for repo_name, prs in self.cache.items():
@@ -225,7 +221,10 @@ class PullRequestCache:
                         review_status = self._get_pr_review_status(
                             repo_name, pr["number"]
                         )
-                        if review_status["has_changes_requested"]:
+                        if review_status is None:
+                            # Error fetching review status, treat as unknown
+                            authored_unknown_status_prs.append(pr_with_repo)
+                        elif review_status["has_changes_requested"]:
                             authored_changes_requested_prs.append(pr_with_repo)
                         elif review_status["has_approvals"]:
                             authored_approved_prs.append(pr_with_repo)
@@ -239,6 +238,7 @@ class PullRequestCache:
             "authored_approved": authored_approved_prs,
             "authored_changes_requested": authored_changes_requested_prs,
             "authored_pending_review": authored_pending_review_prs,
+            "authored_unknown_status": authored_unknown_status_prs,
         }
 
     def get_cache_stats(self) -> dict:
@@ -296,10 +296,11 @@ class PullRequestCache:
 
         return members
 
-    def _get_pr_review_status(self, repo_name: str, pr_number: int) -> dict:
+    def _get_pr_review_status(self, repo_name: str, pr_number: int) -> Optional[Dict[str, bool]]:
         """
         Get review status for a specific PR.
-        Returns dict with 'has_approvals' and 'has_changes_requested' booleans.
+        Returns dict with 'has_approvals' and 'has_changes_requested' booleans on success,
+        or None if an error occurs.
         """
         headers = self._get_headers()
 
@@ -334,16 +335,20 @@ class PullRequestCache:
         except requests.exceptions.RequestException as e:
             logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {e}")
 
-        # Default to no approvals or changes requested if error occurs
-        return {"has_approvals": False, "has_changes_requested": False}
+        # Return None to explicitly indicate an error occurred
+        return None
 
     def _check_pr_has_approvals(self, repo_name: str, pr_number: int) -> bool:
         """
         Legacy method for backward compatibility.
         Check if a specific PR has any approved reviews.
         Returns True if PR has at least one approved review.
+        Returns False if there's an error fetching the review status.
         """
         status = self._get_pr_review_status(repo_name, pr_number)
+        if status is None:
+            # Error occurred, treat as no approvals
+            return False
         return status["has_approvals"]
 
 

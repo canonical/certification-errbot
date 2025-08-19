@@ -110,6 +110,67 @@ class TestPRChangesRequested(unittest.TestCase):
                 self.assertEqual(len(result["assigned"]), 0)
                 self.assertEqual(len(result["authored_unassigned"]), 0)
 
+    @patch("plugins.certification.pr_cache.requests.get")
+    def test_get_pr_review_status_with_error(self, mock_get):
+        """Test that _get_pr_review_status returns None on error"""
+        # Mock a failed response
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_get.return_value = mock_response
+
+        result = self.pr_cache._get_pr_review_status("test-repo", 123)
+
+        # Should return None on error
+        self.assertIsNone(result)
+
+    @patch("plugins.certification.pr_cache.requests.get")
+    def test_get_pr_review_status_with_network_error(self, mock_get):
+        """Test that _get_pr_review_status returns None on network error"""
+        import requests
+        
+        # Mock a network exception
+        mock_get.side_effect = requests.exceptions.RequestException("Network error")
+
+        result = self.pr_cache._get_pr_review_status("test-repo", 123)
+
+        # Should return None on network error
+        self.assertIsNone(result)
+
+    @patch("plugins.certification.pr_cache.requests.get")
+    def test_get_prs_for_user_handles_review_status_error(self, mock_get):
+        """Test that get_prs_for_user handles review status errors gracefully"""
+        from datetime import datetime
+        
+        # Set up cache with a PR
+        self.pr_cache.cache = {
+            "test-repo": [
+                {
+                    "number": 123,
+                    "title": "Test PR",
+                    "draft": False,
+                    "user": {"login": "test-author"},
+                    "requested_reviewers": [{"login": "reviewer1"}],
+                    "requested_teams": [],
+                    "assignees": []
+                }
+            ]
+        }
+        self.pr_cache.last_updated = datetime.now()
+
+        # Mock the review status to return None (error case)
+        with patch.object(self.pr_cache, "_get_pr_review_status", return_value=None):
+            result = self.pr_cache.get_prs_for_user("test-author")
+
+            # PR should be in unknown status category when there's an error
+            self.assertIn("authored_unknown_status", result)
+            self.assertEqual(len(result["authored_unknown_status"]), 1)
+            self.assertEqual(result["authored_unknown_status"][0]["number"], 123)
+
+            # Other categories should be empty
+            self.assertEqual(len(result["authored_changes_requested"]), 0)
+            self.assertEqual(len(result["authored_approved"]), 0)
+            self.assertEqual(len(result["authored_pending_review"]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
