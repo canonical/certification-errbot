@@ -22,7 +22,7 @@ from ldap import (
 )
 from github import get_github_username_from_email
 from pr_cache import PullRequestCache
-from jira_api import (
+from jira_integration import (
     get_jira_issues_for_mattermost_handle,
     get_jira_issues_for_github_team_members,
     refresh_jira_issues_cache,
