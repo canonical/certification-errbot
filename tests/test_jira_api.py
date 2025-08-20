@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from plugins.certification.jira_api import (
+from plugins.certification.jira_integration import (
     get_jira_issues_for_github_team_members,
     get_jira_issues_for_mattermost_handle,
     get_jira_issues_for_user,
@@ -113,7 +113,7 @@ class TestJiraAPI(unittest.TestCase):
         self.assertTrue(is_review_status("IN REVIEW"))
         self.assertTrue(is_review_status("code REVIEW"))
 
-    @patch("plugins.certification.jira_api.jira_issues_cache")
+    @patch("plugins.certification.jira_integration.cache.jira_issues_cache")
     def test_get_jira_issues_for_user_success(self, mock_cache):
         """Test successful retrieval of Jira issues for a user from cache"""
         # Mock cached issues
@@ -148,7 +148,7 @@ class TestJiraAPI(unittest.TestCase):
         self.assertEqual(result["active"][0]["key"], "TEST-1")
         self.assertEqual(result["completed"][0]["key"], "TEST-2")
 
-    @patch("plugins.certification.jira_api.jira_issues_cache")
+    @patch("plugins.certification.jira_integration.cache.jira_issues_cache")
     def test_get_jira_issues_for_user_no_cache(self, mock_cache):
         """Test get_jira_issues_for_user when user not in cache"""
         # Mock empty cache
@@ -158,7 +158,7 @@ class TestJiraAPI(unittest.TestCase):
         
         self.assertEqual(result, {"active": [], "review": [], "completed": [], "untriaged": []})
 
-    @patch("plugins.certification.jira_api.jira_issues_cache")
+    @patch("plugins.certification.jira_integration.cache.jira_issues_cache")
     def test_get_jira_issues_for_user_with_review_issues(self, mock_cache):
         """Test get_jira_issues_for_user correctly categorizes review issues"""
         # Mock cached issues with review status
@@ -181,8 +181,8 @@ class TestJiraAPI(unittest.TestCase):
         self.assertEqual(len(result["review"]), 1)
         self.assertEqual(result["review"][0]["key"], "TEST-3")
 
-    @patch("plugins.certification.jira_api.get_email_from_mattermost_handle")
-    @patch("plugins.certification.jira_api.get_jira_issues_for_user")
+    @patch("plugins.certification.jira_integration.cache.get_email_from_mattermost_handle")
+    @patch("plugins.certification.jira_integration.cache.get_jira_issues_for_user")
     def test_get_jira_issues_for_mattermost_handle(self, mock_get_issues, mock_get_email):
         """Test get_jira_issues_for_mattermost_handle"""
         # Mock email lookup
@@ -201,10 +201,10 @@ class TestJiraAPI(unittest.TestCase):
         
         self.assertEqual(result, mock_issues)
         mock_get_email.assert_called_once_with("testuser")
-        mock_get_issues.assert_called_once_with("test@example.com", 50)
+        mock_get_issues.assert_called_once_with("test@example.com", max_results=50)
 
-    @patch("plugins.certification.jira_api.get_email_from_mattermost_handle")
-    @patch("plugins.certification.jira_api.get_jira_issues_for_user")
+    @patch("plugins.certification.jira_integration.cache.get_email_from_mattermost_handle")
+    @patch("plugins.certification.jira_integration.cache.get_jira_issues_for_user")
     def test_get_jira_issues_for_mattermost_handle_no_email(self, mock_get_issues, mock_get_email):
         """Test get_jira_issues_for_mattermost_handle when email lookup fails"""
         # Mock email lookup failure
@@ -216,8 +216,8 @@ class TestJiraAPI(unittest.TestCase):
         self.assertEqual(result, {"active": [], "completed": []})
         mock_get_issues.assert_not_called()
 
-    @patch("plugins.certification.jira_api.get_email_from_github_username")
-    @patch("plugins.certification.jira_api.get_jira_issues_for_user")
+    @patch("plugins.certification.jira_integration.cache.get_email_from_github_username")
+    @patch("plugins.certification.jira_integration.cache.get_jira_issues_for_user")
     def test_get_jira_issues_for_github_team_members(self, mock_get_issues, mock_get_email):
         """Test get_jira_issues_for_github_team_members"""
         # Mock email lookups
@@ -257,7 +257,7 @@ class TestJiraAPI(unittest.TestCase):
         self.assertEqual(len(result["user1"]["active"]), 1)
         self.assertEqual(len(result["user2"]["completed"]), 1)
 
-    @patch("plugins.certification.jira_api.get_jira_issues_for_github_team_members")
+    @patch("plugins.certification.jira_integration.get_jira_issues_for_github_team_members")
     def test_get_jira_issues_for_github_team_members_empty_team(self, mock_get_issues):
         """Test get_jira_issues_for_github_team_members with empty team"""
         result = get_jira_issues_for_github_team_members([])
@@ -269,7 +269,7 @@ class TestJiraAPI(unittest.TestCase):
 class TestJiraReviewStatus(unittest.TestCase):
     """Test cases for review status detection"""
 
-    @patch("plugins.certification.jira_api.jira_issues_cache")
+    @patch("plugins.certification.jira_integration.cache.jira_issues_cache")
     def test_issues_categorized_by_review_status(self, mock_cache):
         """Test that issues are correctly categorized based on review status"""
         # Mock cached issues with different categories
