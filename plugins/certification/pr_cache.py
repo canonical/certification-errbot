@@ -6,6 +6,8 @@ from typing import Dict, List, Optional
 import requests
 from dotenv import load_dotenv
 
+from plugins.certification.pr_cache_utils import categorize_pr_for_user
+
 # Load environment variables from .env file if present
 load_dotenv()
 
@@ -169,77 +171,28 @@ class PullRequestCache:
         if self.is_cache_expired():
             self.refresh_cache()
 
-        assigned_prs = []
-        authored_unassigned_prs = []
-        authored_approved_prs = []
-        authored_changes_requested_prs = []
-        authored_pending_review_prs = []
-        authored_unknown_status_prs = []
-
-        # Search through all cached PRs
+        pr_categories = {
+            "assigned": [],
+            "authored_unassigned": [],
+            "authored_approved": [],
+            "authored_changes_requested": [],
+            "authored_pending_review": [],
+            "authored_unknown_status": [],
+        }
+        
+        # Create a review status fetcher that uses our internal method
+        review_fetcher = lambda repo, pr_num: self._get_pr_review_status(repo, pr_num)
+        
+        # Categorize each PR
         for repo_name, prs in self.cache.items():
             for pr in prs:
-                requested_reviewers = pr.get("requested_reviewers", [])
-                assignees = pr.get("assignees", [])
-                author = pr.get("user", {}).get("login", "")
-
-                # Check if PR is assigned to the user for review or as assignee
-                is_requested_reviewer = any(
-                    reviewer["login"].lower() == github_username.lower()
-                    for reviewer in requested_reviewers
+                category, categorized_pr = categorize_pr_for_user(
+                    pr, repo_name, github_username, review_fetcher
                 )
-                is_assignee = any(
-                    assignee["login"].lower() == github_username.lower()
-                    for assignee in assignees
-                )
-
-                if is_requested_reviewer or is_assignee:
-                    pr_with_repo = pr.copy()
-                    pr_with_repo["repository"] = repo_name
-                    pr_with_repo["user_role"] = []
-                    if is_requested_reviewer:
-                        pr_with_repo["user_role"].append("reviewer")
-                    if is_assignee:
-                        pr_with_repo["user_role"].append("assignee")
-                    assigned_prs.append(pr_with_repo)
-
-                # Check if PR is authored by user
-                elif author.lower() == github_username.lower():
-                    pr_with_repo = pr.copy()
-                    pr_with_repo["repository"] = repo_name
-
-                    # Check if it has no reviewers, teams, or assignees
-                    requested_teams = pr.get("requested_teams", [])
-                    if (
-                        len(requested_reviewers) == 0
-                        and len(requested_teams) == 0
-                        and len(assignees) == 0
-                    ):
-                        authored_unassigned_prs.append(pr_with_repo)
-                    else:
-                        # Check review status - fetch review data
-                        review_status = self._get_pr_review_status(
-                            repo_name, pr["number"]
-                        )
-                        if review_status is None:
-                            # Error fetching review status, treat as unknown
-                            authored_unknown_status_prs.append(pr_with_repo)
-                        elif review_status["has_changes_requested"]:
-                            authored_changes_requested_prs.append(pr_with_repo)
-                        elif review_status["has_approvals"]:
-                            authored_approved_prs.append(pr_with_repo)
-                        else:
-                            # Has reviewers/assignees but no review activity yet
-                            authored_pending_review_prs.append(pr_with_repo)
-
-        return {
-            "assigned": assigned_prs,
-            "authored_unassigned": authored_unassigned_prs,
-            "authored_approved": authored_approved_prs,
-            "authored_changes_requested": authored_changes_requested_prs,
-            "authored_pending_review": authored_pending_review_prs,
-            "authored_unknown_status": authored_unknown_status_prs,
-        }
+                if category and categorized_pr:
+                    pr_categories[category].append(categorized_pr)
+        
+        return pr_categories
 
     def get_cache_stats(self) -> dict:
         """Get statistics about the current cache"""

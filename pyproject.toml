@@ -25,3 +25,10 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [dependency-groups]
 dev = ["pytest>=8.4.1", "ruff>=0.11.12"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Ignore deprecation warnings from pyasn1 library
+    "ignore:tagMap is deprecated:DeprecationWarning:pyasn1",
+    "ignore:typeMap is deprecated:DeprecationWarning:pyasn1",
+]
