@@ -29,6 +29,14 @@ from jira_integration import (
     jira_issues_cache,
     get_jira_issues_for_user,
 )
+from formatting import (
+    format_pr_summary,
+    format_pr_link,
+    format_jira_summary,
+    format_team_jira_summary,
+    format_story_points,
+    generate_user_digest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,26 +186,14 @@ class CertificationPlugin(BotPlugin):
         Format story points as whole numbers, handling None values.
         Returns formatted string like "(5 story points)" or empty string if None/0.
         """
-        if story_points is None or story_points == 0:
-            return ""
-        # Convert to int to remove decimal places
-        sp_value = int(story_points)
-        # Use singular or plural form
-        if sp_value == 1:
-            return f" ({sp_value} story point)"
-        else:
-            return f" ({sp_value} story points)"
+        return format_story_points(story_points)
 
     def _format_pr_link(self, pr, github_org: str) -> str:
         """
         Format PR link as [org]/[repo] #[PR number] linking to the PR.
         Returns formatted string like "[canonical]/[checkbox] #123"
         """
-        repo_name = pr.get("repository", "unknown")
-        pr_number = pr.get("number", "unknown")
-        html_url = pr.get("html_url", "")
-
-        return f"[{github_org}/{repo_name} #{pr_number}]({html_url})"
+        return format_pr_link(pr, github_org)
 
     def _format_pr_summary(
         self,
@@ -218,114 +214,8 @@ class CertificationPlugin(BotPlugin):
         Returns:
             Formatted message string
         """
-        prs_assigned_to_user = pr_data[
-            "assigned"
-        ]  # These are PRs where user is requested reviewer or assignee
-        authored_prs_with_no_assignment = pr_data["authored_unassigned"]
-        authored_approved_prs = pr_data.get("authored_approved", [])
-        authored_changes_requested_prs = pr_data.get("authored_changes_requested", [])
-        authored_pending_review_prs = pr_data.get("authored_pending_review", [])
-
-        if (
-            not prs_assigned_to_user
-            and not authored_prs_with_no_assignment
-            and not authored_approved_prs
-            and not authored_changes_requested_prs
-            and not authored_pending_review_prs
-        ):
-            if is_digest:
-                return None  # Skip digest for users with no PRs
-            else:
-                cache_stats = self.pr_cache.get_cache_stats()
-                return f"No PRs with @{github_username} as requested reviewer or assignee, and no unassigned, approved, or changes requested PRs authored by @{github_username} across {cache_stats['total_repositories']} repositories in {github_org}."
-
-        if is_digest:
-            # Use Mattermost handle for greeting if provided, otherwise fall back to GitHub username
-            greeting_name = mattermost_handle if mattermost_handle else github_username
-            msg = f"Hello @{greeting_name}!\n\n"
-        else:
-            msg = ""
-
-        if prs_assigned_to_user:
-            msg += "**PRs pending your review:**\n"
-            for pr in prs_assigned_to_user:
-                pr.get("repository", "unknown")
-                user_roles = pr.get("user_role", [])
-                role_indicator = ""
-                if user_roles:
-                    if "reviewer" in user_roles and "assignee" in user_roles:
-                        role_indicator = " (reviewer + assignee)"
-                    elif "reviewer" in user_roles:
-                        role_indicator = " (reviewer)"
-                    elif "assignee" in user_roles:
-                        role_indicator = " (assignee)"
-
-                pr_link = self._format_pr_link(pr, github_org)
-                if is_digest:
-                    msg += f"- [{pr['title']}]({pr['html_url']}) {pr_link}{role_indicator}\n"
-                else:
-                    msg += f"- {pr_link}: {pr['title']}{role_indicator}\n"
-            msg += "\n" if is_digest else ""
-
-        if authored_prs_with_no_assignment:
-            if not is_digest and prs_assigned_to_user:
-                msg += "\n"
-            msg += "**The following PRs you authored presently lack an assigned reviewer:**\n"
-            for pr in authored_prs_with_no_assignment:
-                pr_link = self._format_pr_link(pr, github_org)
-                if is_digest:
-                    msg += f"- [{pr['title']}]({pr['html_url']}) {pr_link}\n"
-                else:
-                    msg += f"- {pr_link}: {pr['title']}\n"
-            msg += "\n" if is_digest else ""
-
-        if authored_pending_review_prs:
-            if not is_digest and (
-                prs_assigned_to_user or authored_prs_with_no_assignment
-            ):
-                msg += "\n"
-            msg += "**PRs you authored that are awaiting review:**\n"
-            for pr in authored_pending_review_prs:
-                pr_link = self._format_pr_link(pr, github_org)
-                if is_digest:
-                    msg += f"- [{pr['title']}]({pr['html_url']}) {pr_link}\n"
-                else:
-                    msg += f"- {pr_link}: {pr['title']}\n"
-            msg += "\n" if is_digest else ""
-
-        if authored_changes_requested_prs:
-            if not is_digest and (
-                prs_assigned_to_user
-                or authored_prs_with_no_assignment
-                or authored_pending_review_prs
-            ):
-                msg += "\n"
-            msg += "**PRs you authored where changes have been requested:**\n"
-            for pr in authored_changes_requested_prs:
-                pr_link = self._format_pr_link(pr, github_org)
-                if is_digest:
-                    msg += f"- [{pr['title']}]({pr['html_url']}) {pr_link}\n"
-                else:
-                    msg += f"- {pr_link}: {pr['title']}\n"
-            msg += "\n" if is_digest else ""
-
-        if authored_approved_prs:
-            if not is_digest and (
-                prs_assigned_to_user
-                or authored_prs_with_no_assignment
-                or authored_pending_review_prs
-                or authored_changes_requested_prs
-            ):
-                msg += "\n"
-            msg += "**Approved PRs, pending merge:**\n"
-            for pr in authored_approved_prs:
-                pr_link = self._format_pr_link(pr, github_org)
-                if is_digest:
-                    msg += f"- [{pr['title']}]({pr['html_url']}) {pr_link}\n"
-                else:
-                    msg += f"- {pr_link}: {pr['title']}\n"
-
-        return msg
+        # Use the new formatting module
+        return format_pr_summary(github_username, pr_data, github_org, is_digest)
 
     def _get_github_username_for_user(self, mattermost_username: str) -> str | None:
         """
@@ -370,119 +260,15 @@ class CertificationPlugin(BotPlugin):
         try:
             # Get PR data for this user
             pr_data = self.pr_cache.get_prs_for_user(github_username)
-
-            # Format PR message using shared logic
-            pr_msg = self._format_pr_summary(
+            
+            # Use the new generate_user_digest function from formatting module
+            return generate_user_digest(
                 github_username,
+                mattermost_username,
                 pr_data,
-                is_digest=is_digest,
-                mattermost_handle=mattermost_username,
+                github_org,
+                use_github_for_jira
             )
-
-            # Get Jira issues for this user
-            if use_github_for_jira:
-                # Use GitHub username to find email, then get Jira issues
-                # This is the same approach as get_jira_issues_for_github_team_members
-                email = get_email_from_github_username(github_username)
-                if email:
-                    jira_issues = get_jira_issues_for_user(email)
-                else:
-                    # No email found, no Jira issues
-                    jira_issues = {"active": [], "review": [], "completed": [], "untriaged": []}
-            else:
-                # Use Mattermost handle approach (for manual commands)
-                jira_issues = get_jira_issues_for_mattermost_handle(mattermost_username)
-            jira_msg = None
-
-            if (
-                jira_issues["active"]
-                or jira_issues.get("review", [])
-                or jira_issues["completed"]
-                or jira_issues.get("untriaged", [])
-            ):
-                # Calculate story point totals (as whole numbers)
-                active_sp = int(
-                    sum(issue["story_points"] or 0 for issue in jira_issues["active"])
-                )
-                review_sp = int(
-                    sum(
-                        issue["story_points"] or 0
-                        for issue in jira_issues.get("review", [])
-                    )
-                )
-                completed_sp = int(
-                    sum(
-                        issue["story_points"] or 0 for issue in jira_issues["completed"]
-                    )
-                )
-                untriaged_sp = int(
-                    sum(
-                        issue["story_points"] or 0
-                        for issue in jira_issues.get("untriaged", [])
-                    )
-                )
-                total_sp = active_sp + review_sp + completed_sp + untriaged_sp
-
-                jira_msg = "**Your Jira issues:**\n\n"
-
-                if jira_issues["active"]:
-                    active_sp_text = "story point" if active_sp == 1 else "story points"
-                    jira_msg += f"**Active ({active_sp} {active_sp_text}):**\n"
-                    for issue in jira_issues["active"]:
-                        story_points = self._format_story_points(issue["story_points"])
-                        jira_msg += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
-                        jira_msg += f"  Status: {issue['status']}\n"
-                    jira_msg += "\n"
-
-                if jira_issues.get("review", []):
-                    review_sp_text = "story point" if review_sp == 1 else "story points"
-                    jira_msg += f"**In Review ({review_sp} {review_sp_text}):**\n"
-                    for issue in jira_issues["review"]:
-                        story_points = self._format_story_points(issue["story_points"])
-                        jira_msg += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
-                        jira_msg += f"  Status: {issue['status']}\n"
-                    jira_msg += "\n"
-
-                if jira_issues["completed"]:
-                    completed_sp_text = (
-                        "story point" if completed_sp == 1 else "story points"
-                    )
-                    jira_msg += f"**Recently Completed ({completed_sp} {completed_sp_text}):**\n"
-                    completed_links = []
-                    for issue in jira_issues["completed"]:
-                        # Format: Priority: [KEY](url "Title")
-                        completed_links.append(
-                            f'{issue["priority"]}: [{issue["key"]}]({issue["url"]} "{issue["summary"]}")'
-                        )
-                    jira_msg += "- " + ", ".join(completed_links) + "\n\n"
-
-                if jira_issues.get("untriaged", []):
-                    untriaged_sp_text = (
-                        "story point" if untriaged_sp == 1 else "story points"
-                    )
-                    jira_msg += f"**⚠️ Untriaged issues in the active pulse ({untriaged_sp} {untriaged_sp_text}):**\n"
-                    jira_msg += "*These should either have been triaged or should not be in the current pulse*\n"
-                    for issue in jira_issues["untriaged"]:
-                        story_points = self._format_story_points(issue["story_points"])
-                        jira_msg += f"- [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
-                        jira_msg += f"  Status: {issue['status']}\n"
-                    jira_msg += "\n"
-
-                # Add total summary if there are any issues
-                total_sp_text = "story point" if total_sp == 1 else "story points"
-                jira_msg += f"**Total: {total_sp} {total_sp_text}**\n"
-
-            # Combine PR and Jira messages
-            combined_msg = ""
-            if pr_msg:
-                combined_msg += pr_msg
-            if jira_msg:
-                if combined_msg:
-                    combined_msg += "\n\n"
-                combined_msg += jira_msg
-
-            return combined_msg if combined_msg else None
-
         except Exception as e:
             logger.error(f"Error generating digest for {github_username}: {e}")
             return None
@@ -626,103 +412,25 @@ class CertificationPlugin(BotPlugin):
         Usage: !jira [mattermost_username]
         Default username: your own username (mapped from LDAP to email)
         """
-        mattermost_username = None
-
-        # Parse arguments
-        if args and len(args) > 0 and args[0].strip():
-            # If Mattermost username is provided
-            mattermost_username = args[0].lstrip("@")  # Remove @ prefix if present
-        else:
-            # Use requesting user's Mattermost username
-            mattermost_username = msg.frm.username
+        # Parse arguments to get target username
+        mattermost_username = self._parse_username_arg(args, msg.frm.username)
 
         try:
             # Get Jira issues for the user
             issues = get_jira_issues_for_mattermost_handle(mattermost_username)
-
-            if (
-                not issues["active"]
-                and not issues.get("review", [])
-                and not issues["completed"]
-                and not issues.get("untriaged", [])
-            ):
-                return f"No Jira issues assigned to @{mattermost_username}"
-
-            # Calculate story point totals (as whole numbers)
-            active_story_points = int(
-                sum(issue["story_points"] or 0 for issue in issues["active"])
-            )
-            review_story_points = int(
-                sum(issue["story_points"] or 0 for issue in issues.get("review", []))
-            )
-            completed_story_points = int(
-                sum(issue["story_points"] or 0 for issue in issues["completed"])
-            )
-            untriaged_story_points = int(
-                sum(issue["story_points"] or 0 for issue in issues.get("untriaged", []))
-            )
-            total_story_points = (
-                active_story_points
-                + review_story_points
-                + completed_story_points
-                + untriaged_story_points
-            )
-
-            # Format the response
-            response = f"**Jira issues assigned to @{mattermost_username} in the current pulse:**\n\n"
-
-            # Show active issues first
-            if issues["active"]:
-                sp_text = "story point" if active_story_points == 1 else "story points"
-                response += f"**Active ({active_story_points} {sp_text}):**\n"
-                for issue in issues["active"]:
-                    story_points = self._format_story_points(issue["story_points"])
-                    response += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points} ({issue['status']})\n"
-                response += "\n"
-
-            # Show issues in review
-            if issues.get("review", []):
-                sp_text = "story point" if review_story_points == 1 else "story points"
-                response += f"**In Review ({review_story_points} {sp_text}):**\n"
-                for issue in issues["review"]:
-                    story_points = self._format_story_points(issue["story_points"])
-                    response += f"- {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points} ({issue['status']})\n"
-                response += "\n"
-
-            # Show completed issues separately (compact format)
-            if issues["completed"]:
-                sp_text = (
-                    "story point" if completed_story_points == 1 else "story points"
-                )
-                response += f"**Completed during the pulse ({completed_story_points} {sp_text}):**\n"
-                completed_links = []
-                for issue in issues["completed"]:
-                    # Format: Priority: [KEY](url "Title")
-                    completed_links.append(
-                        f'{issue["priority"]}: [{issue["key"]}]({issue["url"]} "{issue["summary"]}")'
-                    )
-                response += "- " + ", ".join(completed_links) + "\n\n"
-
-            # Show untriaged issues (these need attention!)
-            if issues.get("untriaged", []):
-                sp_text = (
-                    "story point" if untriaged_story_points == 1 else "story points"
-                )
-                response += f"**⚠️ Untriaged issues in the active pulse ({untriaged_story_points} {sp_text}):**\n"
-                response += "*These should either have been triaged or should not be in the current pulse*\n"
-                for issue in issues["untriaged"]:
-                    story_points = self._format_story_points(issue["story_points"])
-                    response += f"- [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points} ({issue['status']})\n"
-                response += "\n"
-
-            # Add total summary
-            total_sp_text = "story point" if total_story_points == 1 else "story points"
-            response += f"**Total: {total_story_points} {total_sp_text}**"
-            return response
+            
+            # Use the formatting module to format the response
+            return format_jira_summary(mattermost_username, issues, show_completed=True)
 
         except Exception as e:
             logger.error(f"Error fetching Jira issues for {mattermost_username}: {e}")
             return f"Error fetching Jira issues: {str(e)}"
+    
+    def _parse_username_arg(self, args, default_username):
+        """Helper to parse username from command arguments."""
+        if args and len(args) > 0 and args[0].strip():
+            return args[0].lstrip("@")  # Remove @ prefix if present
+        return default_username
 
     @botcmd(split_args_with=" ")
     def team_jira(self, msg, args):
@@ -735,165 +443,35 @@ class CertificationPlugin(BotPlugin):
             return "No GitHub team configured. Please set the GITHUB_TEAM environment variable."
 
         try:
-            # Get team members (GitHub usernames)
+            # Get team members and their Jira issues
             team_members = self.pr_cache.get_team_members(github_team)
             if not team_members:
                 return f"No members found for team {github_team}"
 
-            # Get Jira issues for all team members
             team_issues = get_jira_issues_for_github_team_members(team_members)
-
             if not team_issues:
-                return (
-                    f"No open Jira issues assigned to any members of team {github_team}"
-                )
+                return f"No open Jira issues assigned to any members of team {github_team}"
+            
+            # Build user handles mapping
+            user_handles = self._get_mattermost_handles_for_team(team_members)
 
-            # Format the response
-            response = f"**Jira issues assigned to team {github_team}:**\n\n"
-
-            total_active = 0
-            total_completed = 0
-            total_untriaged = 0
-            total_active_sp = 0
-            total_completed_sp = 0
-            total_untriaged_sp = 0
-
-            for github_username, user_issues in team_issues.items():
-                if (
-                    user_issues["active"]
-                    or user_issues.get("review", [])
-                    or user_issues["completed"]
-                    or user_issues.get("untriaged", [])
-                ):
-                    # Calculate user's story points
-                    user_active_sp = int(
-                        sum(
-                            issue["story_points"] or 0
-                            for issue in user_issues["active"]
-                        )
-                    )
-                    user_review_sp = int(
-                        sum(
-                            issue["story_points"] or 0
-                            for issue in user_issues.get("review", [])
-                        )
-                    )
-                    user_completed_sp = int(
-                        sum(
-                            issue["story_points"] or 0
-                            for issue in user_issues["completed"]
-                        )
-                    )
-                    user_untriaged_sp = int(
-                        sum(
-                            issue["story_points"] or 0
-                            for issue in user_issues.get("untriaged", [])
-                        )
-                    )
-
-                    # Get the actual Mattermost handle for this GitHub user
-                    mattermost_handle = get_mattermost_handle_from_github_username(
-                        github_username
-                    )
-                    if not mattermost_handle:
-                        # Fallback to GitHub username if lookup fails
-                        mattermost_handle = github_username
-                        logger.warning(
-                            f"Could not find Mattermost handle for {github_username}, using GitHub username"
-                        )
-
-                    response += f"**@{mattermost_handle}:**\n"
-
-                    # Show active issues
-                    if user_issues["active"]:
-                        active_sp_text = (
-                            "story point" if user_active_sp == 1 else "story points"
-                        )
-                        response += f"  *Active ({user_active_sp} {active_sp_text}):*\n"
-                        for issue in user_issues["active"]:
-                            story_points = self._format_story_points(
-                                issue["story_points"]
-                            )
-                            response += f"  - {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
-                            response += f"    Status: {issue['status']}\n"
-                        total_active += len(user_issues["active"])
-                        total_active_sp += user_active_sp
-
-                    # Show review issues
-                    if user_issues.get("review", []):
-                        review_sp_text = (
-                            "story point" if user_review_sp == 1 else "story points"
-                        )
-                        response += (
-                            f"  *In Review ({user_review_sp} {review_sp_text}):*\n"
-                        )
-                        for issue in user_issues["review"]:
-                            story_points = self._format_story_points(
-                                issue["story_points"]
-                            )
-                            response += f"  - {issue['priority']}: [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
-                            response += f"    Status: {issue['status']}\n"
-                        total_active += len(
-                            user_issues["review"]
-                        )  # Count review as active
-                        total_active_sp += user_review_sp
-
-                    # Show completed issues (compact format)
-                    if user_issues["completed"]:
-                        completed_sp_text = (
-                            "story point" if user_completed_sp == 1 else "story points"
-                        )
-                        response += f"  *Recently Completed ({user_completed_sp} {completed_sp_text}):*\n"
-                        completed_links = []
-                        for issue in user_issues["completed"]:
-                            # Format: Priority: [KEY](url "Title")
-                            completed_links.append(
-                                f'{issue["priority"]}: [{issue["key"]}]({issue["url"]} "{issue["summary"]}")'
-                            )
-                        response += "  - " + ", ".join(completed_links) + "\n"
-                        total_completed += len(user_issues["completed"])
-                        total_completed_sp += user_completed_sp
-
-                    # Show untriaged issues
-                    if user_issues.get("untriaged", []):
-                        untriaged_sp_text = (
-                            "story point" if user_untriaged_sp == 1 else "story points"
-                        )
-                        response += f"  *⚠️ Untriaged ({user_untriaged_sp} {untriaged_sp_text}):*\n"
-                        for issue in user_issues["untriaged"]:
-                            story_points = self._format_story_points(
-                                issue["story_points"]
-                            )
-                            response += f"  - [{issue['summary']}]({issue['url']}) `{issue['key']}`{story_points}\n"
-                            response += f"    Status: {issue['status']}\n"
-                        total_untriaged += len(user_issues["untriaged"])
-                        total_untriaged_sp += user_untriaged_sp
-
-                    response += "\n"
-
-            # Format team totals with proper singular/plural
-            active_sp_text = "story point" if total_active_sp == 1 else "story points"
-            completed_sp_text = (
-                "story point" if total_completed_sp == 1 else "story points"
-            )
-            untriaged_sp_text = (
-                "story point" if total_untriaged_sp == 1 else "story points"
-            )
-
-            response += f"**Total: {total_active} active ({total_active_sp} {active_sp_text}), {total_completed} completed ({total_completed_sp} {completed_sp_text})"
-
-            if total_untriaged > 0:
-                response += f", {total_untriaged} untriaged ({total_untriaged_sp} {untriaged_sp_text})"
-
-            response += " issues**"
-
-            if total_untriaged > 0:
-                response += f"\n\n⚠️ **Warning: {total_untriaged} untriaged issues need attention!**"
-            return response
-
+            # Use the formatting module to format team summary
+            return format_team_jira_summary(github_team, team_issues, user_handles)
+        
         except Exception as e:
             logger.error(f"Error fetching team Jira issues: {e}")
             return f"Error fetching team Jira issues: {str(e)}"
+    
+    def _get_mattermost_handles_for_team(self, team_members):
+        """Get Mattermost handles for a list of GitHub usernames."""
+        handles = {}
+        for github_username in team_members:
+            mattermost_handle = get_mattermost_handle_from_github_username(github_username)
+            if not mattermost_handle:
+                mattermost_handle = github_username  # Fallback
+                logger.warning(f"Could not find Mattermost handle for {github_username}")
+            handles[github_username] = mattermost_handle
+        return handles
 
     @botcmd(split_args_with=" ")
     def sprint_summary(self, msg, args):
