@@ -32,6 +32,7 @@ class TestPRChangesRequested(unittest.TestCase):
 
         result = self.pr_cache._get_pr_review_status("test-repo", 123)
 
+        self.assertIsNotNone(result)
         self.assertTrue(result["has_changes_requested"])
         self.assertFalse(result["has_approvals"])
 
@@ -49,6 +50,7 @@ class TestPRChangesRequested(unittest.TestCase):
 
         result = self.pr_cache._get_pr_review_status("test-repo", 123)
 
+        self.assertIsNotNone(result)
         self.assertFalse(result["has_changes_requested"])
         self.assertTrue(result["has_approvals"])
 
@@ -66,6 +68,7 @@ class TestPRChangesRequested(unittest.TestCase):
 
         result = self.pr_cache._get_pr_review_status("test-repo", 123)
 
+        self.assertIsNotNone(result)
         self.assertTrue(result["has_changes_requested"])
         self.assertTrue(result["has_approvals"])
 
@@ -161,7 +164,7 @@ class TestPRChangesRequested(unittest.TestCase):
         with patch.object(self.pr_cache, "_get_pr_review_status", return_value=None):
             result = self.pr_cache.get_prs_for_user("test-author")
 
-            # PR should be in unknown status category when there's an error
+            # PR should be in unknown status category when there's an error fetching review status
             self.assertIn("authored_unknown_status", result)
             self.assertEqual(len(result["authored_unknown_status"]), 1)
             self.assertEqual(result["authored_unknown_status"][0]["number"], 123)

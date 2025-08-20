@@ -296,11 +296,15 @@ class PullRequestCache:
 
         return members
 
-    def _get_pr_review_status(self, repo_name: str, pr_number: int) -> Optional[Dict[str, bool]]:
+    def _get_pr_review_status(
+        self, repo_name: str, pr_number: int
+    ) -> Optional[Dict[str, bool]]:
         """
         Get review status for a specific PR.
-        Returns dict with 'has_approvals' and 'has_changes_requested' booleans on success,
-        or None if an error occurs.
+        
+        Returns:
+            dict with 'has_approvals' and 'has_changes_requested' booleans on success,
+            None if an error occurs.
         """
         headers = self._get_headers()
 
@@ -327,16 +331,16 @@ class PullRequestCache:
                 }
             elif response.status_code == 404:
                 logger.warning(f"PR {repo_name}#{pr_number} not found or not accessible (404)")
+                return None
             else:
                 logger.warning(
-                    f"Error fetching reviews for {repo_name}#{pr_number}: {response.status_code}"
+                    f"Error fetching reviews for {repo_name}#{pr_number}: HTTP {response.status_code}"
                 )
+                return None
 
         except requests.exceptions.RequestException as e:
             logger.warning(f"Error fetching reviews for {repo_name}#{pr_number}: {e}")
-
-        # Return None to explicitly indicate an error occurred
-        return None
+            return None
 
     def _check_pr_has_approvals(self, repo_name: str, pr_number: int) -> bool:
         """
