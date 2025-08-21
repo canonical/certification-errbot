@@ -3,8 +3,9 @@
 Test for the PullRequestCache refresh_cache method with mocked GitHub connectivity
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest

@@ -119,7 +119,7 @@ class TestPRCacheStats(unittest.TestCase):
         # But this will actually fail because of the None value
         # Let's test that it raises the expected error
         with self.assertRaises(TypeError):
-            stats = self.pr_cache.get_cache_stats()
+            self.pr_cache.get_cache_stats()
 
 
 if __name__ == "__main__":
