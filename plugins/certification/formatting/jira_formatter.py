@@ -2,7 +2,7 @@
 Jira issue formatting utilities
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 
 def format_story_points(points: Optional[int]) -> str:
@@ -65,7 +65,6 @@ def format_jira_summary(
     completed_issues = jira_data.get("completed", []) if show_completed else []
     untriaged_issues = jira_data.get("untriaged", [])
     
-    # Check if there are any issues
     has_any_issues = any([active_issues, review_issues, completed_issues, untriaged_issues])
     
     if not has_any_issues:
@@ -134,10 +133,8 @@ def format_team_jira_summary(
     
     # Process each team member
     for github_username, jira_data in team_data.items():
-        # Get Mattermost handle
         mattermost_handle = user_handles.get(github_username, github_username)
         
-        # Check if user has any issues
         has_issues = any([
             jira_data.get("active", []),
             jira_data.get("review", []),

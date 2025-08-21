@@ -4,13 +4,14 @@ Jira issues cache management
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+import sys
+from typing import Any, Dict, List
 
 from jira.exceptions import JIRAError
 
-import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ldap import get_email_from_github_username, get_email_from_mattermost_handle
+
 from .client import JIRA_FILTER_ID, JIRA_SERVER, get_jira_client
 from .priority import get_priority_sort_key, is_review_status
 
@@ -96,7 +97,6 @@ def _extract_issue_data(issue, jira_server: str) -> Dict[str, Any]:
     Returns:
         Dictionary with extracted issue data
     """
-    # Get story points (customfield_10024 per user requirements)
     story_points = getattr(issue.fields, "customfield_10024", None)
 
     # Determine issue state based on status
@@ -105,7 +105,6 @@ def _extract_issue_data(issue, jira_server: str) -> Dict[str, Any]:
     is_completed = status_category and status_category.name.lower() == "done"
     is_in_review = is_review_status(status_name)
 
-    # Get priority safely
     priority = "None"
     if issue.fields.priority:
         priority = issue.fields.priority.name
@@ -185,12 +184,6 @@ def refresh_jira_issues_cache():
             if email:
                 issue_data = _extract_issue_data(issue, JIRA_SERVER)
                 jira_issues_cache[email].append(issue_data)
-
-        # Log summary
-        logger.info(
-            f"Refreshed Jira cache: {len(all_issues)} issues for "
-            f"{len(jira_issues_cache)} users"
-        )
 
     except JIRAError as e:
         logger.error(f"Failed to refresh issues cache: {str(e)}")

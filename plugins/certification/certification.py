@@ -18,7 +18,6 @@ from ldap import (
     get_github_username_from_mattermost_handle,
     get_email_from_mattermost_handle,
     get_mattermost_handle_from_github_username,
-    get_email_from_github_username,
 )
 from github import get_github_username_from_email
 from pr_cache import PullRequestCache
@@ -27,7 +26,6 @@ from jira_integration import (
     get_jira_issues_for_github_team_members,
     refresh_jira_issues_cache,
     jira_issues_cache,
-    get_jira_issues_for_user,
 )
 from formatting import (
     format_pr_summary,

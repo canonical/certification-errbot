@@ -5,7 +5,6 @@ from typing import Dict, List, Optional
 
 import requests
 from dotenv import load_dotenv
-
 from pr_cache_utils import categorize_pr_for_user
 
 load_dotenv()
@@ -178,7 +177,8 @@ class PullRequestCache:
             "authored_unknown_status": [],
         }
         
-        review_fetcher = lambda repo, pr_num: self._get_pr_review_status(repo, pr_num)
+        def review_fetcher(repo, pr_num):
+            return self._get_pr_review_status(repo, pr_num)
         
         # Categorize each PR
         for repo_name, prs in self.cache.items():

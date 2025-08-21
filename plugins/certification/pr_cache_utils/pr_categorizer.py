@@ -2,7 +2,7 @@
 PR categorization logic extracted from PullRequestCache.get_prs_for_user
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 
 def categorize_pr_for_user(
@@ -27,7 +27,6 @@ def categorize_pr_for_user(
     assignees = pr.get("assignees", [])
     author = pr.get("user", {}).get("login", "")
     
-    # Check if user is assigned as reviewer or assignee
     is_requested_reviewer = _is_user_in_list(github_username, requested_reviewers)
     is_assignee = _is_user_in_list(github_username, assignees)
     
@@ -36,7 +35,6 @@ def categorize_pr_for_user(
         pr_with_repo["user_role"] = _get_user_roles(is_requested_reviewer, is_assignee)
         return ("assigned", pr_with_repo)
     
-    # Check if PR is authored by user
     if author.lower() == github_username.lower():
         pr_with_repo = _add_pr_metadata(pr, repo_name)
         return _categorize_authored_pr(pr, pr_with_repo, review_status_fetcher, repo_name)
@@ -85,11 +83,9 @@ def _categorize_authored_pr(
     requested_teams = pr.get("requested_teams", [])
     assignees = pr.get("assignees", [])
     
-    # Check if it has no reviewers, teams, or assignees
     if not any([requested_reviewers, requested_teams, assignees]):
         return ("authored_unassigned", pr_with_repo)
     
-    # Check review status if fetcher is provided
     if review_status_fetcher:
         review_status = review_status_fetcher(repo_name, pr["number"])
         

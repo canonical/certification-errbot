@@ -2,7 +2,7 @@
 PR formatting utilities
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 
 def format_pr_link(pr: Dict[str, Any], github_org: str) -> str:
@@ -76,7 +76,6 @@ def format_pr_summary(
     # Count repos
     unique_repos = _count_unique_repos(pr_data)
     
-    # Check if there are any PRs
     has_any_prs = any([
         assigned_prs,
         authored_unassigned,

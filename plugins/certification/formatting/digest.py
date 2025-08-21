@@ -2,14 +2,16 @@
 Digest generation utilities
 """
 
-from typing import Optional, Dict, List, Any
-import sys
 import os
+import sys
+from typing import Dict, List, Optional
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ldap import get_email_from_github_username, get_email_from_mattermost_handle
 from jira_integration import get_jira_issues_for_user
-from .pr_formatter import format_pr_summary
+from ldap import get_email_from_github_username, get_email_from_mattermost_handle
+
 from .jira_formatter import format_jira_summary
+from .pr_formatter import format_pr_summary
 
 
 def generate_user_digest(
@@ -54,7 +56,6 @@ def generate_user_digest(
     if jira_summary:
         sections.append(jira_summary)
     
-    # Return combined digest or None if empty
     if sections:
         return "\n\n---\n\n".join(sections)
     return None
@@ -77,7 +78,6 @@ def _get_jira_summary_for_digest(
     use_github: bool
 ) -> Optional[str]:
     """Get Jira summary for digest, handling both GitHub and Mattermost usernames."""
-    # Get email for Jira lookup
     if use_github:
         email = get_email_from_github_username(username)
     else:
@@ -86,10 +86,8 @@ def _get_jira_summary_for_digest(
     if not email:
         return None
     
-    # Get Jira issues
     jira_data = get_jira_issues_for_user(email)
     
-    # Check if there are any issues
     has_issues = any([
         jira_data.get("active", []),
         jira_data.get("review", []),

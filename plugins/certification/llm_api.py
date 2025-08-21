@@ -110,12 +110,10 @@ class LLMAPIClient:
                 choices = result.get("choices", [])
                 if choices:
                     return choices[0].get("text", "").strip()
-            else:
-                pass
 
         except (RequestException, Timeout, json.JSONDecodeError):
-            pass
-
+            return None
+        
         return None
 
     def test_connection(self) -> bool:
