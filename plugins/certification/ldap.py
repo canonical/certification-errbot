@@ -17,10 +17,8 @@ LDAP_BASE_DN = os.environ.get("LDAP_BASE_DN")
 LDAP_BIND_DN = os.environ.get("LDAP_BIND_DN")
 LDAP_BIND_PASSWORD = os.environ.get("LDAP_BIND_PASSWORD")
 
-# Cache for LDAP lookups
-_ldap_cache = {}
-# Cache for Mattermost handle to email mapping
-mattermost_email_cache: dict[str, str] = {}
+_ldap_cache: dict[str, Optional[str]] = {}
+_mattermost_email_cache: dict[str, Optional[str]] = {}
 
 
 def get_email_from_mattermost_handle_api(mattermost_handle: str) -> Optional[str]:
@@ -32,8 +30,8 @@ def get_email_from_mattermost_handle_api(mattermost_handle: str) -> Optional[str
         logger.warning("Mattermost API configuration incomplete")
         return None
 
-    if mattermost_handle in mattermost_email_cache:
-        return mattermost_email_cache[mattermost_handle]
+    if mattermost_handle in _mattermost_email_cache:
+        return _mattermost_email_cache[mattermost_handle]
 
     try:
         user_details = get_user_by_name(
@@ -43,7 +41,7 @@ def get_email_from_mattermost_handle_api(mattermost_handle: str) -> Optional[str
 
         if email:
             # Cache the result
-            mattermost_email_cache[mattermost_handle] = email
+            _mattermost_email_cache[mattermost_handle] = email
             return email
         else:
             logger.warning(f"No email found for Mattermost handle {mattermost_handle}")
@@ -53,7 +51,7 @@ def get_email_from_mattermost_handle_api(mattermost_handle: str) -> Optional[str
         )
 
     # Cache negative result
-    mattermost_email_cache[mattermost_handle] = None
+    _mattermost_email_cache[mattermost_handle] = None
     return None
 
 

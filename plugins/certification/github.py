@@ -1,6 +1,8 @@
+from typing import Optional
+
 import requests
 
-github_email_cache: dict[str, str] = {}
+_github_email_cache: dict[str, Optional[str]] = {}
 
 
 def get_github_username_from_email(github_token, email):
@@ -11,8 +13,8 @@ def get_github_username_from_email(github_token, email):
     if not github_token:
         return None
 
-    if email in github_email_cache:
-        return github_email_cache[email]
+    if email in _github_email_cache:
+        return _github_email_cache[email]
 
     headers = {
         "Authorization": f"token {github_token}",
@@ -29,11 +31,11 @@ def get_github_username_from_email(github_token, email):
             if data.get("total_count", 0) > 0:
                 username = data["items"][0]["login"]
                 # Cache the result
-                github_email_cache[email] = username
+                _github_email_cache[email] = username
                 return username
     except requests.exceptions.RequestException:
         pass
 
     # Cache negative result to avoid repeated failed lookups
-    github_email_cache[email] = None
+    _github_email_cache[email] = None
     return None
