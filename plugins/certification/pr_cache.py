@@ -6,9 +6,8 @@ from typing import Dict, List, Optional
 import requests
 from dotenv import load_dotenv
 
-from plugins.certification.pr_cache_utils import categorize_pr_for_user
+from pr_cache_utils import categorize_pr_for_user
 
-# Load environment variables from .env file if present
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -127,7 +126,6 @@ class PullRequestCache:
     def refresh_cache(self) -> bool:
         """Refresh the entire PR cache with data from specified repositories"""
         try:
-            # Get repositories to fetch
             repo_names = self._get_repositories_to_fetch()
 
             new_cache = {}
@@ -180,7 +178,6 @@ class PullRequestCache:
             "authored_unknown_status": [],
         }
         
-        # Create a review status fetcher that uses our internal method
         review_fetcher = lambda repo, pr_num: self._get_pr_review_status(repo, pr_num)
         
         # Categorize each PR

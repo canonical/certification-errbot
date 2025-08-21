@@ -57,7 +57,6 @@ from apscheduler.triggers.cron import CronTrigger
 
 import ssl_fix  # noqa: F401
 
-# Load environment variables from .env file if present
 load_dotenv()
 
 
@@ -121,7 +120,6 @@ DEFAULT_REPOS = [
     "yarf",
 ]
 
-# Get repositories from environment variable or use defaults
 github_repositories_env = os.environ.get("GITHUB_REPOSITORIES")
 if github_repositories_env:
     GITHUB_REPOS = [

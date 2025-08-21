@@ -1,6 +1,7 @@
 import logging
 
 from mattermost_api import (
+    UserDetails,
     get_user_by_email,
     get_user_by_name,
     mattermost_base_url,
@@ -9,19 +10,24 @@ from mattermost_api import (
 
 logger = logging.getLogger(__name__)
 
-user_cache_by_email: dict[str, str] = {}
+user_cache_by_email: dict[str, UserDetails | None] = {}
 user_cache_by_username: dict[str, str | None] = {}
 
 
-def get_user_handle(email: str) -> str | None:
+def get_user_handle(email: str) -> UserDetails | None:
     if email in user_cache_by_email:
         return user_cache_by_email[email]
     else:
-        assignee_handle = get_user_by_email(
-            mattermost_token, mattermost_base_url, email
-        )
-        user_cache_by_email[email] = assignee_handle
-        return assignee_handle
+        try:
+            user_details = get_user_by_email(
+                mattermost_token, mattermost_base_url, email
+            )
+            user_cache_by_email[email] = user_details
+            return user_details
+        except Exception as e:
+            logger.warning(f"Failed to get user handle for email {email}: {e}")
+            user_cache_by_email[email] = None
+            return None
 
 
 def get_user_email(username: str) -> str | None:

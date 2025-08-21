@@ -82,13 +82,9 @@ class LLMAPIClient:
                 result = response.json()
                 return result.get("response", "").strip()
             else:
-                logger.debug(
-                    f"Ollama format failed with status {response.status_code}: {response.text}"
-                )
                 return None
 
-        except (RequestException, Timeout, json.JSONDecodeError) as e:
-            logger.debug(f"Ollama format attempt failed: {e}")
+        except (RequestException, Timeout, json.JSONDecodeError):
             return None
 
     def _try_openai_format(
@@ -115,12 +111,10 @@ class LLMAPIClient:
                 if choices:
                     return choices[0].get("text", "").strip()
             else:
-                logger.debug(
-                    f"OpenAI format failed with status {response.status_code}: {response.text}"
-                )
+                pass
 
-        except (RequestException, Timeout, json.JSONDecodeError) as e:
-            logger.debug(f"OpenAI format attempt failed: {e}")
+        except (RequestException, Timeout, json.JSONDecodeError):
+            pass
 
         return None
 

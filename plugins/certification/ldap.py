@@ -32,7 +32,6 @@ def get_email_from_mattermost_handle_api(mattermost_handle: str) -> Optional[str
         logger.warning("Mattermost API configuration incomplete")
         return None
 
-    # Check cache first
     if mattermost_handle in mattermost_email_cache:
         return mattermost_email_cache[mattermost_handle]
 
@@ -68,11 +67,9 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
         logger.warning("LDAP configuration incomplete")
         return None
 
-    # Check cache first
     if handle in _ldap_cache:
         return _ldap_cache[handle]
 
-    # Get email from Mattermost API
     email = get_email_from_mattermost_handle_api(handle)
     if not email:
         logger.warning(f"Could not get email for Mattermost handle {handle}")
@@ -92,7 +89,7 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
         conn.search(
             search_base=LDAP_BASE_DN,
             search_filter=search_filter,
-            attributes=["*"],  # Get all attributes to see what's available
+            attributes=["*"],
         )
 
 
@@ -177,13 +174,11 @@ def get_mattermost_handle_from_github_username(github_username: str) -> Optional
     Get Mattermost handle from GitHub username
     Flow: GitHub username -> LDAP (email) -> Mattermost API (handle)
     """
-    # Get email from LDAP using GitHub username
     email = get_email_from_github_username(github_username)
     if not email:
         logger.warning(f"Could not find email for GitHub username {github_username}")
         return None
 
-    # Get Mattermost handle using email
     if not all([mattermost_token, mattermost_base_url]):
         logger.warning("Mattermost API configuration incomplete")
         return None

@@ -8,7 +8,9 @@ from typing import Any, Dict, List, Optional
 
 from jira.exceptions import JIRAError
 
-from plugins.certification.ldap import get_email_from_github_username, get_email_from_mattermost_handle
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from ldap import get_email_from_github_username, get_email_from_mattermost_handle
 from .client import JIRA_FILTER_ID, JIRA_SERVER, get_jira_client
 from .priority import get_priority_sort_key, is_review_status
 

@@ -3,8 +3,11 @@ Digest generation utilities
 """
 
 from typing import Optional, Dict, List, Any
-from plugins.certification.ldap import get_email_from_github_username, get_email_from_mattermost_handle
-from plugins.certification.jira_integration import get_jira_issues_for_user
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from ldap import get_email_from_github_username, get_email_from_mattermost_handle
+from jira_integration import get_jira_issues_for_user
 from .pr_formatter import format_pr_summary
 from .jira_formatter import format_jira_summary
 

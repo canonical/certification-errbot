@@ -11,7 +11,6 @@ def get_github_username_from_email(github_token, email):
     if not github_token:
         return None
 
-    # Check cache first
     if email in github_email_cache:
         return github_email_cache[email]
 

@@ -14,7 +14,8 @@ This is a certification-errbot project that provides Errbot plugins and a Juju c
 ERRBOT_SERVER=chat.canonical.com \
 ERRBOT_ADMINS=@mz2 \
 ERRBOT_TOKEN=... \
-ERRBOT_TEAM=canonical uv run errbot
+ERRBOT_TEAM=canonical \
+BOT_PREFIX=dev! uv run errbot  # Optional: Use 'dev!' prefix for development instance
 ```
 
 ### Generate API Client Libraries
@@ -86,6 +87,7 @@ Required environment variables include:
 - `LLM_API_SERVER` (optional, defaults to "http://localhost:11434" for Ollama)
 - `LLM_API_TOKEN` (optional, for authenticated LLM APIs)
 - `LLM_MODEL_NAME` (optional, defaults to "deepseek-r1:70b")
+- `BOT_PREFIX` (optional, defaults to "!" - useful for running dev instances with different prefixes like "dev!")
 
 ### Testing Strategy
 

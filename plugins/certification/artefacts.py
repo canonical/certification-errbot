@@ -152,12 +152,10 @@ def artefacts_by_user_handle(
             continue
 
         if assignee and assignee.launchpad_email:
-            try:
-                assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
-            except Exception as e:
-                logger.warning(
-                    f"Failed to get user handle for {assignee.launchpad_email}: {e}"
-                )
+            user_details = get_user_handle(assignee.launchpad_email)
+            if user_details:
+                assignee_handle = user_details["username"]
+            else:
                 assignee_handle = "No assignee"
         else:
             assignee_handle = "No assignee"
@@ -207,7 +205,11 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
                 continue
 
             if assignee and assignee.launchpad_email:
-                assignee_handle = get_user_handle(assignee.launchpad_email)["username"]
+                user_details = get_user_handle(assignee.launchpad_email)
+                if user_details:
+                    assignee_handle = user_details["username"]
+                else:
+                    assignee_handle = None
             else:
                 assignee_handle = None
 
