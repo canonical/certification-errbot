@@ -32,6 +32,7 @@ class ArtefactsTestBase(unittest.TestCase):
             branch="branch1",
             series="series1",
             repo="repo1",
+            source="source1",
             os="os1",
             release="release1",
             owner="owner1",
@@ -39,6 +40,7 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url",
             stage="stage1",
             bug_link="bug_link",
+            comment="test comment 1",
             created_at=datetime.now() - timedelta(days=10),
         )
 
@@ -58,6 +60,7 @@ class ArtefactsTestBase(unittest.TestCase):
             branch="branch2",
             series="series2",
             repo="repo2",
+            source="source2",
             os="os2",
             release="release2",
             owner="owner2",
@@ -65,6 +68,7 @@ class ArtefactsTestBase(unittest.TestCase):
             image_url="image_url2",
             stage="stage2",
             bug_link="bug_link2",
+            comment="test comment 2",
             created_at=datetime.now() - timedelta(days=10),
         )
 
