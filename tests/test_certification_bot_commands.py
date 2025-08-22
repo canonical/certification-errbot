@@ -79,10 +79,13 @@ class TestCertificationBotCommands(unittest.TestCase):
         
         self.assertIn("GitHub token not configured", result)
 
+    @patch("plugins.certification.certification.get_c3_token")
     @patch("plugins.certification.certification.get_physicalmachinesview")
     @patch("plugins.certification.certification.C3Client")
-    def test_cid_command(self, mock_c3_client_class, mock_get_machines):
+    def test_cid_command(self, mock_c3_client_class, mock_get_machines, mock_get_c3_token):
         """Test !cid command"""
+        # Mock the C3 token
+        mock_get_c3_token.return_value = "test-token"
         # Mock C3 client
         mock_c3_client = MagicMock()
         mock_c3_client_class.return_value = mock_c3_client

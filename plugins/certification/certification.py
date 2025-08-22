@@ -82,7 +82,15 @@ if not github_org:
 
 C3_BASE_URL = "https://certification.canonical.com"
 
-c3_access_token = get_c3_access_token(C3_BASE_URL, c3_client_id, c3_client_secret)
+# Lazy loading of c3_access_token - will be initialized when first needed
+c3_access_token = None
+
+def get_c3_token():
+    """Get or initialize the C3 access token."""
+    global c3_access_token
+    if c3_access_token is None:
+        c3_access_token = get_c3_access_token(C3_BASE_URL, c3_client_id, c3_client_secret)
+    return c3_access_token
 
 now = datetime.now().date()
 
@@ -376,7 +384,7 @@ class CertificationPlugin(BotPlugin):
     @botcmd(split_args_with=" ", name="cid")
     def cid(self, msg, args):
         c3_client = C3Client(
-            base_url="https://certification.canonical.com", token=c3_access_token
+            base_url="https://certification.canonical.com", token=get_c3_token()
         )
 
         msg = ""
