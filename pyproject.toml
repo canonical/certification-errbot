@@ -24,7 +24,12 @@ err-backend-mattermost = { git = "https://github.com/rwielk/err-backend-mattermo
 select = ["E4", "E7", "E9", "F", "I"]
 
 [dependency-groups]
-dev = ["pytest>=8.4.1", "ruff>=0.11.12"]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.0.0",
+    "coverage[toml]>=7.6.0",
+    "ruff>=0.11.12",
+]
 
 [tool.pytest.ini_options]
 filterwarnings = [
@@ -32,3 +37,35 @@ filterwarnings = [
     "ignore:tagMap is deprecated:DeprecationWarning:pyasn1",
     "ignore:typeMap is deprecated:DeprecationWarning:pyasn1",
 ]
+addopts = [
+    "--cov=plugins/certification",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+
+[tool.coverage.run]
+source = ["plugins/certification"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/c3/*",  # Auto-generated client
+    "*/test_observer/*",  # Auto-generated client
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+precision = 2
+skip_covered = false
+show_missing = true
+
+[tool.coverage.html]
+directory = "htmlcov"
