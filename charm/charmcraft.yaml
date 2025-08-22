@@ -15,6 +15,15 @@ platforms:
 
 config:
   options:
+    artefact-families:
+      description: |
+        Comma-separated list of Test Observer artefact families to include in responses.
+        Valid families: snap, deb, image, charm (use singular form, not plural)
+        If not set or empty, all families are included.
+        Example: "snap,deb,image" to exclude charm artefacts.
+        Do NOT use plural forms like "snaps,debs" - use "snap,deb" instead.
+      default: "snap,deb"
+      type: string
     c3-client-id:
       description: |
         OAuth client ID for the C3 v2 API.

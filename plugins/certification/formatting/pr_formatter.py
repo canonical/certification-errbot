@@ -88,8 +88,8 @@ def format_pr_summary(
     if not has_any_prs:
         return _format_no_prs_message(github_username, unique_repos, github_org)
     
-    # Build the summary
-    sections = []
+    # Build the summary with heading
+    sections = ["## Pull Requests\n"]
     
     # Add sections for different PR categories
     if assigned_prs:
@@ -151,7 +151,8 @@ def _format_no_prs_message(
 ) -> str:
     """Format message when user has no PRs."""
     return (
-        f"No PRs with @{github_username} as requested reviewer or assignee, "
-        f"and no unassigned, approved, or changes requested PRs authored by "
-        f"@{github_username} across {unique_repos} repositories in {github_org}."
+        f"## Pull Requests\n\n"
+        f"You have no PRs pending review or assignment, "
+        f"and no unassigned, approved, or changes requested PRs you authored "
+        f"across {unique_repos} repositories in {github_org}."
     )

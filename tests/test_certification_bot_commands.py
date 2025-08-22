@@ -123,7 +123,7 @@ class TestCertificationBotCommands(unittest.TestCase):
         
         result = self.plugin.jira(self.msg, [])
         
-        self.assertEqual(result, "No Jira issues assigned to @testuser")
+        self.assertEqual(result, "You have no Jira issues assigned")
 
     @patch("plugins.certification.certification.get_jira_issues_for_mattermost_handle")
     def test_jira_command_with_issues(self, mock_get_issues):
@@ -158,7 +158,7 @@ class TestCertificationBotCommands(unittest.TestCase):
         
         result = self.plugin.jira(self.msg, ["otheruser"])
         
-        self.assertIn("Jira issues assigned to @otheruser", result)
+        self.assertIn("Your assigned issues:", result)
         self.assertIn("Active (5 story points)", result)
         self.assertIn("TEST-1", result)
         self.assertIn("Completed during the pulse (3 story points)", result)
@@ -231,20 +231,24 @@ class TestCertificationBotCommands(unittest.TestCase):
         
         self.assertIn("LLM functionality not available", result)
 
+    @patch('plugins.certification.certification.reply_with_artefacts_summary')
     @patch.object(CertificationPlugin, '_get_github_username_for_user')
     @patch.object(CertificationPlugin, '_generate_user_digest')
-    def test_digest_command(self, mock_generate_digest, mock_get_github):
+    def test_digest_command(self, mock_generate_digest, mock_get_github, mock_artefacts):
         """Test !digest command"""
         # Mock the GitHub username lookup
         mock_get_github.return_value = "github_user"
         # Mock the digest generation
         mock_generate_digest.return_value = "Test digest content"
+        # Mock artefacts - no pending artefacts
+        mock_artefacts.return_value = "No pending artefacts found"
         
         result = self.plugin.digest(self.msg, [])
         
         # Verify the mocks were called
         mock_get_github.assert_called_once_with("testuser")
         mock_generate_digest.assert_called_once()
+        mock_artefacts.assert_called_once()
         
         # Check the result
         self.assertEqual(result, "Test digest content")
@@ -297,8 +301,7 @@ class TestCertificationHelperMethods(unittest.TestCase):
         
         result = self.plugin._format_pr_summary("testuser", pr_data, is_digest=False)
         
-        self.assertIn("No PRs", result)
-        self.assertIn("testuser", result)
+        self.assertIn("You have no PRs", result)
 
     def test_format_pr_summary_with_prs(self):
         """Test _format_pr_summary with PRs"""

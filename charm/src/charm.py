@@ -65,6 +65,7 @@ class ErrbotCharm(ops.CharmBase):
                     command="errbot",
                     startup="enabled",
                     environment={
+                        "ARTEFACT_FAMILIES": str(self.model.config.get("artefact-families", "")),
                         "C3_CLIENT_ID": str(self.model.config["c3-client-id"]),
                         "C3_CLIENT_SECRET": str(self.model.config["c3-client-secret"]),
                         "DIGEST_SEND_TIME": str(self.model.config["digest-send-time"]),

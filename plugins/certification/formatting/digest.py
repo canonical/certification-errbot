@@ -95,6 +95,6 @@ def _get_jira_summary_for_digest(
     ])
     
     if has_issues:
-        return format_jira_summary(username, jira_data, show_completed=True)
+        return format_jira_summary(username, jira_data, show_completed=True, use_second_person=True)
     
     return None

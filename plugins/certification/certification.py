@@ -13,7 +13,11 @@ from c3.api.physicalmachinesview.physicalmachinesview_list import (
     sync_detailed as get_physicalmachinesview,
 )
 from c3_auth import get_access_token as get_c3_access_token
-from artefacts import reply_with_artefacts_summary
+from artefacts import (
+    archive_artefact_by_id,
+    extract_artefact_id_from_url,
+    reply_with_artefacts_summary,
+)
 from ldap import (
     get_github_username_from_mattermost_handle,
     get_email_from_mattermost_handle,
@@ -175,7 +179,8 @@ class CertificationPlugin(BotPlugin):
         refresh_jira_issues_cache()
 
     def polled_digest_sending(self):
-        # send_artefact_summaries(self)
+        # Note: artefacts are now included in send_team_pr_summaries
+        # send_artefact_summaries(self)  # Can be enabled for separate artefact-only digest
         self.send_team_pr_summaries()
 
     def _format_story_points(self, story_points) -> str:
@@ -270,7 +275,7 @@ class CertificationPlugin(BotPlugin):
 
     def send_team_pr_summaries(self):
         """
-        Send daily summaries (PRs + Jira issues) to all members of the configured GitHub team.
+        Send daily summaries (PRs + Jira issues + artefacts) to all members of the configured GitHub team.
         """
         if not github_team:
             logger.warning("No GitHub team configured, skipping team PR summaries")
@@ -295,13 +300,26 @@ class CertificationPlugin(BotPlugin):
                         )
                         continue
 
-                    combined_msg = self._generate_user_digest(
+                    sections = []
+                    
+                    # Get PR and Jira digest
+                    pr_jira_msg = self._generate_user_digest(
                         github_username, mattermost_handle, is_digest=True, use_github_for_jira=True
                     )
-
-                    if not combined_msg:
+                    if pr_jira_msg:
+                        sections.append(pr_jira_msg)
+                    
+                    # Get artefacts for the user  
+                    # Create a mock message object with the user info for reply_with_artefacts_summary
+                    mock_msg_frm = type('obj', (object,), {'username': mattermost_handle})()
+                    artefacts_msg = reply_with_artefacts_summary(mock_msg_frm, [mattermost_handle])
+                    if artefacts_msg and not artefacts_msg.startswith("No pending artefacts"):
+                        sections.append(artefacts_msg)
+                    
+                    if not sections:
                         continue
-
+                    
+                    combined_msg = "\n\n---\n\n".join(sections)
                     identifier = self.build_identifier(f"@{mattermost_handle}")
                     self.send(identifier, combined_msg)
 
@@ -328,6 +346,44 @@ class CertificationPlugin(BotPlugin):
         except Exception as e:
             logger.error(f"Error in !artefacts command: {e}", exc_info=True)
             return f"Error processing artefacts command: {str(e)}"
+    
+    @botcmd(split_args_with=" ", admin_only=True)
+    def archive_artefact(self, msg, args):
+        """
+        Archive an artefact by ID or URL (admin only).
+        
+        Usage: 
+            !archive_artefact <artefact_id> [comment]
+            !archive_artefact <test_observer_url> [comment]
+        
+        Examples:
+            !archive_artefact 123
+            !archive_artefact 123 "No longer needed"
+            !archive_artefact https://test-observer.canonical.com/#/snaps/456
+            !archive_artefact https://test-observer.canonical.com/#/debs/789 "Obsolete version"
+        """
+        if not args:
+            return (
+                "Usage: !archive_artefact <artefact_id_or_url> [comment]\n"
+                "Examples:\n"
+                "  !archive_artefact 123\n"
+                "  !archive_artefact https://test-observer.canonical.com/#/snaps/456\n"
+                "  !archive_artefact 123 \"No longer needed\""
+            )
+        
+        try:
+            artefact_id = extract_artefact_id_from_url(args[0])
+        except ValueError as e:
+            return f"Error: {str(e)}. Please provide a valid artefact ID or Test Observer URL."
+        
+        comment = " ".join(args[1:]) if len(args) > 1 else None
+        
+        try:
+            result = archive_artefact_by_id(artefact_id, comment)
+            return result
+        except Exception as e:
+            logger.error(f"Error archiving artefact {artefact_id}: {e}", exc_info=True)
+            return f"Error archiving artefact: {str(e)}"
 
     @botcmd(split_args_with=" ")
     def prs(self, msg, args):
@@ -598,7 +654,7 @@ Keep the summary concise (3-4 paragraphs) and actionable for team members and st
         Show current digest information (equivalent to daily scheduled digest)
         Usage: !digest [mattermost_username]
         Default username: your own username (mapped from LDAP)
-        Shows PRs requiring attention, authored unassigned PRs, approved authored PRs, and Jira issues
+        Shows PRs requiring attention, authored unassigned PRs, approved authored PRs, Jira issues, and pending artefacts
         """
         if args and len(args) > 0 and args[0].strip():
             mattermost_username = args[0].lstrip("@")
@@ -615,15 +671,28 @@ Keep the summary concise (3-4 paragraphs) and actionable for team members and st
             return "GitHub token not configured. Please set the GITHUB_TOKEN environment variable."
 
         try:
-            combined_msg = self._generate_user_digest(
+            sections = []
+            
+            # Get PR and Jira digest
+            pr_jira_msg = self._generate_user_digest(
                 github_username, mattermost_username, is_digest=False
             )
-
-            if combined_msg:
-                return combined_msg
+            if pr_jira_msg:
+                sections.append(pr_jira_msg)
+            
+            # Get artefacts for the user
+            artefacts_msg = reply_with_artefacts_summary(msg.frm, [mattermost_username])
+            if artefacts_msg and not artefacts_msg.startswith("No pending artefacts"):
+                sections.append(artefacts_msg)
+            
+            if sections:
+                return "\n\n---\n\n".join(sections)
             else:
                 cache_stats = self.pr_cache.get_cache_stats()
-                return f"No PRs or Jira issues found for @{mattermost_username} across {cache_stats['total_repositories']} repositories in {github_org}."
+                # Check if we have artefacts even if no PRs/Jira
+                if artefacts_msg and not artefacts_msg.startswith("No pending artefacts"):
+                    return artefacts_msg
+                return f"No PRs, Jira issues, or pending artefacts found for @{mattermost_username} across {cache_stats['total_repositories']} repositories in {github_org}."
 
         except Exception as e:
             logger.error(f"Error generating digest: {e}")

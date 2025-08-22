@@ -47,7 +47,8 @@ def _format_issue_section(
 def format_jira_summary(
     username: str,
     jira_data: Dict[str, List],
-    show_completed: bool = True
+    show_completed: bool = True,
+    use_second_person: bool = True
 ) -> str:
     """
     Format Jira issue summary for a user.
@@ -56,6 +57,7 @@ def format_jira_summary(
         username: Username (Mattermost handle)
         jira_data: Dictionary with issue categories as keys
         show_completed: Whether to show completed issues
+        use_second_person: Whether to use "you" (True) or @username (False)
     
     Returns:
         Formatted Jira summary string
@@ -68,7 +70,10 @@ def format_jira_summary(
     has_any_issues = any([active_issues, review_issues, completed_issues, untriaged_issues])
     
     if not has_any_issues:
-        return f"No Jira issues assigned to @{username}"
+        if use_second_person:
+            return "You have no Jira issues assigned"
+        else:
+            return f"No Jira issues assigned to @{username}"
     
     # Calculate total story points
     def sum_points(issues):
@@ -78,8 +83,11 @@ def format_jira_summary(
     review_points = sum_points(review_issues)
     completed_points = sum_points(completed_issues)
     
-    # Build the summary
-    sections = [f"Jira issues assigned to @{username}:"]
+    # Build the summary with heading
+    if use_second_person:
+        sections = ["## Jira Issues\n\nYour assigned issues:"]
+    else:
+        sections = [f"## Jira Issues\n\nIssues assigned to @{username}:"]
     
     # Add sections for different issue categories
     if active_issues:
@@ -147,7 +155,8 @@ def format_team_jira_summary(
             user_summary = format_jira_summary(
                 mattermost_handle,
                 jira_data,
-                show_completed=False  # Don't show completed in team view
+                show_completed=False,  # Don't show completed in team view
+                use_second_person=False  # Use third person in team view
             )
             # Remove the "No Jira issues" prefix if present
             if not user_summary.startswith("No Jira"):

@@ -88,6 +88,7 @@ Required environment variables include:
 - `LLM_API_TOKEN` (optional, for authenticated LLM APIs)
 - `LLM_MODEL_NAME` (optional, defaults to "deepseek-r1:70b")
 - `BOT_PREFIX` (optional, defaults to "!" - useful for running dev instances with different prefixes like "dev!")
+- `ARTEFACT_FAMILIES` (optional, comma-separated list of Test Observer artefact families to include. Valid values: "snap", "deb", "image", "charm" (use singular form, not plural). Example: "snap,deb,image". Defaults to "snap,deb" in the charm configuration. If not set locally, all families are included)
 
 ### Testing Strategy
 
