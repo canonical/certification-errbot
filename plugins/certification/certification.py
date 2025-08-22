@@ -94,7 +94,6 @@ def get_c3_token():
 
 now = datetime.now().date()
 
-# Default repositories to monitor for PRs
 DEFAULT_REPOS = [
     "blueprints",
     "certification-docs",
@@ -142,7 +141,6 @@ class CertificationPlugin(BotPlugin):
 
     def __init__(self, bot, name):
         super().__init__(bot, name)
-        # Initialize PR cache with configured repository filter
         self.pr_cache = PullRequestCache(repo_filter=GITHUB_REPOS)
 
     def activate(self):
@@ -154,30 +152,25 @@ class CertificationPlugin(BotPlugin):
         try:
             hour, minute = map(int, DIGEST_SEND_TIME.split(":"))
         except ValueError:
-            # Default to 6:30 if parsing fails
             hour, minute = 6, 30
             self.log.warning(
                 f"Invalid DIGEST_SEND_TIME format: {DIGEST_SEND_TIME}, using default 6:30"
             )
 
-        # Daily artefact digest (Mon-Fri at configured time UTC)
         digest_trigger = CronTrigger(
             day_of_week="mon-fri", hour=hour, minute=minute, timezone="UTC"
         )
         scheduler.add_job(self.polled_digest_sending, digest_trigger)
         self.log.info(f"Scheduled daily digest for {hour:02d}:{minute:02d} UTC")
 
-        # PR cache refresh (every 5 minutes)
         pr_cache_trigger = CronTrigger(minute="*/5", timezone="UTC")
         scheduler.add_job(self.refresh_pr_cache, pr_cache_trigger)
 
-        # Jira issues cache refresh (every 15 minutes)
         jira_cache_trigger = CronTrigger(minute="*/5", timezone="UTC")
         scheduler.add_job(refresh_jira_issues_cache, jira_cache_trigger)
 
         scheduler.start()
 
-        # Initial cache population
         self.refresh_pr_cache()
         refresh_jira_issues_cache()
 
@@ -232,7 +225,6 @@ class CertificationPlugin(BotPlugin):
             )
 
             if not github_username:
-                # Fallback to email-based lookup
                 target_user_email = get_email_from_mattermost_handle(
                     mattermost_username
                 )
@@ -262,7 +254,6 @@ class CertificationPlugin(BotPlugin):
             use_github_for_jira: If True, lookup Jira issues via GitHub username->email instead of Mattermost handle
         """
         try:
-            # Get PR data for this user
             pr_data = self.pr_cache.get_prs_for_user(github_username)
             
             # Use the new generate_user_digest function from formatting module
@@ -286,7 +277,6 @@ class CertificationPlugin(BotPlugin):
             return
 
         try:
-            # Get team members
             team_members = self.pr_cache.get_team_members(github_team)
             if not team_members:
                 logger.warning(f"No members found for team {github_team}")
@@ -296,7 +286,6 @@ class CertificationPlugin(BotPlugin):
             for github_username in team_members:
 
                 try:
-                    # Get Mattermost username for this GitHub user
                     mattermost_handle = get_mattermost_handle_from_github_username(
                         github_username
                     )
@@ -306,17 +295,13 @@ class CertificationPlugin(BotPlugin):
                         )
                         continue
 
-                    # Generate digest using shared logic
-                    # Use GitHub-based Jira lookup for periodic digest to ensure robustness
                     combined_msg = self._generate_user_digest(
                         github_username, mattermost_handle, is_digest=True, use_github_for_jira=True
                     )
 
-                    # Skip if no PRs or Jira issues for this user
                     if not combined_msg:
                         continue
 
-                    # Send direct message to user
                     identifier = self.build_identifier(f"@{mattermost_handle}")
                     self.send(identifier, combined_msg)
 
@@ -352,7 +337,6 @@ class CertificationPlugin(BotPlugin):
         Default username: your own username (mapped from LDAP)
         Now searches across ALL repositories in the configured GitHub organization
         """
-        # Parse arguments and get GitHub username
         if args and len(args) > 0 and args[0].strip():
             mattermost_username = args[0].lstrip("@")
             github_username = self._get_github_username_for_user(mattermost_username)
@@ -362,16 +346,14 @@ class CertificationPlugin(BotPlugin):
             mattermost_username = msg.frm.username
             github_username = self._get_github_username_for_user(mattermost_username)
             if not github_username:
-                github_username = mattermost_username  # Fallback
+                github_username = mattermost_username
 
         if not github_token:
             return "GitHub token not configured. Please set the GITHUB_TOKEN environment variable."
 
         try:
-            # Get PRs for the user from cache
             pr_data = self.pr_cache.get_prs_for_user(github_username)
 
-            # Use shared formatting logic
             response = self._format_pr_summary(
                 github_username, pr_data, is_digest=False
             )
@@ -416,14 +398,11 @@ class CertificationPlugin(BotPlugin):
         Usage: !jira [mattermost_username]
         Default username: your own username (mapped from LDAP to email)
         """
-        # Parse arguments to get target username
         mattermost_username = self._parse_username_arg(args, msg.frm.username)
 
         try:
-            # Get Jira issues for the user
             issues = get_jira_issues_for_mattermost_handle(mattermost_username)
             
-            # Use the formatting module to format the response
             return format_jira_summary(mattermost_username, issues, show_completed=True)
 
         except Exception as e:
@@ -433,7 +412,7 @@ class CertificationPlugin(BotPlugin):
     def _parse_username_arg(self, args, default_username):
         """Helper to parse username from command arguments."""
         if args and len(args) > 0 and args[0].strip():
-            return args[0].lstrip("@")  # Remove @ prefix if present
+            return args[0].lstrip("@")
         return default_username
 
     @botcmd(split_args_with=" ")
@@ -447,7 +426,6 @@ class CertificationPlugin(BotPlugin):
             return "No GitHub team configured. Please set the GITHUB_TEAM environment variable."
 
         try:
-            # Get team members and their Jira issues
             team_members = self.pr_cache.get_team_members(github_team)
             if not team_members:
                 return f"No members found for team {github_team}"
@@ -456,10 +434,8 @@ class CertificationPlugin(BotPlugin):
             if not team_issues:
                 return f"No open Jira issues assigned to any members of team {github_team}"
             
-            # Build user handles mapping
             user_handles = self._get_mattermost_handles_for_team(team_members)
 
-            # Use the formatting module to format team summary
             return format_team_jira_summary(github_team, team_issues, user_handles)
         
         except Exception as e:
@@ -485,20 +461,16 @@ class CertificationPlugin(BotPlugin):
         Uses the configured LLM to analyze and summarize current sprint issues
         """
         try:
-            # Check if LLM functionality is available
             if not LLM_AVAILABLE:
                 return "LLM functionality not available. Please ensure the requests library is installed and LLM configuration is set up."
 
-            # Get LLM client
             llm_client = get_llm_client()
             if not llm_client:
                 return "LLM API not configured. Please set LLM_API_SERVER, and optionally LLM_API_TOKEN and LLM_MODEL_NAME environment variables."
 
-            # Test LLM connection
             if not llm_client.test_connection():
                 return f"Could not connect to LLM API at {llm_client.server_url}. Please check the configuration and server status."
 
-            # Get all current sprint issues from cache
             all_sprint_issues = []
             for assignee_email, issues in jira_issues_cache.items():
                 for issue in issues:
@@ -517,7 +489,6 @@ class CertificationPlugin(BotPlugin):
             if not all_sprint_issues:
                 return "No sprint issues found in cache. The Jira integration may need to be configured or refreshed."
 
-            # Prepare data for LLM
             active_issues = [
                 issue for issue in all_sprint_issues if not issue["is_completed"]
             ]
@@ -525,10 +496,8 @@ class CertificationPlugin(BotPlugin):
                 issue for issue in all_sprint_issues if issue["is_completed"]
             ]
 
-            # Create structured prompt for the LLM
             prompt = self._create_sprint_summary_prompt(active_issues, completed_issues)
 
-            # Generate summary using LLM
             summary = llm_client.generate_completion(
                 prompt, max_tokens=2000, temperature=0.3
             )
@@ -536,10 +505,8 @@ class CertificationPlugin(BotPlugin):
             if not summary:
                 return "Failed to generate sprint summary. The LLM API may be unavailable or returned an empty response."
 
-            # Filter out thinking tags from LLM response
             summary = self._filter_thinking_output(summary)
 
-            # Add metadata
             total_active = len(active_issues)
             total_completed = len(completed_issues)
             total_story_points_active = sum(
@@ -568,8 +535,7 @@ class CertificationPlugin(BotPlugin):
 **Active Issues:**
 """
 
-        # Add active issues
-        for issue in active_issues[:20]:  # Limit to avoid token overflow
+        for issue in active_issues[:20]:
             story_points = (
                 f" ({issue['story_points']} SP)" if issue["story_points"] else ""
             )
@@ -585,8 +551,7 @@ class CertificationPlugin(BotPlugin):
 
         prompt += "\n**Completed Issues:**\n"
 
-        # Add completed issues
-        for issue in completed_issues[:15]:  # Limit completed issues
+        for issue in completed_issues[:15]:
             story_points = (
                 f" ({issue['story_points']} SP)" if issue["story_points"] else ""
             )
@@ -616,16 +581,13 @@ Keep the summary concise (3-4 paragraphs) and actionable for team members and st
         """Filter out thinking output from LLM response (text between <think> and </think> tags)"""
         import re
 
-        # Remove everything between <think> and </think> tags (including the tags themselves)
-        # Using re.DOTALL to match across multiple lines
         filtered_text = re.sub(
             r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE
         )
 
-        # Clean up any extra whitespace that might be left
         filtered_text = re.sub(
             r"\n\s*\n\s*\n", "\n\n", filtered_text
-        )  # Replace multiple blank lines with double newline
+        )
         filtered_text = filtered_text.strip()
 
         return filtered_text
@@ -638,7 +600,6 @@ Keep the summary concise (3-4 paragraphs) and actionable for team members and st
         Default username: your own username (mapped from LDAP)
         Shows PRs requiring attention, authored unassigned PRs, approved authored PRs, and Jira issues
         """
-        # Parse arguments and get usernames
         if args and len(args) > 0 and args[0].strip():
             mattermost_username = args[0].lstrip("@")
             github_username = self._get_github_username_for_user(mattermost_username)
@@ -648,18 +609,16 @@ Keep the summary concise (3-4 paragraphs) and actionable for team members and st
             mattermost_username = msg.frm.username
             github_username = self._get_github_username_for_user(mattermost_username)
             if not github_username:
-                github_username = mattermost_username  # Fallback
+                github_username = mattermost_username
 
         if not github_token:
             return "GitHub token not configured. Please set the GITHUB_TOKEN environment variable."
 
         try:
-            # Generate digest using shared logic
             combined_msg = self._generate_user_digest(
                 github_username, mattermost_username, is_digest=False
             )
 
-            # Return the digest or no content message
             if combined_msg:
                 return combined_msg
             else:

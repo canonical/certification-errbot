@@ -11,7 +11,6 @@ from jira.exceptions import JIRAError
 
 logger = logging.getLogger(__name__)
 
-# Configuration from environment
 JIRA_SERVER = os.environ.get("JIRA_SERVER")
 JIRA_TOKEN = os.environ.get("JIRA_TOKEN")
 JIRA_EMAIL = os.environ.get("JIRA_EMAIL")
@@ -57,10 +56,8 @@ def identify_story_points_field(client: Optional[JIRA] = None) -> Optional[str]:
             return None
 
     try:
-        # Get all fields
         fields = client.fields()
 
-        # Look for story points field
         story_points_names = ["story points", "story point", "storypoints", "sp"]
 
         for field in fields:
@@ -70,7 +67,6 @@ def identify_story_points_field(client: Optional[JIRA] = None) -> Optional[str]:
                     logger.info(f"Found story points field: {field['id']} - {field['name']}")
                     return field["id"]
 
-        # Default to commonly used field if not found by name
         logger.warning("Story points field not found by name, using default customfield_10024")
         return "customfield_10024"
 
