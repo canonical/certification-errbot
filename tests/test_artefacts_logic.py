@@ -90,8 +90,7 @@ class TestArtefactsSummary(ArtefactsTestBase):
         self.assertIn("**@testuser**", result)
         self.assertIn("## Artefact Review", result)
         self.assertIn("You have some Test Observer artefacts to review", result)
-        self.assertIn("artefact review instructions", result)
-        self.assertIn("https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/", result)
+        self.assertIn("[here](https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/)", result)
         self.assertIn(
             "**[Artefact 1 1.0](https://test-observer.canonical.com/#/family1s/1)**",
             result,
@@ -198,8 +197,7 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
         # Check for section heading and review instructions link
         self.assertIn("## Artefact Review", sent_message)
         self.assertIn("You have some Test Observer artefacts to review", sent_message)
-        self.assertIn("artefact review instructions", sent_message)
-        self.assertIn("https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/", sent_message)
+        self.assertIn("[here](https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/)", sent_message)
         # Check that overdue artefact is present with overdue indicator
         self.assertIn("Overdue Artefact", sent_message)
         self.assertIn("🔴", sent_message)
@@ -568,8 +566,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
         self.assertIn("## Artefact Review", result)
         self.assertEqual(result.count("## Artefact Review"), 1)
         self.assertIn("You have some Test Observer artefacts to review", result)
-        self.assertIn("artefact review instructions", result)
-        self.assertIn("https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/", result)
+        self.assertIn("[here](https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/)", result)
         
         # Check overdue comes first
         self.assertIn("🔴", result)
@@ -820,8 +817,7 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
         self.assertIn("Hello @testuser!", sent_message)
         self.assertIn("## Artefact Review", sent_message)
         self.assertIn("You have some Test Observer artefacts to review", sent_message)
-        self.assertIn("artefact review instructions", sent_message)
-        self.assertIn("https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/", sent_message)
+        self.assertIn("[here](https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/)", sent_message)
         self.assertIn("Artefact 1", sent_message)
 
     @patch("plugins.certification.artefacts.pending_artefacts_by_user_handle")
