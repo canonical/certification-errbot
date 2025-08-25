@@ -1,7 +1,6 @@
 """Test Jira formatter handles None story points correctly."""
 
 import unittest
-from unittest.mock import MagicMock, patch
 
 from plugins.certification.formatting.jira_formatter import (
     format_jira_summary,
