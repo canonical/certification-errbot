@@ -4,3 +4,6 @@ data
 .venv
 plugins/certification/c3
 plugins/certification/test_observer
+.env
+.coverage
+coverage.xml

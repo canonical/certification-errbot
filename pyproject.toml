@@ -3,7 +3,7 @@ name = "certification-errbot"
 version = "0.1.0"
 description = "Hardware Certification plugins to errbot"
 readme = "README.md"
-requires-python = "~=3.10"
+requires-python = "~=3.10.0"
 dependencies = [
     "errbot==6.2.0",
     "err-backend-mattermost==3.0.0",
@@ -12,6 +12,9 @@ dependencies = [
     "attrs>=25.1.0",
     "python-dateutil>=2.9.0.post0",
     "apscheduler>=3.11.0",
+    "ldap3>=2.9.1",
+    "python-dotenv>=1.1.0",
+    "jira>=3.8.0",
 ]
 
 [tool.uv.sources]
@@ -22,6 +25,47 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [dependency-groups]
 dev = [
- "pytest>=8.4.1",
- "ruff>=0.11.12",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.0.0",
+    "coverage[toml]>=7.6.0",
+    "ruff>=0.11.12",
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Ignore deprecation warnings from pyasn1 library
+    "ignore:tagMap is deprecated:DeprecationWarning:pyasn1",
+    "ignore:typeMap is deprecated:DeprecationWarning:pyasn1",
+]
+addopts = [
+    "--cov=plugins/certification",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+
+[tool.coverage.run]
+source = ["plugins/certification"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/c3/*",  # Auto-generated client
+    "*/test_observer/*",  # Auto-generated client
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+precision = 2
+skip_covered = false
+show_missing = true
+
+[tool.coverage.html]
+directory = "htmlcov"

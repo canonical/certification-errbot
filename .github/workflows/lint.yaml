@@ -1,26 +1,26 @@
 on:
-    workflow_call:
-      secrets:
-        CHARMHUB_TOKEN:
-          required: true
-    
-    push:
-      branches:
-        - main
-   
-    pull_request:
+  push:
+    paths:
+      - 'test/**'
+      - 'config/**'
+      - 'plugins/**'
+      - '.github/workflows/lint.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, linux, large, noble, x64]
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Install dependencies
+      - name: Install uv
         run: sudo snap install --classic astral-uv
+      - name: Install dependencies
+        run: uv sync --dev
       - name: Run linters
         run: |
-          uv tool run ruff check
-          uv tool run ruff format --check --diff
-        working-directory: charm
+          uv run ruff check

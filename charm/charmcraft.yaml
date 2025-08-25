@@ -15,28 +15,14 @@ platforms:
 
 config:
   options:
-    log-level:
+    artefact-families:
       description: |
-        Configures the application log level.
-
-        Acceptable values are: "info", "debug", "warning", "error" and "critical"
-      default: "info"
-      type: string
-    mattermost-team:
-      description: |
-        The Mattermost team name.
-      type: string
-    mattermost-server:
-      description: |
-        The Mattermost server address for Errbot.
-      type: string
-    mattermost-token:
-      description: |
-        Mattermost API token for Errbot.
-      type: string
-    mattermost-admins:
-      description: |
-        A comma separated list of mattermost handles who can act as bot admins.
+        Comma-separated list of Test Observer artefact families to include in responses.
+        Valid families: snap, deb, image, charm (use singular form, not plural)
+        If not set or empty, all families are included.
+        Example: "snap,deb,image" to exclude charm artefacts.
+        Do NOT use plural forms like "snaps,debs" - use "snap,deb" instead.
+      default: "snap,deb"
       type: string
     c3-client-id:
       description: |
@@ -46,6 +32,28 @@ config:
       description: |
         OAuth client secret for the C3 v2 API.
       type: string
+    digest-send-time:
+      description: |
+        Time to send the daily digest in HH:MM format (24-hour, UTC). For example: "09:00" for 9am UTC.
+      default: "06:30"
+      type: string
+    github-org:
+      description: |
+        GitHub organization name to fetch PRs from.
+      default: "canonical"
+      type: string
+    github-repositories:
+      description: |
+        Comma-separated list of repository names to monitor for PRs. If not set, uses default list.
+      type: string
+    github-team:
+      description: |
+        GitHub team name to send daily PR notifications for. Team members will receive PR summaries at 9am UTC Mon-Fri.
+      type: string
+    github-token:
+      description: |
+        GitHub personal access token for API access.
+      type: string
     http-proxy:
       type: string
       default: ""
@@ -54,6 +62,65 @@ config:
       type: string
       default: ""
       description: HTTPS proxy for accessing external HTTPS resources
+    jira-current-sprint-only:
+      type: boolean
+      default: false
+      description: Filtering by current sprint when fetching jira issues
+    jira-email:
+      description: |
+        Jira email address for API access.
+      type: string
+    jira-filter-id:
+      description: |
+        Jira filter ID to use for fetching issues.
+      type: string
+    jira-server:
+      description: |
+        Jira server URL for issue tracking integration.
+      type: string
+    jira-token:
+      description: |
+        Jira API token for authentication.
+      type: string
+    ldap-base-dn:
+      description: |
+        LDAP base DN for user searches.
+      type: string
+    ldap-bind-dn:
+      description: |
+        LDAP bind DN for authentication.
+      type: string
+    ldap-bind-password:
+      description: |
+        LDAP bind password for authentication.
+      type: string
+    ldap-server:
+      description: |
+        LDAP server URL for user lookups.
+      type: string
+    log-level:
+      description: |
+        Configures the application log level.
+
+        Acceptable values are: "info", "debug", "warning", "error" and "critical"
+      default: "info"
+      type: string
+    mattermost-admins:
+      description: |
+        A comma separated list of mattermost handles who can act as bot admins.
+      type: string
+    mattermost-server:
+      description: |
+        The Mattermost server address for Errbot.
+      type: string
+    mattermost-team:
+      description: |
+        The Mattermost team name.
+      type: string
+    mattermost-token:
+      description: |
+        Mattermost API token for Errbot.
+      type: string
     no-proxy:
       type: string
       default: "localhost,127.0.0.1,::1"

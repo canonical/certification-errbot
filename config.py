@@ -2,7 +2,10 @@ import logging
 import os
 import sys
 
-# BACKEND = "Text"  # Errbot will start in text mode (console only mode) and will answer commands from there.
+from dotenv import load_dotenv
+
+load_dotenv()
+
 BACKEND = "Mattermost"
 
 BOT_DATA_DIR = r"./data"
@@ -21,15 +24,15 @@ if "ERRBOT_ADMINS" not in os.environ:
 BOT_ADMINS = os.environ.get("ERRBOT_ADMINS", "").split(",")
 
 
+BOT_PREFIX = os.environ.get("BOT_PREFIX", "!")
+
+DIGEST_SEND_TIME = os.environ.get("DIGEST_SEND_TIME", "6:30")
+
 BOT_IDENTITY = {
-    # Required
     "team": os.environ.get("ERRBOT_TEAM"),
     "server": os.environ.get("ERRBOT_SERVER"),
     "token": os.environ.get("ERRBOT_TOKEN"),
-    # Optional
-    # "insecure": False,  # Default = False. Set to true for self signed certificates
-    "scheme": "https",  # Default = https
-    "port": 443,  # Default = 8065
-    "timeout": 30,  # Default = 30. If the web server disconnects idle connections later/earlier change this value
-    # "cards_hook": "incomingWebhookId",  # Needed for cards/attachments
+    "scheme": "https",
+    "port": 443,
+    "timeout": 30,
 }

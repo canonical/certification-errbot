@@ -29,4 +29,22 @@ jobs:
         run: ./bin/generate-c3-client.sh && ./bin/generate-test-observer-client.sh
 
       - name: Run unit tests
+        env:
+          ERRBOT_ADMINS: test-admin
+          ERRBOT_TEAM: test-team
+          ERRBOT_SERVER: test.server.com
+          ERRBOT_TOKEN: test-token
+          C3_CLIENT_ID: test-client-id
+          C3_CLIENT_SECRET: test-secret
+          GITHUB_TOKEN: test-github-token
+          GITHUB_ORG: test-org
+          GITHUB_TEAM: test-team
+          JIRA_SERVER: https://test.jira.com
+          JIRA_TOKEN: test-jira-token
+          JIRA_EMAIL: test@example.com
+          JIRA_FILTER_ID: test-filter
+          LDAP_SERVER: ldap://test.ldap.com
+          LDAP_BASE_DN: dc=test,dc=com
+          LDAP_BIND_DN: cn=test,dc=test,dc=com
+          LDAP_BIND_PASSWORD: test-password
         run: uv run pytest tests

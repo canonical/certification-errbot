@@ -1,14 +1,44 @@
-from mattermost_api import get_user_by_email, mattermost_base_url, mattermost_token
+import logging
 
-user_cache: dict[str, str] = {}
+from mattermost_api import (
+    UserDetails,
+    get_user_by_email,
+    get_user_by_name,
+    mattermost_base_url,
+    mattermost_token,
+)
+
+logger = logging.getLogger(__name__)
+
+user_cache_by_email: dict[str, UserDetails | None] = {}
+user_cache_by_username: dict[str, str | None] = {}
 
 
-def get_assignee_handle(email: str) -> str | None:
-    if email in user_cache:
-        return user_cache[email]
+def get_user_handle(email: str) -> UserDetails | None:
+    if email in user_cache_by_email:
+        return user_cache_by_email[email]
     else:
-        assignee_handle = get_user_by_email(
-            mattermost_token, mattermost_base_url, email
-        )
-        user_cache[email] = assignee_handle
-        return assignee_handle
+        try:
+            user_details = get_user_by_email(
+                mattermost_token, mattermost_base_url, email
+            )
+            user_cache_by_email[email] = user_details
+            return user_details
+        except Exception as e:
+            logger.warning(f"Failed to get user handle for email {email}: {e}")
+            user_cache_by_email[email] = None
+            return None
+
+
+def get_user_email(username: str) -> str | None:
+    if username in user_cache_by_username:
+        return user_cache_by_username[username]
+    else:
+        user_details = get_user_by_name(mattermost_token, mattermost_base_url, username)
+        if user_details:
+            email = user_details.get("email")
+            if email:
+                user_cache_by_username[username] = email
+                return email
+        user_cache_by_username[username] = None
+        return None

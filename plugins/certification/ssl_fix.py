@@ -1,5 +1,4 @@
 # adopted from https://github.com/lbr88/mattermost-chillzone-1337bot/commit/301ea0693e709d89f49b2658d62c246b062f3da3
-#
 # https://github.com/Vaelor/python-mattermost-driver/issues/115
 # monkey patching ssl.create_default_context to fix SSL error
 # to fix:

@@ -1,34 +1,47 @@
-# Use the specified base image
-FROM ubuntu:22.04
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-ENV ERRBOT_TOKEN=""
-ENV ERRBOT_TEAM="Canonical"
-ENV ERRBOT_ADMIN=""
-ENV ERRBOT_SERVER="chat.canonical.com"
-
-LABEL name="certification-errbot" \
-    version="6.2.0" \
-    description="An OCI image for certification-errbot" \
-    license="GPL-3.0"
-
+FROM ubuntu:22.04 AS builder
 RUN apt-get update && \
-    apt-get install -y python3.10 python3.10-gdbm git build-essential python3-dev libffi-dev && \
+    apt-get install -y python3-venv git build-essential python3-dev libffi-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
-COPY . .
-
-RUN mkdir -p data
-
-ENV UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync
+    --mount=type=bind,source=.python-version,target=.python-version \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev --no-python-downloads
 
-RUN uv sync
-RUN uv tool install errbot
+ADD . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-python-downloads
 
 RUN ./bin/generate-c3-client.sh
 RUN ./bin/generate-test-observer-client.sh
 
-CMD ["uv", "run", "errbot"]
+FROM ubuntu:22.04
+ENV ERRBOT_TOKEN=""
+ENV ERRBOT_TEAM="Canonical"
+ENV ERRBOT_SERVER="chat.canonical.com"
+ENV ERRBOT_ADMINS=""
+
+LABEL name="certification-errbot" \
+    description="An OCI image for certification-errbot" \
+    license="GPL-3.0"
+
+RUN apt-get update && \
+    apt-get install -y python3.10 python3.10-gdbm ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN mkdir -p data
+
+COPY --from=builder --chown=app:app /app /app
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["errbot"]
