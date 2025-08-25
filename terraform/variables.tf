@@ -132,3 +132,17 @@ variable "no_proxy" {
   type        = string
   default     = "localhost,127.0.0.1,::1"
 }
+
+variable "channel" {
+  description = "Juju charm channel to use"
+  type        = string
+  nullable    = true
+  default     = null
+}
+
+variable "revision" {
+  description = "Revision of the charm to use"
+  type        = number
+  nullable    = true
+  default     = null
+}

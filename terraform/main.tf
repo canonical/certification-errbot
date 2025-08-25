@@ -1,10 +1,15 @@
+locals {
+  channel = coalesce(var.channel, var.revision == null ? "latest/edge" : null)
+}
+
 resource "juju_application" "errbot" {
   name  = "errbot"
   model = var.juju_model
 
   charm {
-    name    = "certification-errbot"
-    channel = "latest/edge"
+    name     = "certification-errbot"
+    channel  = local.channel
+    revision = var.revision
   }
 
   config = {
