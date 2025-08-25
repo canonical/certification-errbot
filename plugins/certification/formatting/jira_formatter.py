@@ -77,11 +77,11 @@ def format_jira_summary(
     
     # Calculate total story points
     def sum_points(issues):
-        return sum(issue.get("story_points", 0) for issue in issues)
+        return sum(issue.get("story_points", 0) or 0 for issue in issues)
     
-    active_points = sum_points(active_issues)
-    review_points = sum_points(review_issues)
-    completed_points = sum_points(completed_issues)
+    active_points = sum_points(active_issues) or 0
+    review_points = sum_points(review_issues) or 0
+    completed_points = sum_points(completed_issues) or 0
     
     # Build the summary with heading
     if use_second_person:
