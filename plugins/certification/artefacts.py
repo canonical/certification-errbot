@@ -295,7 +295,7 @@ def artefacts_by_user_handle(
 
 def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse]]:
     """
-    Get all pending (not approved or failed) artefacts by user's Mattermost handle
+    Get all pending Beta stage artefacts (not approved or failed) by user's Mattermost handle
     """
     test_observer_client = TestObserverClient(
         base_url="https://test-observer-api.canonical.com"
@@ -318,6 +318,9 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
                 ArtefactStatus.APPROVED,
                 ArtefactStatus.MARKED_AS_FAILED,
             ]:
+                continue
+
+            if artefact.stage != "beta":
                 continue
 
             assignee = artefact.assignee
