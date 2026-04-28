@@ -125,6 +125,12 @@ config:
       type: string
       default: "localhost,127.0.0.1,::1"
       description: Resources that we should be able to access bypassing proxy
+    test-observer-api-key:
+      description: |
+        API key for authenticating against the Test Observer API.
+        Leave empty to make unauthenticated requests.
+      type: string
+      default: ""
 
 containers:
   errbot:
