@@ -12,6 +12,8 @@ from test_observer.api.artefacts.patch_artefact_v1_artefacts_artefact_id_patch i
 )
 from test_observer.client import (
     AuthenticatedClient as AuthTestObserverClient,
+)
+from test_observer.client import (
     Client as TestObserverClient,
 )
 from test_observer.models import ArtefactPatch, ArtefactResponse, ArtefactStatus
@@ -20,14 +22,14 @@ from user_handle_cache import get_user_handle
 logger = logging.getLogger(__name__)
 
 TEST_OBSERVER_BASE_URL = "https://test-observer-api.canonical.com"
-TEST_OBSERVER_API_KEY = os.environ.get("TEST_OBSERVER_API_KEY", "")
 
 
 def _get_test_observer_client():
-    if TEST_OBSERVER_API_KEY:
+    api_key = os.environ.get("TEST_OBSERVER_API_KEY", "")
+    if api_key:
         return AuthTestObserverClient(
             base_url=TEST_OBSERVER_BASE_URL,
-            token=TEST_OBSERVER_API_KEY,
+            token=api_key,
         )
     return TestObserverClient(base_url=TEST_OBSERVER_BASE_URL)
 
