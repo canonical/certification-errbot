@@ -45,6 +45,8 @@ class ArtefactsTestBase(unittest.TestCase):
             bug_link="bug_link",
             comment="test comment 1",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
 
         self.artefact2 = ArtefactResponse(
@@ -73,6 +75,8 @@ class ArtefactsTestBase(unittest.TestCase):
             bug_link="bug_link2",
             comment="test comment 2",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
 
 
@@ -181,6 +185,8 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
             bug_link="bug_link3",
             comment="test comment 3",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_pending_artefacts_by_user_handle.return_value = {
@@ -291,6 +297,8 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link10",
             comment="test comment 10",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         # Test with both included and excluded families
@@ -322,6 +330,8 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link11",
             comment="test comment 11",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         artefacts_response = [charm_artefact, snap_artefact]
@@ -366,6 +376,8 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link10",
             comment="test comment 10",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         artefacts_response = [self.artefact1, charm_artefact]
@@ -556,6 +568,8 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             bug_link="bug_link3",
             comment="test comment 3",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_get_artefacts.return_value.parsed = [self.artefact1, overdue_artefact]
@@ -616,6 +630,8 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             bug_link="bug_link10",
             comment="test comment 10",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         charm_artefact = ArtefactResponse(
@@ -644,6 +660,8 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             bug_link="bug_link11",
             comment="test comment 11",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_get_artefacts.return_value.parsed = [snap_artefact, charm_artefact]
@@ -688,6 +706,8 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             bug_link="bug_link3",
             comment="test comment 3",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_get_artefacts.return_value.parsed = [unassigned_artefact]
@@ -733,6 +753,8 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link3",
             comment="test comment 3",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2, approved_artefact]
@@ -788,6 +810,8 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link4",
             comment="test comment 4",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_get_artefacts.return_value.parsed = [no_assignee_no_due_date]
@@ -849,6 +873,8 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
             bug_link="bug_link3",
             comment="test comment 3",
             created_at=datetime.now() - timedelta(days=10),
+            reviewers=[],
+            jira_issue=None,
         )
         
         mock_pending_artefacts.return_value = {
