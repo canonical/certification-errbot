@@ -33,5 +33,6 @@ resource "juju_application" "errbot" {
     mattermost-team          = var.mattermost_team
     mattermost-token         = var.mattermost_token
     no-proxy                 = var.no_proxy
+    test-observer-api-key    = var.test_observer_api_key
   }
 }
