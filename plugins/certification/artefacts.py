@@ -10,11 +10,29 @@ from test_observer.api.artefacts.get_artefacts_v1_artefacts_get import (
 from test_observer.api.artefacts.patch_artefact_v1_artefacts_artefact_id_patch import (
     sync_detailed as patch_artefact,
 )
-from test_observer.client import Client as TestObserverClient
+from test_observer.client import (
+    AuthenticatedClient as AuthTestObserverClient,
+)
+from test_observer.client import (
+    Client as TestObserverClient,
+)
 from test_observer.models import ArtefactPatch, ArtefactResponse, ArtefactStatus
 from user_handle_cache import get_user_handle
 
 logger = logging.getLogger(__name__)
+
+TEST_OBSERVER_BASE_URL = "https://test-observer-api.canonical.com"
+
+
+def _get_test_observer_client():
+    api_key = os.environ.get("TEST_OBSERVER_API_KEY", "")
+    if api_key:
+        return AuthTestObserverClient(
+            base_url=TEST_OBSERVER_BASE_URL,
+            token=api_key,
+        )
+    return TestObserverClient(base_url=TEST_OBSERVER_BASE_URL)
+
 
 # Get configured artefact families to include (default: all families)
 # Can be configured as comma-separated list, e.g., "snap,deb,image"
@@ -117,9 +135,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     if len([arg for arg in args if arg.startswith("name-contains:")]) > 1:
         return "You can't use multiple 'name-contains' arguments"
 
-    test_observer_client = TestObserverClient(
-        base_url="https://test-observer-api.canonical.com"
-    )
+    test_observer_client = _get_test_observer_client()
 
     out_msg = ""
 
@@ -297,9 +313,7 @@ def pending_artefacts_by_user_handle() -> Dict[str | None, List[ArtefactResponse
     """
     Get all pending Beta stage artefacts (not approved or failed) by user's Mattermost handle
     """
-    test_observer_client = TestObserverClient(
-        base_url="https://test-observer-api.canonical.com"
-    )
+    test_observer_client = _get_test_observer_client()
 
     with test_observer_client:
         r = get_artefacts(client=test_observer_client)
@@ -436,9 +450,7 @@ def archive_artefact_by_id(artefact_id: int, comment: str = None) -> str:
     Returns:
         Success or error message
     """
-    test_observer_client = TestObserverClient(
-        base_url="https://test-observer-api.canonical.com"
-    )
+    test_observer_client = _get_test_observer_client()
     
     with test_observer_client:
         # Create patch request to archive the artefact

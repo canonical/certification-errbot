@@ -133,6 +133,12 @@ variable "no_proxy" {
   default     = "localhost,127.0.0.1,::1"
 }
 
+variable "test_observer_api_key" {
+  description = "API key for authenticating against the Test Observer API. Leave empty to make unauthenticated requests."
+  type        = string
+  default     = ""
+}
+
 variable "channel" {
   description = "Juju charm channel to use"
   type        = string

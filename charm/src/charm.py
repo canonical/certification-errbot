@@ -91,6 +91,7 @@ class ErrbotCharm(ops.CharmBase):
                         "LDAP_BIND_PASSWORD": str(self.model.config["ldap-bind-password"]),
                         "LDAP_SERVER": str(self.model.config["ldap-server"]),
                         "NO_PROXY": str(self.model.config["no-proxy"]),
+                        "TEST_OBSERVER_API_KEY": str(self.model.config["test-observer-api-key"]),
                     },
                 ),
             },
