@@ -45,7 +45,7 @@ class ArtefactsTestBase(unittest.TestCase):
             bug_link="bug_link",
             comment="test comment 1",
             created_at=datetime.now() - timedelta(days=10),
-            reviewers=[],
+            reviewers=[self.assignee],
             jira_issue=None,
         )
 
@@ -75,7 +75,7 @@ class ArtefactsTestBase(unittest.TestCase):
             bug_link="bug_link2",
             comment="test comment 2",
             created_at=datetime.now() - timedelta(days=10),
-            reviewers=[],
+            reviewers=[self.assignee],
             jira_issue=None,
         )
 
@@ -129,7 +129,7 @@ class TestArtefactsSummary(ArtefactsTestBase):
         # User handle from LDAP returns different case
         mock_get_user_handle.return_value = {"username": "TestUser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1]
-        
+
         # But sender has lowercase username
         self.user.username = "testuser"
 
@@ -147,7 +147,7 @@ class TestArtefactsSummary(ArtefactsTestBase):
         """Test that argumentless call shows appropriate message when user has no artefacts"""
         mock_get_user_handle.return_value = {"username": "otheruser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1]  # Assigned to otheruser
-        
+
         # Sender is testuser but artefacts are for otheruser
         result = reply_with_artefacts_summary(self.user, [])
         self.assertIn("No pending artefacts found for @testuser", result)
@@ -188,7 +188,7 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         mock_pending_artefacts_by_user_handle.return_value = {
             "testuser": [self.artefact1, overdue_artefact]
         }
@@ -265,11 +265,51 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
         self.assertEqual(result["testuser"][0].id, 1)
 
     @patch("plugins.certification.artefacts.get_user_handle")
+    def test_artefacts_by_user_handle_multiple_reviewers(self, mock_get_user_handle):
+        """An artefact with multiple reviewers is bucketed under each reviewer."""
+        first_reviewer = MagicMock(launchpad_email="first@example.com")
+        second_reviewer = MagicMock(launchpad_email="second@example.com")
+        self.artefact1.reviewers = [first_reviewer, second_reviewer]
+
+        handles = {
+            "first@example.com": {"username": "firstuser"},
+            "second@example.com": {"username": "seconduser"},
+        }
+        mock_get_user_handle.side_effect = lambda email: handles.get(email)
+
+        result = artefacts_by_user_handle([self.artefact1], None, None, False)
+
+        self.assertIn("firstuser", result)
+        self.assertIn("seconduser", result)
+        self.assertEqual(result["firstuser"][0].id, 1)
+        self.assertEqual(result["seconduser"][0].id, 1)
+
+    @patch("plugins.certification.artefacts.get_user_handle")
+    def test_artefacts_by_user_handle_assigned_to_filter_matches_any_reviewer(
+        self, mock_get_user_handle
+    ):
+        """assigned_to filter matches when the user is any of the reviewers."""
+        first_reviewer = MagicMock(launchpad_email="first@example.com")
+        second_reviewer = MagicMock(launchpad_email="second@example.com")
+        self.artefact1.reviewers = [first_reviewer, second_reviewer]
+
+        handles = {
+            "first@example.com": {"username": "firstuser"},
+            "second@example.com": {"username": "seconduser"},
+        }
+        mock_get_user_handle.side_effect = lambda email: handles.get(email)
+
+        result = artefacts_by_user_handle([self.artefact1], None, "seconduser", False)
+
+        self.assertEqual(list(result.keys()), ["seconduser"])
+        self.assertEqual(result["seconduser"][0].id, 1)
+
+    @patch("plugins.certification.artefacts.get_user_handle")
     @patch("plugins.certification.artefacts.INCLUDED_FAMILIES", {"snap", "deb", "image"})
     def test_filters_by_configured_families(self, mock_get_user_handle):
         """Test that artefacts are filtered by configured families"""
         mock_get_user_handle.return_value = {"username": "testuser"}
-        
+
         # Create a charm artefact that should be excluded when families are configured
         charm_artefact = ArtefactResponse(
             id=10,
@@ -300,7 +340,7 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         # Test with both included and excluded families
         # artefact1 has family="family1" which is not in the configured list
         # but we'll create a snap artefact that should be included
@@ -330,25 +370,25 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link11",
             comment="test comment 11",
             created_at=datetime.now() - timedelta(days=10),
-            reviewers=[],
+            reviewers=[self.assignee],
             jira_issue=None,
         )
-        
+
         artefacts_response = [charm_artefact, snap_artefact]
         result = artefacts_by_user_handle(artefacts_response, None, None, False)
-        
+
         # Should only include snap artefact
         self.assertIn("testuser", result)
         self.assertEqual(len(result["testuser"]), 1)
         self.assertEqual(result["testuser"][0].id, 11)
         self.assertEqual(result["testuser"][0].family, "snap")
-    
+
     @patch("plugins.certification.artefacts.get_user_handle")
     @patch("plugins.certification.artefacts.INCLUDED_FAMILIES", None)
     def test_includes_all_families_when_not_configured(self, mock_get_user_handle):
         """Test that all families are included when INCLUDED_FAMILIES is None"""
         mock_get_user_handle.return_value = {"username": "testuser"}
-        
+
         # Create artefacts with different families
         charm_artefact = ArtefactResponse(
             id=10,
@@ -376,13 +416,13 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             bug_link="bug_link10",
             comment="test comment 10",
             created_at=datetime.now() - timedelta(days=10),
-            reviewers=[],
+            reviewers=[self.assignee],
             jira_issue=None,
         )
-        
+
         artefacts_response = [self.artefact1, charm_artefact]
         result = artefacts_by_user_handle(artefacts_response, None, None, False)
-        
+
         # Should include both artefacts when no filtering is configured
         self.assertIn("testuser", result)
         self.assertEqual(len(result["testuser"]), 2)
@@ -396,7 +436,7 @@ class TestFormatArtefactMessage(ArtefactsTestBase):
         # Set due date to future (not urgent)
         self.artefact1.due_date = datetime.now().date() + timedelta(days=10)
         result = format_artefact_message(self.artefact1)
-        
+
         self.assertIn("Artefact 1 1.0", result)
         self.assertIn("https://test-observer.canonical.com/#/family1s/1", result)
         self.assertIn("(due", result)
@@ -409,7 +449,7 @@ class TestFormatArtefactMessage(ArtefactsTestBase):
         """Test formatting when artefact is due within 7 days"""
         self.artefact1.due_date = datetime.now().date() + timedelta(days=3)
         result = format_artefact_message(self.artefact1)
-        
+
         self.assertIn("Artefact 1 1.0", result)
         self.assertIn("⚠️ Due in 3 days", result)
         self.assertIn("1/2 reviews (50%)", result)
@@ -418,7 +458,7 @@ class TestFormatArtefactMessage(ArtefactsTestBase):
         """Test formatting when artefact is overdue"""
         self.artefact1.due_date = datetime.now().date() - timedelta(days=5)
         result = format_artefact_message(self.artefact1, is_overdue=True)
-        
+
         self.assertIn("Artefact 1 1.0", result)
         self.assertIn("🔴", result)
         self.assertIn("OVERDUE by 5 days", result)
@@ -428,7 +468,7 @@ class TestFormatArtefactMessage(ArtefactsTestBase):
         """Test formatting artefact message without due date"""
         self.artefact1.due_date = None
         result = format_artefact_message(self.artefact1)
-        
+
         self.assertIn("Artefact 1 1.0", result)
         self.assertNotIn("(due", result)
         self.assertNotIn("⚠️", result)
@@ -440,7 +480,7 @@ class TestFormatArtefactMessage(ArtefactsTestBase):
         self.artefact2.completed_environment_reviews_count = 0
         self.artefact2.all_environment_reviews_count = 0
         result = format_artefact_message(self.artefact2)
-        
+
         self.assertIn("0/0 reviews (0%)", result)
 
 
@@ -452,9 +492,9 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
         """Test reply_with_artefacts_summary with 'all' argument"""
         mock_get_user_handle.return_value = {"username": "testuser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1]
-        
+
         result = reply_with_artefacts_summary(self.user, ["all"])
-        
+
         self.assertIn("**@testuser**", result)
         self.assertIn("Artefact 1", result)
 
@@ -465,9 +505,9 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
         """Test reply_with_artefacts_summary with name-contains filter"""
         mock_get_user_handle.return_value = {"username": "testuser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2]
-        
+
         result = reply_with_artefacts_summary(self.user, ["name-contains:artefact 1"])
-        
+
         self.assertIn("Artefact 1", result)
         self.assertNotIn("Artefact 2", result)
 
@@ -477,9 +517,9 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
     def test_reply_with_no_artefacts(self, mock_get_artefacts, MockTestObserverClient):
         """Test reply_with_artefacts_summary when no artefacts match"""
         mock_get_artefacts.return_value.parsed = []
-        
+
         result = reply_with_artefacts_summary(self.user, [])
-        
+
         self.assertIn("No pending artefacts", result)
 
     @patch("plugins.certification.artefacts.TestObserverClient")
@@ -487,19 +527,19 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
     def test_reply_with_api_error(self, mock_get_artefacts, MockTestObserverClient):
         """Test reply_with_artefacts_summary when API returns non-list"""
         mock_get_artefacts.return_value.parsed = "not a list"
-        
+
         result = reply_with_artefacts_summary(self.user, [])
-        
+
         self.assertEqual(result, "Error retrieving artefacts")
 
     def test_reply_with_invalid_argument_combinations(self):
         """Test reply_with_artefacts_summary with invalid argument combinations"""
         result = reply_with_artefacts_summary(self.user, ["all", "name-contains:test"])
         self.assertEqual(result, "You can't use 'all' with 'name-contains' or username filter")
-        
+
         result = reply_with_artefacts_summary(self.user, ["all", "pending"])
         self.assertEqual(result, "You can't use 'all' with 'pending'")
-        
+
         result = reply_with_artefacts_summary(self.user, ["name-contains:a", "name-contains:b"])
         self.assertEqual(result, "You can't use multiple 'name-contains' arguments")
 
@@ -510,9 +550,9 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
         """Test reply_with_artefacts_summary with pending filter"""
         mock_get_user_handle.return_value = {"username": "testuser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2]
-        
+
         result = reply_with_artefacts_summary(self.user, ["pending"])
-        
+
         self.assertIn("Artefact 1", result)
         self.assertNotIn("Artefact 2", result)
 
@@ -523,24 +563,24 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
         """Test reply_with_artefacts_summary with direct username (no assigned-to prefix)"""
         mock_get_user_handle.return_value = {"username": "testuser"}
         mock_get_artefacts.return_value.parsed = [self.artefact1]
-        
+
         # Test with direct username
         result = reply_with_artefacts_summary(self.user, ["testuser"])
         self.assertIn("**@testuser**", result)
         self.assertIn("Artefact 1", result)
-        
+
         # Test with @ prefix
         result = reply_with_artefacts_summary(self.user, ["@testuser"])
         self.assertIn("**@testuser**", result)
         self.assertIn("Artefact 1", result)
-    
+
     @patch("plugins.certification.artefacts.TestObserverClient")
     @patch("plugins.certification.artefacts.get_artefacts")
     @patch("plugins.certification.artefacts.get_user_handle")
     def test_reply_with_overdue_and_current_artefacts(self, mock_get_user_handle, mock_get_artefacts, MockTestObserverClient):
         """Test reply_with_artefacts_summary formats overdue and current artefacts correctly"""
         mock_get_user_handle.return_value = {"username": "testuser"}
-        
+
         # Create overdue artefact
         overdue_artefact = ArtefactResponse(
             id=3,
@@ -568,28 +608,28 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             bug_link="bug_link3",
             comment="test comment 3",
             created_at=datetime.now() - timedelta(days=10),
-            reviewers=[],
+            reviewers=[self.assignee],
             jira_issue=None,
         )
-        
+
         mock_get_artefacts.return_value.parsed = [self.artefact1, overdue_artefact]
-        
+
         result = reply_with_artefacts_summary(self.user, [])
-        
+
         # Check single heading and review instructions
         self.assertIn("## Artefact Review", result)
         self.assertEqual(result.count("## Artefact Review"), 1)
         self.assertIn("You have some Test Observer artefacts to review", result)
         self.assertIn("[here](https://certification.canonical.com/docs/ops/common-policies-docs/how-to/artefact-signoff-process/)", result)
-        
+
         # Check overdue comes first
         self.assertIn("🔴", result)
         self.assertIn("OVERDUE by 3 days", result)
         self.assertIn("Overdue Artefact", result)
-        
+
         # Check current artefact is present
         self.assertIn("Artefact 1", result)
-        
+
         # Verify order (overdue should come before current)
         overdue_pos = result.index("Overdue Artefact")
         current_pos = result.index("Artefact 1")
@@ -602,7 +642,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
     def test_reply_filters_by_configured_families(self, mock_get_user_handle, mock_get_artefacts, MockTestObserverClient):
         """Test reply_with_artefacts_summary filters by configured families"""
         mock_get_user_handle.return_value = {"username": "testuser"}
-        
+
         # Create artefacts with different families
         snap_artefact = ArtefactResponse(
             id=10,
@@ -630,10 +670,10 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             bug_link="bug_link10",
             comment="test comment 10",
             created_at=datetime.now() - timedelta(days=10),
-            reviewers=[],
+            reviewers=[self.assignee],
             jira_issue=None,
         )
-        
+
         charm_artefact = ArtefactResponse(
             id=11,
             name="Charm Artefact",
@@ -663,11 +703,11 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         mock_get_artefacts.return_value.parsed = [snap_artefact, charm_artefact]
-        
+
         result = reply_with_artefacts_summary(self.user, [])
-        
+
         # Should only show snap artefact
         self.assertIn("Snap Artefact", result)
         self.assertNotIn("Charm Artefact", result)
@@ -678,7 +718,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
     def test_reply_with_unassigned_artefacts(self, mock_get_user_handle, mock_get_artefacts, MockTestObserverClient):
         """Test reply_with_artefacts_summary with unassigned artefacts"""
         mock_get_user_handle.return_value = None
-        
+
         # Create unassigned artefact
         unassigned_artefact = ArtefactResponse(
             id=3,
@@ -709,11 +749,11 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         mock_get_artefacts.return_value.parsed = [unassigned_artefact]
-        
+
         result = reply_with_artefacts_summary(self.user, ["all"])
-        
+
         self.assertIn("**No assignee**", result)
         self.assertIn("Unassigned Artefact", result)
 
@@ -725,7 +765,7 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
     def test_pending_artefacts_by_user_handle(self, mock_get_user_handle, mock_get_artefacts, MockTestObserverClient):
         """Test pending_artefacts_by_user_handle returns only pending artefacts"""
         mock_get_user_handle.return_value = {"username": "testuser"}
-        
+
         # Create approved artefact that should be filtered out
         approved_artefact = ArtefactResponse(
             id=3,
@@ -756,11 +796,11 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         mock_get_artefacts.return_value.parsed = [self.artefact1, self.artefact2, approved_artefact]
-        
+
         result = pending_artefacts_by_user_handle()
-        
+
         self.assertIn("testuser", result)
         self.assertEqual(len(result["testuser"]), 1)
         self.assertEqual(result["testuser"][0].id, 1)
@@ -770,10 +810,10 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
     def test_pending_artefacts_by_user_handle_api_error(self, mock_get_artefacts, MockTestObserverClient):
         """Test pending_artefacts_by_user_handle raises exception on API error"""
         mock_get_artefacts.return_value.parsed = "not a list"
-        
+
         with self.assertRaises(Exception) as context:
             pending_artefacts_by_user_handle()
-        
+
         self.assertEqual(str(context.exception), "Error retrieving artefacts")
 
     @patch("plugins.certification.artefacts.TestObserverClient")
@@ -782,7 +822,7 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
     def test_pending_artefacts_excludes_no_assignee_no_due_date(self, mock_get_user_handle, mock_get_artefacts, MockTestObserverClient):
         """Test that artefacts with no assignee and no due date are excluded"""
         mock_get_user_handle.return_value = None
-        
+
         # Create artefact with no assignee and no due date
         no_assignee_no_due_date = ArtefactResponse(
             id=4,
@@ -813,11 +853,11 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         mock_get_artefacts.return_value.parsed = [no_assignee_no_due_date]
-        
+
         result = pending_artefacts_by_user_handle()
-        
+
         self.assertEqual(len(result), 0)
 
 
@@ -828,15 +868,15 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
         mock_pending_artefacts.return_value = {
             "testuser": [self.artefact1]
         }
-        
+
         sender = MagicMock()
         sender.build_identifier.return_value = "@testuser"
-        
+
         send_artefact_summaries(sender)
-        
+
         sender.build_identifier.assert_called_once_with("@testuser")
         sender.send.assert_called_once()
-        
+
         sent_message = sender.send.call_args[0][1]
         self.assertIn("Hello @testuser!", sent_message)
         self.assertIn("## Artefact Review", sent_message)
@@ -876,23 +916,23 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
             reviewers=[],
             jira_issue=None,
         )
-        
+
         mock_pending_artefacts.return_value = {
             "testuser": [self.artefact1],
             "otheruser": [artefact3]
         }
-        
+
         sender = MagicMock()
         sender.build_identifier.side_effect = lambda x: x
-        
+
         send_artefact_summaries(sender)
-        
+
         self.assertEqual(sender.send.call_count, 2)
-        
+
         # Check both messages were sent
         calls = sender.send.call_args_list
         messages = [call[0][1] for call in calls]
-        
+
         self.assertTrue(any("@testuser" in msg for msg in messages))
         self.assertTrue(any("@otheruser" in msg for msg in messages))
         self.assertTrue(any("Artefact 1" in msg for msg in messages))
@@ -902,11 +942,11 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
     def test_send_artefact_summaries_no_artefacts(self, mock_pending_artefacts):
         """Test send_artefact_summaries does not send messages when no artefacts"""
         mock_pending_artefacts.return_value = {}
-        
+
         sender = MagicMock()
-        
+
         send_artefact_summaries(sender)
-        
+
         sender.send.assert_not_called()
 
     @patch("plugins.certification.artefacts.pending_artefacts_by_user_handle")
@@ -915,11 +955,11 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
         mock_pending_artefacts.return_value = {
             "testuser": []
         }
-        
+
         sender = MagicMock()
-        
+
         send_artefact_summaries(sender)
-        
+
         sender.send.assert_not_called()
 
     @patch("plugins.certification.artefacts.pending_artefacts_by_user_handle")
@@ -928,11 +968,11 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
         mock_pending_artefacts.return_value = {
             None: [self.artefact1]
         }
-        
+
         sender = MagicMock()
-        
+
         send_artefact_summaries(sender)
-        
+
         sender.send.assert_not_called()
 
 
@@ -953,7 +993,7 @@ class TestExtractArtefactIdFromUrl(unittest.TestCase):
             extract_artefact_id_from_url("https://test-observer.canonical.com/#/snap/456"),
             456
         )
-        
+
     def test_extract_id_from_deb_url(self):
         """Test extracting ID from deb URLs"""
         self.assertEqual(
@@ -964,7 +1004,7 @@ class TestExtractArtefactIdFromUrl(unittest.TestCase):
             extract_artefact_id_from_url("https://test-observer.canonical.com/#/deb/321"),
             321
         )
-        
+
     def test_extract_id_from_image_url(self):
         """Test extracting ID from image URLs"""
         self.assertEqual(
@@ -975,7 +1015,7 @@ class TestExtractArtefactIdFromUrl(unittest.TestCase):
             extract_artefact_id_from_url("https://test-observer.canonical.com/#/image/222"),
             222
         )
-        
+
     def test_extract_id_from_charm_url(self):
         """Test extracting ID from charm URLs"""
         self.assertEqual(
@@ -986,26 +1026,26 @@ class TestExtractArtefactIdFromUrl(unittest.TestCase):
             extract_artefact_id_from_url("https://test-observer.canonical.com/#/charm/444"),
             444
         )
-        
+
     def test_extract_id_from_partial_url(self):
         """Test extracting ID from partial URLs"""
         self.assertEqual(extract_artefact_id_from_url("#/snaps/555"), 555)
         self.assertEqual(extract_artefact_id_from_url("/#/debs/666"), 666)
-        
+
     def test_invalid_input_raises_error(self):
         """Test that invalid inputs raise ValueError"""
         with self.assertRaises(ValueError) as context:
             extract_artefact_id_from_url("not-a-number")
         self.assertIn("Could not extract artefact ID from: not-a-number", str(context.exception))
-        
+
         with self.assertRaises(ValueError) as context:
             extract_artefact_id_from_url("https://example.com/other/123")
         self.assertIn("Could not extract artefact ID from:", str(context.exception))
-        
+
         with self.assertRaises(ValueError) as context:
             extract_artefact_id_from_url("#/snaps/abc")
         self.assertIn("Could not extract artefact ID from:", str(context.exception))
-        
+
         with self.assertRaises(ValueError) as context:
             extract_artefact_id_from_url("")
         self.assertIn("Could not extract artefact ID from:", str(context.exception))
