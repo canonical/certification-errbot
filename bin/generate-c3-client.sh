@@ -5,10 +5,10 @@ RETRY_DELAY=5
 
 run_with_retries() {
     local attempt=1
-    
+
     while [ $attempt -le $MAX_RETRIES ]; do
         if uv tool run openapi-python-client generate \
-            --url https://certification.canonical.com/api/v2/openapi \
+            --url https://certification.canonical.com/api/v2/openapi/ \
             --meta none \
             --output-path plugins/certification/c3 \
             --overwrite; then
@@ -18,10 +18,10 @@ run_with_retries() {
                 sleep $RETRY_DELAY
             fi
         fi
-        
+
         ((attempt++))
     done
-    
+
     return 1
 }
 
