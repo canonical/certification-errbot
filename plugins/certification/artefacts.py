@@ -96,7 +96,7 @@ def reply_with_artefacts_summary(target_user, args: List[str]) -> str:
     - recently rejected artefacts.
 
     When no argument is provided, returns the summary for the sender
-    (artefacts filtered with them as the assignee).
+    (artefacts filtered with them as one of the reviewers).
 
     Arguments:
     - No args or just a mattermost handle: Show artefacts for that user (defaults to sender)
