@@ -14,9 +14,8 @@ Covers:
 import os
 import socket
 import sys
-import threading
 import unittest
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -36,7 +35,6 @@ LDAP_ENV = {
 
 def _import_ldap_module(extra_env=None):
     """Import (or re-import) the ldap module with controlled env vars."""
-    import importlib
     import plugins.certification.ldap as mod
 
     env = {**LDAP_ENV, **(extra_env or {})}
