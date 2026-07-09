@@ -10,6 +10,8 @@ on:
 jobs:
   build-and-publish-image:
     runs-on: [self-hosted, linux, xlarge, jammy, x64]
+    permissions:
+      packages: write
 
     steps:
       - name: Checkout repository
