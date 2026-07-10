@@ -5,7 +5,7 @@ on:
     secrets:
       CHARMHUB_TOKEN:
         required: true
-  
+
   push:
 
 concurrency:
@@ -61,7 +61,7 @@ jobs:
         with:
           name: charm
           path: ./charm/*.charm
-        
+
 
   define-matrix:
     name: Define spread matrix
@@ -78,8 +78,12 @@ jobs:
       - name: Generate matrix list
         id: suites
         run: |
-          list="$(charmcraft test --list github-ci | sed "s|github-ci:ubuntu-22.04:tests/spread/||g" | jq -r -ncR '[inputs | select(length>0)]')"
+          list="$(charmcraft.spread -list github-ci | sed "s|github-ci:ubuntu-22.04:tests/spread/||g" | jq -r -ncR '[inputs | select(length>0)]')"
           echo "suites=$list"
+          if [ "$list" = "[]" ]; then
+            echo "::error::No spread suites found for backend 'github-ci'. Check 'charmcraft.spread -list github-ci' output."
+            exit 1
+          fi
           echo "suites=$list" >> $GITHUB_OUTPUT
         working-directory: charm
 
@@ -89,7 +93,7 @@ jobs:
     permissions:
       contents: read
       packages: read
-    
+
     runs-on: [self-hosted, linux, large, jammy, x64]
     needs:
       - define-matrix
@@ -106,7 +110,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
@@ -115,7 +119,7 @@ jobs:
         with:
           name: charm
           path: ${{ github.workspace }}/charm
-  
+
       - name: Setup LXD
         uses: canonical/setup-lxd@main
 
@@ -129,7 +133,7 @@ jobs:
         env:
           GHCR_PACKAGE_API_USER: ${{ github.actor }}
           GHCR_PACKAGE_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Upload spread artifacts
         if: failure()
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
