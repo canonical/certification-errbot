@@ -269,10 +269,8 @@ def artefacts_by_user_handle(
         if artefact.status == ArtefactStatus.APPROVED:
             continue
 
-        if (
-            artefact.status == ArtefactStatus.MARKED_AS_FAILED
-            and artefact.due_date
-            and artefact.due_date < one_week_ago
+        if artefact.status == ArtefactStatus.MARKED_AS_FAILED and (
+            not artefact.due_date or artefact.due_date < one_week_ago
         ):
             continue
 
