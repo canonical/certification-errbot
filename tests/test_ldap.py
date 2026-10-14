@@ -141,6 +141,7 @@ class TestLdapConnect(unittest.TestCase):
         """_ProxiedSocket.connect sends HTTP CONNECT for port 636 and reads 200."""
         import plugins.certification.ldap as mod
         mod.HTTPS_PROXY = "http://proxy.internal:3128"
+        mod.LDAP_SERVER = "ldap.canonical.com"
 
         # Build the _ProxiedSocket class by peeking inside _ldap_connect
         proxy_socket_cls = None
@@ -176,7 +177,12 @@ class TestLdapConnect(unittest.TestCase):
             instance.connect(("93.184.216.34", 636))
 
         mock_connect.assert_called_once_with(("proxy.internal", 3128))
-        self.assertTrue(any(b"CONNECT 93.184.216.34:636 HTTP/1.1" in d for d in sent_data))
+        # The CONNECT request must use the configured LDAP hostname, not the
+        # resolved IP address ldap3 passes in, since proxies often allowlist
+        # CONNECT destinations by hostname (e.g. via SNI/dst domain ACLs) and
+        # reject requests made directly against a raw IP.
+        self.assertTrue(any(b"CONNECT ldap.canonical.com:636 HTTP/1.1" in d for d in sent_data))
+        self.assertFalse(any(b"93.184.216.34" in d for d in sent_data))
 
     def test_proxied_socket_raises_on_connect_rejection(self):
         """_ProxiedSocket.connect raises ConnectionError when proxy returns non-200."""
@@ -242,6 +248,25 @@ class TestLdapConnect(unittest.TestCase):
         # Should have called super().connect with the original address, not the proxy
         mock_connect.assert_called_once_with(("10.0.0.1", 443))
         mock_sendall.assert_not_called()
+
+
+class TestLdapServerHostname(unittest.TestCase):
+    """Tests for the _ldap_server_hostname helper."""
+
+    def test_plain_hostname(self):
+        import plugins.certification.ldap as mod
+        mod.LDAP_SERVER = "ldap.canonical.com"
+        self.assertEqual(mod._ldap_server_hostname(), "ldap.canonical.com")
+
+    def test_hostname_with_scheme_and_port(self):
+        import plugins.certification.ldap as mod
+        mod.LDAP_SERVER = "ldaps://ldap.canonical.com:636"
+        self.assertEqual(mod._ldap_server_hostname(), "ldap.canonical.com")
+
+    def test_falls_back_to_raw_value_when_unparseable(self):
+        import plugins.certification.ldap as mod
+        mod.LDAP_SERVER = ""
+        self.assertEqual(mod._ldap_server_hostname(), "")
 
 
 class TestGetGithubUsernameFromMattermostHandle(unittest.TestCase):
