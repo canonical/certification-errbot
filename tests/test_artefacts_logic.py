@@ -2,7 +2,11 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from test_observer.models import ArtefactResponse, ArtefactStatus
+from test_observer.models import (
+    ArtefactResponse,
+    ArtefactResponseAttributes,
+    ArtefactStatus,
+)
 
 from plugins.certification.artefacts import (
     artefacts_by_user_handle,
@@ -24,6 +28,7 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 1",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -54,6 +59,7 @@ class ArtefactsTestBase(unittest.TestCase):
             name="Artefact 2",
             version="1.0",
             status=ArtefactStatus.MARKED_AS_FAILED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() - timedelta(days=10),
             assignee=self.assignee,
@@ -164,6 +170,7 @@ class TestArtefactsSummarySending(ArtefactsTestBase):
             name="Overdue Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() - timedelta(days=3),  # Overdue
             assignee=self.assignee,
@@ -316,6 +323,7 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             name="Charm Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -349,6 +357,7 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             name="Snap Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -395,6 +404,7 @@ class TestArtefactsByUserHandle(ArtefactsTestBase):
             name="Charm Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -587,6 +597,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             name="Overdue Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() - timedelta(days=3),
             assignee=self.assignee,
@@ -649,6 +660,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             name="Snap Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -679,6 +691,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             name="Charm Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -725,6 +738,7 @@ class TestReplyWithArtefactsSummary(ArtefactsTestBase):
             name="Unassigned Artefact",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=None,
@@ -772,6 +786,7 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
             name="Approved Artefact",
             version="1.0",
             status=ArtefactStatus.APPROVED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=1),
             assignee=self.assignee,
@@ -829,6 +844,7 @@ class TestPendingArtefactsByUserHandle(ArtefactsTestBase):
             name="No Assignee No Due Date",
             version="1.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=None,
             assignee=None,
@@ -892,6 +908,7 @@ class TestSendArtefactSummaries(ArtefactsTestBase):
             name="Artefact 3",
             version="2.0",
             status=ArtefactStatus.UNDECIDED,
+            attributes=ArtefactResponseAttributes(),
             archived=False,
             due_date=datetime.now().date() + timedelta(days=2),
             assignee=MagicMock(launchpad_email="otheruser@example.com"),
