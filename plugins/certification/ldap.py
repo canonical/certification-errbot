@@ -26,6 +26,20 @@ HTTPS_PROXY = os.environ.get("HTTPS_PROXY")
 _proxy_patch_lock = threading.Lock()
 
 
+def _ldap_server_hostname() -> str:
+    """Return the bare hostname configured for LDAP_SERVER (strip any scheme/port).
+
+    ldap3 resolves LDAP_SERVER to an IP address before our proxy socket shim sees
+    the connect() call, so the IP (not the hostname) would otherwise be sent in
+    the CONNECT request. Proxies that allowlist by destination hostname (e.g. via
+    SNI/dst domain ACLs) reject CONNECT requests made against a raw IP, so we must
+    always tunnel using the original configured hostname instead.
+    """
+    raw = LDAP_SERVER or ""
+    parsed = urllib.parse.urlparse(raw if "://" in raw else f"//{raw}")
+    return parsed.hostname or raw
+
+
 @contextlib.contextmanager
 def _ldap_connect() -> Iterator[ldap3.Connection]:
     """Open an authenticated LDAP connection, yielding it for use within the context.
@@ -47,9 +61,10 @@ def _ldap_connect() -> Iterator[ldap3.Connection]:
                 # Only intercept LDAPS connections (port 636)
                 if isinstance(address, tuple) and len(address) >= 2 and address[1] == 636:
                     super().connect((proxy_host, proxy_port))
+                    target_host = _ldap_server_hostname()
                     req = (
-                        f"CONNECT {address[0]}:{address[1]} HTTP/1.1\r\n"
-                        f"Host: {address[0]}:{address[1]}\r\n\r\n"
+                        f"CONNECT {target_host}:{address[1]} HTTP/1.1\r\n"
+                        f"Host: {target_host}:{address[1]}\r\n\r\n"
                     )
                     self.sendall(req.encode())
                     resp = b""
