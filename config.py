@@ -4,7 +4,17 @@ import sys
 
 from dotenv import load_dotenv
 
+from plugins.certification.mattermost_keepalive import (
+    enable_mattermost_websocket_keepalive,
+)
+
 load_dotenv()
+
+# Must run before the Mattermost backend is started (errbot loads this module
+# first), otherwise a single websocket disconnect silently and permanently
+# stops the bot from receiving Mattermost events. See mattermost_keepalive.py
+# for the full explanation.
+enable_mattermost_websocket_keepalive()
 
 BACKEND = "Mattermost"
 
