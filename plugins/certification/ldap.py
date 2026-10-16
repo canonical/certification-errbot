@@ -1,5 +1,10 @@
+import contextlib
 import logging
 import os
+import socket
+import threading
+import urllib.parse
+from collections.abc import Iterator
 from typing import Optional
 
 import ldap3
@@ -16,6 +21,80 @@ LDAP_SERVER = os.environ.get("LDAP_SERVER")
 LDAP_BASE_DN = os.environ.get("LDAP_BASE_DN")
 LDAP_BIND_DN = os.environ.get("LDAP_BIND_DN")
 LDAP_BIND_PASSWORD = os.environ.get("LDAP_BIND_PASSWORD")
+HTTPS_PROXY = os.environ.get("HTTPS_PROXY")
+
+_proxy_patch_lock = threading.Lock()
+
+
+def _ldap_server_hostname() -> str:
+    """Return the bare hostname configured for LDAP_SERVER (strip any scheme/port).
+
+    ldap3 resolves LDAP_SERVER to an IP address before our proxy socket shim sees
+    the connect() call, so the IP (not the hostname) would otherwise be sent in
+    the CONNECT request. Proxies that allowlist by destination hostname (e.g. via
+    SNI/dst domain ACLs) reject CONNECT requests made against a raw IP, so we must
+    always tunnel using the original configured hostname instead.
+    """
+    raw = LDAP_SERVER or ""
+    parsed = urllib.parse.urlparse(raw if "://" in raw else f"//{raw}")
+    return parsed.hostname or raw
+
+
+@contextlib.contextmanager
+def _ldap_connect() -> Iterator[ldap3.Connection]:
+    """Open an authenticated LDAP connection, yielding it for use within the context.
+
+    If HTTPS_PROXY is set, tunnels the connection through the proxy via HTTP CONNECT
+    (ldap3 does not natively support proxies, so socket.socket is patched temporarily).
+    The lock ensures the patch is thread-safe.
+    """
+    server = ldap3.Server(LDAP_SERVER, use_ssl=True)
+
+    if HTTPS_PROXY:
+        parsed = urllib.parse.urlparse(HTTPS_PROXY)
+        proxy_host = parsed.hostname
+        proxy_port = parsed.port or 3128
+        _original_socket = socket.socket
+
+        class _ProxiedSocket(_original_socket):
+            def connect(self, address):
+                # Only intercept LDAPS connections (port 636)
+                if isinstance(address, tuple) and len(address) >= 2 and address[1] == 636:
+                    super().connect((proxy_host, proxy_port))
+                    target_host = _ldap_server_hostname()
+                    req = (
+                        f"CONNECT {target_host}:{address[1]} HTTP/1.1\r\n"
+                        f"Host: {target_host}:{address[1]}\r\n\r\n"
+                    )
+                    self.sendall(req.encode())
+                    resp = b""
+                    while b"\r\n\r\n" not in resp:
+                        chunk = self.recv(4096)
+                        if not chunk:
+                            break
+                        resp += chunk
+                    if b" 200 " not in resp:
+                        raise ConnectionError(f"Proxy CONNECT failed: {resp!r}")
+                else:
+                    super().connect(address)
+
+        with _proxy_patch_lock:
+            socket.socket = _ProxiedSocket
+            try:
+                conn = ldap3.Connection(
+                    server, user=LDAP_BIND_DN, password=LDAP_BIND_PASSWORD, auto_bind=True
+                )
+            finally:
+                socket.socket = _original_socket
+    else:
+        conn = ldap3.Connection(
+            server, user=LDAP_BIND_DN, password=LDAP_BIND_PASSWORD, auto_bind=True
+        )
+
+    try:
+        yield conn
+    finally:
+        conn.unbind()
 
 _ldap_cache: dict[str, Optional[str]] = {}
 _mattermost_email_cache: dict[str, Optional[str]] = {}
@@ -75,35 +154,23 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
         return None
 
     try:
-        # Connect to LDAP server
-        server = ldap3.Server(LDAP_SERVER, use_ssl=True)
-        conn = ldap3.Connection(
-            server, user=LDAP_BIND_DN, password=LDAP_BIND_PASSWORD, auto_bind=True
-        )
-
-        # Search for user by email from Mattermost API
-        search_filter = f"(mail={email})"
-
-        conn.search(
-            search_base=LDAP_BASE_DN,
-            search_filter=search_filter,
-            attributes=["*"],
-        )
-
-
-        if conn.entries:
-            entry = conn.entries[0]
-
-            github_username = (
-                entry.gitHubID.value if hasattr(entry, "gitHubID") else None
+        with _ldap_connect() as conn:
+            conn.search(
+                search_base=LDAP_BASE_DN,
+                search_filter=f"(mail={email})",
+                attributes=["*"],
             )
 
-            if github_username:
-                # Cache the result
-                _ldap_cache[handle] = github_username
-                return github_username
-            else:
-                logger.warning(f"No GitHub username (gitHubID) found in LDAP for {handle}")
+            if conn.entries:
+                entry = conn.entries[0]
+                github_username = (
+                    entry.gitHubID.value if hasattr(entry, "gitHubID") else None
+                )
+                if github_username:
+                    _ldap_cache[handle] = github_username
+                    return github_username
+                else:
+                    logger.warning(f"No GitHub username (gitHubID) found in LDAP for {handle}")
 
         # Cache negative result
         _ldap_cache[handle] = None
@@ -114,9 +181,6 @@ def get_github_username_from_mattermost_handle(handle: str) -> Optional[str]:
         # Cache negative result to avoid repeated failed lookups
         _ldap_cache[handle] = None
         return None
-    finally:
-        if "conn" in locals():
-            conn.unbind()
 
 
 def get_email_from_github_username(github_username: str) -> Optional[str]:
@@ -128,32 +192,22 @@ def get_email_from_github_username(github_username: str) -> Optional[str]:
         return None
 
     try:
-        # Connect to LDAP server
-        server = ldap3.Server(LDAP_SERVER, use_ssl=True)
-        conn = ldap3.Connection(
-            server, user=LDAP_BIND_DN, password=LDAP_BIND_PASSWORD, auto_bind=True
-        )
+        with _ldap_connect() as conn:
+            conn.search(
+                search_base=LDAP_BASE_DN,
+                search_filter=f"(gitHubID={github_username})",
+                attributes=["mail", "gitHubID"],
+            )
 
-        # Search for user by GitHub username using GitHubID attribute
-        search_filter = f"(gitHubID={github_username})"
-
-        conn.search(
-            search_base=LDAP_BASE_DN,
-            search_filter=search_filter,
-            attributes=["mail", "gitHubID"],
-        )
-
-
-        if conn.entries:
-            entry = conn.entries[0]
-            email = entry.mail.value if hasattr(entry, "mail") else None
-
-            if email:
-                return email
+            if conn.entries:
+                entry = conn.entries[0]
+                email = entry.mail.value if hasattr(entry, "mail") else None
+                if email:
+                    return email
+                else:
+                    logger.warning(f"No email found for GitHub username {github_username}")
             else:
-                logger.warning(f"No email found for GitHub username {github_username}")
-        else:
-            logger.warning(f"No LDAP entry found for GitHub username {github_username}")
+                logger.warning(f"No LDAP entry found for GitHub username {github_username}")
 
         return None
 
@@ -162,9 +216,6 @@ def get_email_from_github_username(github_username: str) -> Optional[str]:
             f"LDAP lookup failed for GitHub username {github_username}: {str(e)}"
         )
         return None
-    finally:
-        if "conn" in locals():
-            conn.unbind()
 
 
 def get_mattermost_handle_from_github_username(github_username: str) -> Optional[str]:
