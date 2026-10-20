@@ -1,6 +1,6 @@
 resource "juju_application" "errbot" {
-  name  = "errbot"
-  model = var.juju_model
+  name       = "errbot"
+  model_uuid = var.model_uuid
 
   charm {
     name     = "certification-errbot"

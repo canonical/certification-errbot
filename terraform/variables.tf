@@ -74,8 +74,8 @@ variable "jira_token" {
   type        = string
 }
 
-variable "juju_model" {
-  description = "Juju model to deploy this app in"
+variable "model_uuid" {
+  description = "UUID of the Juju model to deploy this app in"
   type        = string
 }
 
